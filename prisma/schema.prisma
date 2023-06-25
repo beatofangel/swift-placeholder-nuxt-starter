@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // NOTE: You probably want to change this to another database later on
+  // provider = "sqlite"
+  provider = "mysql"
+
+  // This value is read from the .env file.
+  url      = env("DATABASE_URL")
+}
+
+// -- 将model写入数据库
+// npx/yarn prisma migrate dev --name init
+// -- 拉取数据库表定义，生成model
+// npx/yarn prisma db pull
+model BusinessCategory {
+  /// id
+  id        String             @id @default(uuid()) @db.VarChar(36)
+  /// pid
+  pid       String?            @db.VarChar(36)
+  /// 名称
+  name      String             @unique @db.VarChar(200)
+  /// 图标
+  icon      String?            @db.VarChar(50)
+  /// 序号
+  ordinal   Int                @default(0)
+  /// 创建日期
+  createdAt DateTime           @default(now())
+  /// 更新日期
+  updatedAt DateTime           @updatedAt
+  /// version
+  version   Int
+  templates BcTplRel[]
+  children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
+  parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id])
+}
+
+model Template {
+  id                 String        @id @default(uuid()) @db.VarChar(36)
+  name               String        @unique @db.VarChar(200)
+  path               String        @db.VarChar(1000)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  version            Int
+  businessCategories BcTplRel[]
+  placeholderGroups  TplPhGrpRel[]
+}
+
+model PlaceholderGroup {
+  id               String        @id @default(uuid()) @db.VarChar(36)
+  name             String        @unique @db.VarChar(200)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  version          Int
+  templates        TplPhGrpRel[]
+  placeholderItems PhGrpItmRel[]
+}
+
+model PlaceholderItem {
+  id                String        @id @default(uuid()) @db.VarChar(36)
+  name              String        @unique @db.VarChar(200)
+  type              String        @db.VarChar(20)
+  format            String?       @db.VarChar(100)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  version           Int
+  placeholderGroups PhGrpItmRel[]
+}
+
+// TODO
+// model Setting {
+//   id String @id @default(uuid()) @db.VarChar(36)
+//   name        String  @unique @db.VarChar(200)
+//   description String? @db.VarChar(1000)
+//   type        String  @default("BOOL")
+//   value       String? @db.VarChar(1000)
+// }
+
+// TODO
+// model Session {
+//   id String @id @default(uuid()) @db.VarChar(36)
+// }
+
+model BcTplRel {
+  bcId             String
+  tplId            String
+  ordinal          Int              @default(0)
+  businessCategory BusinessCategory @relation(fields: [bcId], references: [id])
+  template         Template         @relation(fields: [tplId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  version          Int
+
+  @@id([bcId, tplId])
+}
+
+model TplPhGrpRel {
+  tplId            String
+  phGrpId          String
+  ordinal          Int              @default(0)
+  template         Template         @relation(fields: [tplId], references: [id])
+  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  version          Int
+
+  @@id([tplId, phGrpId])
+}
+
+model PhGrpItmRel {
+  phGrpId          String
+  phItmId          String
+  ordinal          Int              @default(0)
+  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+  placeholderItem  PlaceholderItem  @relation(fields: [phItmId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  version          Int
+
+  @@id([phGrpId, phItmId])
+}
+
