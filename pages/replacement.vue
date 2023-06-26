@@ -163,8 +163,8 @@
       :completed="completed"
     >
     </common-progress> -->
-    <v-btn @click="showDialog = !showDialog">show</v-btn>
-    <CommonDialog v-model="showDialog" text="测试"></CommonDialog>
+    <!-- <v-btn @click="showDialog = !showDialog">show</v-btn>
+    <CommonDialog v-model="showDialog" text="测试"></CommonDialog> -->
   </v-container>
 </template>
 
@@ -172,6 +172,8 @@
 import { Session } from '~/index';
 
 definePageMeta({
+  auth: false,
+  middleware: ['casbin'],
   icon: "mdi-file-replace",
   index: 1
 });

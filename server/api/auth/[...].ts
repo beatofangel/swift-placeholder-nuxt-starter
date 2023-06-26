@@ -31,7 +31,7 @@ export default NuxtAuthHandler({
         // that is false/null if the credentials are invalid.
         // NOTE: THE BELOW LOGIC IS NOT SAFE OR PROPER FOR AUTHENTICATION!
 
-        const user = { id: '1', name: 'J Smith', username: 'jsmith', password: 'hunter2' }
+        const user = { id: '1', name: 'J Smith', username: 'jsmith', password: 'hunter2', role: 'role_admin' }
 
         if (credentials?.username === user.username && credentials?.password === user.password) {
           // Any object returned will be saved in `user` property of the JWT
@@ -46,5 +46,23 @@ export default NuxtAuthHandler({
         }
       }
     })
-  ]
+  ],
+  callbacks: {
+    // Callback when the JWT is created / updated, see https://next-auth.js.org/configuration/callbacks#jwt-callback
+    jwt: async ({token, user}) => {
+      const isSignIn = user ? true : false;
+      if (isSignIn) {
+        token.jwt = user ? (user as any).access_token || '' : '';
+        token.id = user ? user.id || '' : '';
+        token.role = user ? (user as any).role || '' : '';
+      }
+      return Promise.resolve(token);
+    },
+    // Callback whenever session is checked, see https://next-auth.js.org/configuration/callbacks#session-callback
+    session: async ({session, token}) => {
+      (session as any).role = token.role;
+      (session as any).uid = token.id;
+      return Promise.resolve(session);
+    },
+  },
 })

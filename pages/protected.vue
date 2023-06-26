@@ -8,7 +8,10 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+  auth: false,
+  // middleware: 'auth'
+})
 
 const { data, signOut } = useSession()
 </script>
