@@ -16,8 +16,11 @@
     "@invictus.codes/nuxt-vuetify": "^0.2.20",
     "@mdi/font": "^7.2.96",
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
-    "@sidebase/nuxt-auth": "^0.4.3",
+    "@sidebase/nuxt-auth": "^0.6.0-beta.3",
+    "@types/bcrypt": "^5.0.0",
     "@types/node": "^18.11.18",
+    "d3": "^7.8.5",
+    "d3-cloud": "^1.2.5",
     "eslint": "^8.33.0",
     "nuxt": "^3.2.3",
     "prisma": "^4.11.0",
@@ -27,6 +30,7 @@
   },
   "dependencies": {
     "@prisma/client": "^4.11.0",
+    "bcrypt": "^5.1.0",
     "casbin": "^5.26.1",
     "casbin-prisma-adapter": "^1.2.0",
     "next-auth": "^4.18.8"

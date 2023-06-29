@@ -1,23 +1,13 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
-  // NOTE: You probably want to change this to another database later on
-  // provider = "sqlite"
   provider = "mysql"
-
-  // This value is read from the .env file.
   url      = env("DATABASE_URL")
 }
 
-// -- 将model写入数据库
-// npx/yarn prisma migrate dev --name init
-// -- 拉取数据库表定义，生成model
-// npx/yarn prisma db pull
 model BusinessCategory {
   /// id
   id        String             @id @default(uuid()) @db.VarChar(36)
@@ -36,8 +26,10 @@ model BusinessCategory {
   /// version
   version   Int
   templates BcTplRel[]
-  children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
   parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id])
+  children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
+
+  @@index([pid], map: "BusinessCategory_pid_fkey")
 }
 
 model Template {
@@ -57,8 +49,8 @@ model PlaceholderGroup {
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   version          Int
-  templates        TplPhGrpRel[]
   placeholderItems PhGrpItmRel[]
+  templates        TplPhGrpRel[]
 }
 
 model PlaceholderItem {
@@ -72,57 +64,56 @@ model PlaceholderItem {
   placeholderGroups PhGrpItmRel[]
 }
 
-// TODO
-// model Setting {
-//   id String @id @default(uuid()) @db.VarChar(36)
-//   name        String  @unique @db.VarChar(200)
-//   description String? @db.VarChar(1000)
-//   type        String  @default("BOOL")
-//   value       String? @db.VarChar(1000)
-// }
-
-// TODO
-// model Session {
-//   id String @id @default(uuid()) @db.VarChar(36)
-// }
-
 model BcTplRel {
   bcId             String
   tplId            String
   ordinal          Int              @default(0)
-  businessCategory BusinessCategory @relation(fields: [bcId], references: [id])
-  template         Template         @relation(fields: [tplId], references: [id])
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   version          Int
+  businessCategory BusinessCategory @relation(fields: [bcId], references: [id])
+  template         Template         @relation(fields: [tplId], references: [id])
 
   @@id([bcId, tplId])
+  @@index([tplId], map: "BcTplRel_tplId_fkey")
 }
 
 model TplPhGrpRel {
   tplId            String
   phGrpId          String
   ordinal          Int              @default(0)
-  template         Template         @relation(fields: [tplId], references: [id])
-  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   version          Int
+  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+  template         Template         @relation(fields: [tplId], references: [id])
 
   @@id([tplId, phGrpId])
+  @@index([phGrpId], map: "TplPhGrpRel_phGrpId_fkey")
 }
 
 model PhGrpItmRel {
   phGrpId          String
   phItmId          String
   ordinal          Int              @default(0)
-  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
-  placeholderItem  PlaceholderItem  @relation(fields: [phItmId], references: [id])
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   version          Int
+  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+  placeholderItem  PlaceholderItem  @relation(fields: [phItmId], references: [id])
 
   @@id([phGrpId, phItmId])
+  @@index([phItmId], map: "PhGrpItmRel_phItmId_fkey")
+}
+
+model User {
+  id       Int       @id @default(autoincrement())
+  username String    @unique
+  password String    @db.VarChar(60)
+  name     String    @default("user")
+  email    String?
+  image    String?
+  roles    RoleRel[]
 }
 
 /// Casbin rbac访问控制
@@ -137,4 +128,13 @@ model CasbinRule {
   v5    String?
 
   @@map("casbin_rule")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view RoleRel {
+  sub  String
+  psub String
+  user User?   @relation(fields: [sub], references: [username])
+
+  @@unique([sub, psub])
 }

@@ -123,7 +123,7 @@ const dialog = ref({
 });
 
 const links = ref(new Array<Link>());
-useRouter().options.routes.forEach((pRoute) => {
+useRouter().options.routes.filter(pRoute=>!pRoute.meta?.invisible).forEach((pRoute) => {
   console.log('router:', pRoute.path)
   links.value.push({
     name: pRoute.name,

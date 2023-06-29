@@ -172,7 +172,6 @@
 import { Session } from '~/index';
 
 definePageMeta({
-  auth: false,
   middleware: ['casbin'],
   icon: "mdi-file-replace",
   index: 1

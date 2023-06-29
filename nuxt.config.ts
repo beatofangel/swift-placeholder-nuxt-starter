@@ -14,8 +14,10 @@ export default defineNuxtConfig({
     '@mdi/font/css/materialdesignicons.min.css'
   ],
   auth: {
-    origin: process.env.ORIGIN,
-    enableGlobalAppMiddleware: true
+    baseURL: process.env.AUTH_ORIGIN,
+    globalAppMiddleware: {
+      isEnabled: true
+    }
   },
   vuetify: {
     vuetifyOptions: {

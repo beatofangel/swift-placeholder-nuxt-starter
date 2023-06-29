@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  auth: false,
+  // auth: false,
   middleware: ['casbin'],
   icon: 'mdi-home',
   index: -1

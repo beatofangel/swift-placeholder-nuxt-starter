@@ -1,10 +1,16 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GithubProvider from 'next-auth/providers/github'
 import { NuxtAuthHandler } from '#auth'
+import bcrypt from 'bcrypt'
+import { PrismaClient } from '@prisma/client'
 
+let prisma: PrismaClient
 export default NuxtAuthHandler({
   // TODO: SET A STRONG SECRET, SEE https://sidebase.io/nuxt-auth/configuration/nuxt-auth-handler#secret
   secret: process.env.AUTH_SECRET,
+  pages: {
+    signIn: '/login'
+  },
   // TODO: ADD YOUR OWN AUTHENTICATION PROVIDER HERE, READ THE DOCS FOR MORE: https://sidebase.io/nuxt-auth
   providers: [
     // @ts-expect-error You need to use .default here for it to work during SSR. May be fixed via Vite at some point
@@ -24,26 +30,57 @@ export default NuxtAuthHandler({
         username: { label: 'Username', type: 'text', placeholder: '(hint: jsmith)' },
         password: { label: 'Password', type: 'password', placeholder: '(hint: hunter2)' }
       },
-      authorize (credentials: any) {
+      async authorize (credentials: any) {
         console.warn('ATTENTION: You should replace this with your real providers or credential provider logic! The current setup is not safe')
         // You need to provide your own logic here that takes the credentials
         // submitted and returns either a object representing a user or value
         // that is false/null if the credentials are invalid.
         // NOTE: THE BELOW LOGIC IS NOT SAFE OR PROPER FOR AUTHENTICATION!
 
-        const user = { id: '1', name: 'J Smith', username: 'jsmith', password: 'hunter2', role: 'role_admin' }
-
-        if (credentials?.username === user.username && credentials?.password === user.password) {
-          // Any object returned will be saved in `user` property of the JWT
-          return user
-        } else {
-          console.error('Warning: Malicious login attempt registered, bad credentials provided')
-
-          // If you return null then an error will be displayed advising the user to check their details.
-          return null
-
-          // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+        if (!prisma) {
+          prisma = new PrismaClient()
         }
+        const user = await prisma.user.findFirst({
+          select: {
+            id: true,
+            username: true,
+            password: true,
+            name: true,
+            email: true,
+            image: true,
+            roles: {
+              select: {
+                psub: true
+              }
+            }
+          },
+          where: {
+            username: credentials?.username
+          }
+        })
+        // const user = { id: '1', name: 'J Smith', username: 'jsmith', password: 'hunter2', role: 'role_admin' }
+
+        // const myPass = await bcrypt.hash(credentials?.password, 10)
+        // console.log(myPass, user?.password)
+        if (user) {
+          if (await bcrypt.compare(credentials?.password, user.password)) {
+            return user
+          }
+        }
+
+        return null
+
+        // if (credentials?.username === user.username && credentials?.password === user.password) {
+        //   // Any object returned will be saved in `user` property of the JWT
+        //   return user
+        // } else {
+        //   console.error('Warning: Malicious login attempt registered, bad credentials provided')
+
+        //   // If you return null then an error will be displayed advising the user to check their details.
+        //   return null
+
+        //   // You can also Reject this callback with an Error thus the user will be sent to the error page with the error message as a query parameter
+        // }
       }
     })
   ],
@@ -54,13 +91,13 @@ export default NuxtAuthHandler({
       if (isSignIn) {
         token.jwt = user ? (user as any).access_token || '' : '';
         token.id = user ? user.id || '' : '';
-        token.role = user ? (user as any).role || '' : '';
+        token.roles = user ? (user as any).roles.map((role: any)=>role.psub) || '' : '';
       }
       return Promise.resolve(token);
     },
     // Callback whenever session is checked, see https://next-auth.js.org/configuration/callbacks#session-callback
     session: async ({session, token}) => {
-      (session as any).role = token.role;
+      (session as any).roles = token.roles;
       (session as any).uid = token.id;
       return Promise.resolve(session);
     },

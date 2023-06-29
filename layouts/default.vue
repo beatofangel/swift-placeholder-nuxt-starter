@@ -1,9 +1,24 @@
 <template>
-  <v-app>
+  <v-layout>
+    <v-app-bar>
+      <template v-slot:prepend>
+        <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      </template>
+      <v-app-bar-title>Swift Placeholder</v-app-bar-title>
+      <template v-slot:append>
+        Hello, {{ data?.user?.name }}
+        <v-btn icon="mdi-logout" density="comfortable" color="error"
+          @click="signOut({ callbackUrl: '/login' })"></v-btn>
+      </template>
+    </v-app-bar>
     <Menu />
     <v-main>
       <slot />
     </v-main>
     <Watermark />
-  </v-app>
+  </v-layout>
 </template>
+
+<script setup lang="ts">
+const { data, signOut } = useAuth()
+</script>
