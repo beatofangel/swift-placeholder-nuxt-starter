@@ -10,6 +10,7 @@ CREATE TABLE `BusinessCategory` (
     `version` INTEGER NOT NULL,
 
     UNIQUE INDEX `BusinessCategory_name_key`(`name`),
+    INDEX `BusinessCategory_pid_fkey`(`pid`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -61,6 +62,7 @@ CREATE TABLE `BcTplRel` (
     `updatedAt` DATETIME(3) NOT NULL,
     `version` INTEGER NOT NULL,
 
+    INDEX `BcTplRel_tplId_fkey`(`tplId`),
     PRIMARY KEY (`bcId`, `tplId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -73,6 +75,7 @@ CREATE TABLE `TplPhGrpRel` (
     `updatedAt` DATETIME(3) NOT NULL,
     `version` INTEGER NOT NULL,
 
+    INDEX `TplPhGrpRel_phGrpId_fkey`(`phGrpId`),
     PRIMARY KEY (`tplId`, `phGrpId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -85,6 +88,7 @@ CREATE TABLE `PhGrpItmRel` (
     `updatedAt` DATETIME(3) NOT NULL,
     `version` INTEGER NOT NULL,
 
+    INDEX `PhGrpItmRel_phItmId_fkey`(`phItmId`),
     PRIMARY KEY (`phGrpId`, `phItmId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -115,6 +119,15 @@ CREATE TABLE `casbin_rule` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `Workspace` (
+    `id` VARCHAR(36) NOT NULL,
+    `type` ENUM('REPLACEMENT') NOT NULL DEFAULT 'REPLACEMENT',
+    `data` JSON NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `BusinessCategory` ADD CONSTRAINT `BusinessCategory_pid_fkey` FOREIGN KEY (`pid`) REFERENCES `BusinessCategory`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
@@ -125,10 +138,10 @@ ALTER TABLE `BcTplRel` ADD CONSTRAINT `BcTplRel_bcId_fkey` FOREIGN KEY (`bcId`) 
 ALTER TABLE `BcTplRel` ADD CONSTRAINT `BcTplRel_tplId_fkey` FOREIGN KEY (`tplId`) REFERENCES `Template`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TplPhGrpRel` ADD CONSTRAINT `TplPhGrpRel_tplId_fkey` FOREIGN KEY (`tplId`) REFERENCES `Template`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `TplPhGrpRel` ADD CONSTRAINT `TplPhGrpRel_phGrpId_fkey` FOREIGN KEY (`phGrpId`) REFERENCES `PlaceholderGroup`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `TplPhGrpRel` ADD CONSTRAINT `TplPhGrpRel_phGrpId_fkey` FOREIGN KEY (`phGrpId`) REFERENCES `PlaceholderGroup`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `TplPhGrpRel` ADD CONSTRAINT `TplPhGrpRel_tplId_fkey` FOREIGN KEY (`tplId`) REFERENCES `Template`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `PhGrpItmRel` ADD CONSTRAINT `PhGrpItmRel_phGrpId_fkey` FOREIGN KEY (`phGrpId`) REFERENCES `PlaceholderGroup`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

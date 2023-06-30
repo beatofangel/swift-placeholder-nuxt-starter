@@ -1,4 +1,7 @@
 <script setup lang="ts">
+definePageMeta({
+  middleware: ['casbin'],
+});
 const { data: examples } = useFetch('/api/examples')
 </script>
 

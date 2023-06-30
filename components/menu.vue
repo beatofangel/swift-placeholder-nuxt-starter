@@ -7,6 +7,7 @@
     :theme="isDarkMode ? 'dark' : 'light'"
   >
     <v-tabs
+      v-model="currentPage"
       grow
       direction="vertical"
     >
@@ -121,6 +122,7 @@ const showLogin = ref(false);
 const dialog = ref({
   settingDialog: false,
 });
+const currentPage = ref(0);
 
 const links = ref(new Array<Link>());
 useRouter().options.routes.filter(pRoute=>!pRoute.meta?.invisible).forEach((pRoute) => {
@@ -137,6 +139,15 @@ links.value.sort((a, b) => a.index - b.index)
 const isDarkMode = computed(() => {
   return theme.global.current.value.dark;
 });
+
+// watch
+watch(currentPage, (val) => {
+  const currentRoute = useRouter().currentRoute.value.path
+  // currentPage changed but currentRoute not changed, then currentPage rollback to currentRoute
+  if (currentRoute !== links.value[val].path) {
+    currentPage.value = links.value.findIndex(link=>link.path === currentRoute)
+  }
+})
 
 // methods
 function toggleDarkMode() {

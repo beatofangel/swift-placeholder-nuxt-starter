@@ -13,10 +13,8 @@ export default eventHandler(async (event) => {
   if (!enforcer) {
     const adapter = await PrismaAdapter.newAdapter();
     enforcer = await casbin.newEnforcer('./rbac_model.conf', adapter);
-    const testTrue = await enforcer.enforce('admin', '/', 'all')
-    console.log(`admin can${ testTrue ? ' ' : ' not '}access '/' with permission 'all'.`)
-    const testFalse = await enforcer.enforce('admin', '/noperm', 'all')
-    console.log(`admin can${ testFalse ? ' ' : ' not'} access '/noperm' with permission 'all'.`)
+    console.log(await enforcer.getAllRoles())
+    console.log(await enforcer.getAllSubjects())
   }
   event.context.casbin = enforcer
 })

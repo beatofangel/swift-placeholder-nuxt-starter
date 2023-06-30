@@ -1,4 +1,5 @@
 <template>
+  <v-app>
   <v-layout>
     <v-app-bar>
       <template v-slot:prepend>
@@ -11,12 +12,13 @@
           @click="signOut({ callbackUrl: '/login' })"></v-btn>
       </template>
     </v-app-bar>
-    <Menu />
+    <Menu></Menu>
     <v-main>
-      <slot />
+      <slot></slot>
     </v-main>
     <Watermark />
   </v-layout>
+</v-app>
 </template>
 
 <script setup lang="ts">

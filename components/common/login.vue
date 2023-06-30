@@ -177,8 +177,8 @@ export default {
   },
   mounted() {
     const noData = this.words.length == 0
-    this.getWordCloud(noData)
-    this.timer = setInterval(() => { this.getWordCloud(noData) }, 10000)
+    // this.getWordCloud(noData)
+    // this.timer = setInterval(() => { this.getWordCloud(noData) }, 10000)
   },
   beforeDestroy() {
     clearInterval(this.timer)
