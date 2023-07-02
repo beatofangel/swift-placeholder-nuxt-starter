@@ -2,9 +2,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import GithubProvider from 'next-auth/providers/github'
 import { NuxtAuthHandler } from '#auth'
 import bcrypt from 'bcrypt'
-import { PrismaClient } from '@prisma/client'
 
-let prisma: PrismaClient
 export default NuxtAuthHandler({
   // TODO: SET A STRONG SECRET, SEE https://sidebase.io/nuxt-auth/configuration/nuxt-auth-handler#secret
   secret: process.env.AUTH_SECRET,
@@ -31,16 +29,7 @@ export default NuxtAuthHandler({
         password: { label: 'Password', type: 'password', placeholder: '(hint: hunter2)' }
       },
       async authorize (credentials: any) {
-        console.warn('ATTENTION: You should replace this with your real providers or credential provider logic! The current setup is not safe')
-        // You need to provide your own logic here that takes the credentials
-        // submitted and returns either a object representing a user or value
-        // that is false/null if the credentials are invalid.
-        // NOTE: THE BELOW LOGIC IS NOT SAFE OR PROPER FOR AUTHENTICATION!
-
-        if (!prisma) {
-          prisma = new PrismaClient()
-        }
-        const user = await prisma.user.findFirst({
+        const user = await usePrisma().user.findFirst({
           select: {
             id: true,
             username: true,
@@ -58,10 +47,7 @@ export default NuxtAuthHandler({
             username: credentials?.username
           }
         })
-        // const user = { id: '1', name: 'J Smith', username: 'jsmith', password: 'hunter2', role: 'role_admin' }
 
-        // const myPass = await bcrypt.hash(credentials?.password, 10)
-        // console.log(myPass, user?.password)
         if (user) {
           if (await bcrypt.compare(credentials?.password, user.password)) {
             return user
@@ -101,5 +87,11 @@ export default NuxtAuthHandler({
       (session as any).uid = token.id;
       return Promise.resolve(session);
     },
+    redirect: async ({ url, baseUrl }) => {
+      console.log(`redirect url:${url} baseUrl:${baseUrl}`)
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
+    }
   },
 })

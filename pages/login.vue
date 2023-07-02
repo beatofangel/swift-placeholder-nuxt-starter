@@ -1,12 +1,14 @@
 <template>
-  <v-app>
-    <v-container class="bg-grey fill-height" fluid>
-      <!-- <v-text-field v-model="username"></v-text-field>
+  <v-layout>
+    <v-main style="height: 100dvh;">
+      <v-container class="bg-grey fill-height" fluid>
+        <!-- <v-text-field v-model="username"></v-text-field>
       <v-text-field type="password" v-model="password"></v-text-field>
       <v-btn @click="signIn('credentials', {username, password})">login</v-btn> -->
-      <CommonLogin width="1000" height="650" class="d-flex justify-center"></CommonLogin>
-    </v-container>
-  </v-app>
+        <CommonLogin width="1000" height="650" class="d-flex justify-center"></CommonLogin>
+      </v-container>
+    </v-main>
+  </v-layout>
 </template>
 
 <script setup lang="ts">
@@ -22,3 +24,9 @@ definePageMeta({
 // const username = ref('')
 // const password = ref('')
 </script>
+
+<style scoped>
+.v-container {
+  background: no-repeat center url("/background2.webp");
+}
+</style>

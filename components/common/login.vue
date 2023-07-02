@@ -19,7 +19,7 @@
     >
       <v-card-title class="d-flex justify-center mt-8 text-h5">用户登录</v-card-title>
       <v-card-text>
-        <v-form>
+        <v-form @submit.prevent.self="handleLogin">
           <v-row class="my-0">
             <v-col>
               <v-tabs v-model="tab" height="32" grow>
@@ -86,9 +86,9 @@
           <v-row>
             <v-col>
               <v-btn
+                type="submit"
                 color="primary"
                 :disabled="!formData.agree"
-                @click="handleLogin"
                 block
                 >登录</v-btn
               >

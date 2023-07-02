@@ -1,7 +1,7 @@
 // @ts-ignore
 import colors from 'vuetify/lib/util/colors'
 import { zhHans } from 'vuetify/locale'
-import { md1 } from 'vuetify/blueprints'
+import { md1, md2, md3 } from 'vuetify/blueprints'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -10,18 +10,22 @@ export default defineNuxtConfig({
     '@invictus.codes/nuxt-vuetify'
   ],
   css: [
-    'vuetify/styles',
+    // 'vuetify/styles',
+    'vuetify/styles/main.sass',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
+  // sourcemap: {
+  //   server: true,
+  //   client: true
+  // },
   auth: {
-    baseURL: process.env.AUTH_ORIGIN,
-    globalAppMiddleware: {
-      isEnabled: true
-    }
+    // baseURL: process.env.AUTH_ORIGIN,
+    origin: process.env.AUTH_ORIGIN,
+    enableGlobalAppMiddleware: true
   },
   vuetify: {
     vuetifyOptions: {
-      blueprint: md1,
+      blueprint: md2,
       // @TODO: list all vuetify options
       theme: {
         themes: {

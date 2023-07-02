@@ -1,28 +1,15 @@
 <template>
-  <v-navigation-drawer
-    rail-width="48"
-    v-if="!showLogin"
-    rail
-    permanent
-    :theme="isDarkMode ? 'dark' : 'light'"
-  >
-    <v-tabs
-      v-model="currentPage"
-      grow
-      direction="vertical"
-    >
+  <v-navigation-drawer rail-width="48" v-if="!showLogin" rail permanent :theme="isDarkMode ? 'dark' : 'light'">
+    <v-tabs v-model="currentPage" grow direction="vertical">
       <template v-for="link in links" :key="link.name">
         <v-tooltip transition="fade-transition" right>
           <template v-slot:activator="{ props }">
-            <v-tab
-              style="-webkit-user-drag: none; min-width: unset; justify-content: center;"
-              v-bind="props"
-              :to="link.path"
-            >
+            <v-tab style="-webkit-user-drag: none; min-width: unset; justify-content: center;" v-bind="props"
+              :to="link.path">
               <v-icon size="32" left>{{
                 $route.path == link.path || isDarkMode
-                  ? link.icon
-                  : `${link.icon}-outline`
+                ? link.icon
+                : `${link.icon}-outline`
               }}</v-icon>
             </v-tab>
           </template>
@@ -32,46 +19,24 @@
       <v-divider></v-divider>
       <v-tooltip transition="fade-transition" right>
         <template v-slot:activator="{ props }">
-          <v-btn
-            @click="toggleDarkMode"
-            v-bind="props"
-            min-width="48"
-            width="48"
-            height="48"
-            variant="text"
-          >
-            <v-icon
-              size="32"
-              :color="isDarkMode ? 'yellow darken-2' : 'blue lighten-1'"
-            >
+          <v-btn @click="toggleDarkMode" v-bind="props" min-width="48" width="48" height="48" variant="text">
+            <v-icon size="32" :color="isDarkMode ? 'yellow darken-2' : 'blue lighten-1'">
               {{ isDarkMode ? "mdi-weather-sunny" : "mdi-weather-night" }}
             </v-icon>
           </v-btn>
         </template>
         {{ isDarkMode ? "关闭" : "开启" }}夜间模式
       </v-tooltip>
-      <v-bottom-sheet v-model="dialog.settingDialog">
+      <v-bottom-sheet v-if="status === 'authenticated'" v-model="dialog.settingDialog">
         <template v-slot:activator="{ props: bottomSheetProps }">
           <v-tooltip transition="fade-transition" right>
             <template v-slot:activator="{ props }">
               <v-hover v-slot="{ isHovering, props: hoverProps }">
-                <v-btn
-                  @click="dialog.settingDialog = !dialog.settingDialog"
-                  v-bind="Object.assign(bottomSheetProps, props, hoverProps)"
-                  class="px-0"
-                  min-width="48"
-                  width="48"
-                  height="48"
-                  variant="text"
-                >
-                  <v-icon
-                    size="32"
-                    :class="{ 'rotate-transition-120': true }"
-                    :color="
-                      isDarkMode ? 'secondary lighten-4' : 'secondary lighten-2'
-                    "
-                    >mdi-cog</v-icon
-                  >
+                <v-btn @click="dialog.settingDialog = !dialog.settingDialog"
+                  v-bind="Object.assign(bottomSheetProps, props, hoverProps)" class="px-0" min-width="48" width="48"
+                  height="48" variant="text">
+                  <v-icon size="32" :class="{ 'rotate-transition-120': true }" :color="isDarkMode ? 'secondary lighten-4' : 'secondary lighten-2'
+                    ">mdi-cog</v-icon>
                 </v-btn>
               </v-hover>
             </template>
@@ -84,12 +49,7 @@
               <v-icon color="primary" class="mr-3">mdi-cog</v-icon>
               <v-app-bar-title>设置</v-app-bar-title>
               <v-spacer></v-spacer>
-              <v-btn
-                variant="text"
-                color="red"
-                @click="dialog.settingDialog = !dialog.settingDialog"
-                icon
-              >
+              <v-btn variant="text" color="red" @click="dialog.settingDialog = !dialog.settingDialog" icon>
                 <v-icon>mdi-close</v-icon>
               </v-btn>
             </v-toolbar>
@@ -100,10 +60,7 @@
           </v-card>
         </v-sheet>
       </v-bottom-sheet>
-      <v-container
-        class="pa-0 fill-height draggable-region"
-        fluid
-      ></v-container>
+      <v-container class="pa-0 fill-height draggable-region" fluid></v-container>
     </v-tabs>
     <!-- <v-dialog v-model="showLogin" width="unset" no-click-animation hide-overlay persistent light>
       <common-login @input="e=>showLogin = e"></common-login>
@@ -125,16 +82,23 @@ const dialog = ref({
 const currentPage = ref(0);
 
 const links = ref(new Array<Link>());
-useRouter().options.routes.filter(pRoute=>!pRoute.meta?.invisible).forEach((pRoute) => {
-  console.log('router:', pRoute.path)
-  links.value.push({
-    name: pRoute.name,
-    path: pRoute.path,
-    icon: pRoute.meta?.icon,
-    index: pRoute.meta?.index || 9999,
-  } as Link);
-});
-links.value.sort((a, b) => a.index - b.index)
+const { status } = useAuth()
+watch(status, val => {
+  if (val === 'authenticated') {
+    useRouter().options.routes.filter(pRoute => !pRoute.meta?.invisible).forEach((pRoute) => {
+      console.log('router:', pRoute.path)
+      links.value.push({
+        name: pRoute.name,
+        path: pRoute.path,
+        icon: pRoute.meta?.icon,
+        index: pRoute.meta?.index || 9999,
+      } as Link);
+    });
+  }
+  links.value.sort((a, b) => a.index - b.index)
+}, {
+  immediate: true
+})
 
 const isDarkMode = computed(() => {
   return theme.global.current.value.dark;
@@ -145,7 +109,7 @@ watch(currentPage, (val) => {
   const currentRoute = useRouter().currentRoute.value.path
   // currentPage changed but currentRoute not changed, then currentPage rollback to currentRoute
   if (currentRoute !== links.value[val].path) {
-    currentPage.value = links.value.findIndex(link=>link.path === currentRoute)
+    currentPage.value = links.value.findIndex(link => link.path === currentRoute)
   }
 })
 
