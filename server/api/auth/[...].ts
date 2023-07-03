@@ -78,6 +78,7 @@ export default NuxtAuthHandler({
         token.jwt = user ? (user as any).access_token || '' : '';
         token.id = user ? user.id || '' : '';
         token.roles = user ? (user as any).roles.map((role: any)=>role.psub) || '' : '';
+        token.username = user ? (user as any).username || '' : '';
       }
       return Promise.resolve(token);
     },
@@ -85,6 +86,7 @@ export default NuxtAuthHandler({
     session: async ({session, token}) => {
       (session as any).roles = token.roles;
       (session as any).uid = token.id;
+      (session as any).username = token.username;
       return Promise.resolve(session);
     },
     redirect: async ({ url, baseUrl }) => {

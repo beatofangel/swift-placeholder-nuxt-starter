@@ -33,22 +33,22 @@
               <v-text-field
                 label="手机号/账号"
                 v-model="formData.username"
-                outlined
+                variant="outlined"
+                density="comfortable"
                 hint="※未注册手机验证后自动登录"
                 persistent-hint
                 prepend-inner-icon="mdi-cellphone"
-                dense
               ></v-text-field>
             </v-col>
           </v-row>
           <v-row>
             <v-col>
               <v-window v-model="tab" light>
-                <v-window-item>
+                <v-window-item class="pt-3">
                   <v-row>
                     <v-col cols="8">
                       <!-- <v-otp-input length="6" dense> </v-otp-input> -->
-                      <v-text-field label="验证码" name="smsCode" outlined prepend-inner-icon="mdi-key-variant" dense></v-text-field>
+                      <v-text-field label="验证码" name="smsCode" variant="outlined" density="comfortable" prepend-inner-icon="mdi-key-variant"></v-text-field>
                     </v-col>
                     <v-col cols="4" class="d-flex align-center justify-center pl-0">
                       <a
@@ -70,14 +70,14 @@
                     </v-col>
                   </v-row>
                 </v-window-item>
-                <v-window-item>
+                <v-window-item class="pt-3">
                   <v-text-field
                     label="密码"
                     type="password"
                     v-model="formData.password"
-                    outlined
+                    variant="outlined"
+                    density="comfortable"
                     prepend-inner-icon="mdi-lock"
-                    dense
                   ></v-text-field>
                 </v-window-item>
               </v-window>

@@ -1,7 +1,7 @@
 // yarn prisma migrate dev --name [init]
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["views"]
+  previewFeatures = ["views", "fieldReference"]
 }
 
 datasource db {
@@ -108,13 +108,14 @@ model PhGrpItmRel {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  username String    @unique
-  password String    @db.VarChar(60)
-  name     String    @default("user")
-  email    String?
-  image    String?
-  roles    RoleRel[]
+  id         Int         @id @unique @default(autoincrement())
+  username   String      @unique
+  password   String      @db.VarChar(60)
+  name       String      @default("user")
+  email      String?
+  image      String?
+  roles      RoleRel[]
+  workspaces Workspace[]
 }
 
 /// Casbin rbac访问控制
@@ -135,7 +136,7 @@ model CasbinRule {
 view RoleRel {
   sub  String
   psub String
-  user User?   @relation(fields: [sub], references: [username])
+  user User?  @relation(fields: [sub], references: [username])
 
   @@unique([sub, psub])
 }
@@ -145,7 +146,9 @@ enum WsType {
 }
 
 model Workspace {
-  id                 String        @id @default(uuid()) @db.VarChar(36)
-  type WsType @default(REPLACEMENT)
-  data Json?
+  id    String @id @default(uuid()) @db.VarChar(36)
+  type  WsType @default(REPLACEMENT)
+  data  Json?
+  owner String
+  user  User   @relation(fields: [owner], references: [username])
 }

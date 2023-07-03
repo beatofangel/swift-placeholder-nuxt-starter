@@ -10,8 +10,7 @@ export default defineNuxtConfig({
     '@invictus.codes/nuxt-vuetify'
   ],
   css: [
-    // 'vuetify/styles',
-    'vuetify/styles/main.sass',
+    'vuetify/styles',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
   // sourcemap: {
@@ -56,6 +55,7 @@ export default defineNuxtConfig({
           }
         }
       },
+      ssr: true,
       locale: {
         locale: 'zhHans',
         messages: { zhHans }
@@ -66,7 +66,7 @@ export default defineNuxtConfig({
     },
     moduleOptions: {
       /* nuxt-vuetify module options */
-      treeshaking: false,
+      // treeshaking: false,
       useIconCDN: false, // 使用本地图标库@mdi/font
 
       /* vite-plugin-vuetify options */

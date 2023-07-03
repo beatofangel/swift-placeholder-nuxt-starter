@@ -1,6 +1,6 @@
 <template>
-  <v-layout>
-    <v-app-bar flat>
+  <v-layout full-height>
+    <v-app-bar>
       <template v-slot:prepend>
         <v-app-bar-nav-icon></v-app-bar-nav-icon>
       </template>
@@ -32,7 +32,7 @@
           <v-tooltip text="登录" location="bottom">
             <template v-slot:activator="{ props }">
               <v-btn v-bind="props" density="comfortable" prepend-icon="mdi-login" variant="text" color="primary"
-                @click="navigateTo('/')">
+                @click="navigateTo('/login')">
                 登录
               </v-btn>
             </template>
@@ -40,7 +40,9 @@
         </template>
       </template>
     </v-app-bar>
-    <Menu></Menu>
+    <div v-show="status === 'authenticated'">
+      <Menu></Menu>
+    </div>
     <v-main style="height: 100dvh;">
       <slot></slot>
     </v-main>

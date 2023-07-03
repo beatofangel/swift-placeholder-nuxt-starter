@@ -1,9 +1,35 @@
-export interface Session extends Record<string, any> {
-  declare id: string
-  declare name: string
-  declare type: string
-  declare businessCategory: string
-  declare templates: string[]
+// export interface Session extends Record<string, any> {
+//   declare id: string
+//   declare name: string
+//   declare type: string
+//   declare businessCategory: string
+//   declare templates: string[]
+// }
+import type { Session } from 'next-auth';
+export interface SessionWrapper extends Session {
+  id: string
+  username: string
+  roles: string[]
+}
+
+export interface WorkData extends Replacement {
+  id: string
+  name: string
+}
+
+export interface Replacement extends Record<string, any> {
+  businessCategory: string
+  templates: Template[]
+}
+
+export interface Template extends Record<string, any> {
+  id: string
+  placeholders: Placeholder[]
+}
+
+export interface Placeholder extends Record<string, any> {
+  id: string
+  value: any
 }
 
 export enum EditMode {
@@ -33,3 +59,9 @@ export interface Setting {
   type: string,
   value: string | number | boolean
 }
+
+export enum WsType {
+  REPLACEMENT = 1
+}
+
+export type HTTPMethod = "GET" | "HEAD" | "PATCH" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | string

@@ -1,55 +1,28 @@
 <template>
   <v-container class="pa-0" fluid>
-    <v-app-bar
-      density="compact"
-    >
-      <v-slide-group
-        v-model="tab"
-        @change="onChanged"
-        show-arrows
-        mandatory
-        style="max-width: calc(100vw - 176px)"
-        class="align-self-end"
-      >
-        <v-slide-group-item
-          v-for="item in sessions"
-          :key="item.tab"
-          v-slot="{ isSelected, toggle }"
-        >
+    <v-app-bar density="compact" flat>
+      <v-slide-group v-model="tab" @change="onChanged" show-arrows mandatory style="max-width: calc(100vw - 176px)"
+        class="align-self-end">
+        <v-slide-group-item v-for="(item, index) in sessions" :key="index" v-slot="{ isSelected, toggle }">
           <div class="align-self-end">
             <!-- 由于添加了tooltip，必须在外层嵌套一个容器否则会导致激活标签无法自动显示 -->
-            <v-tooltip bottom open-delay="1000">
+            <v-tooltip open-delay="1000" location="bottom">
               <template v-slot:activator="{ props }">
-                <v-btn
-                  v-bind="props"
-                  class="mx-1 text-none tab-border-top"
-                  :class="{
-                    active: isSelected,
-                    'primary--text': isSelected && !editing[item.id],
-                    'error--text': editing[item.id],
-                    'grey--text text--darken-2': !isSelected && !editing[item.id],
-                    'font-weight-bold': isSelected,
-                  }"
-                  :color="isSelected ? 'white' : 'grey lighten-4'"
-                  @click="toggle"
-                  :elevation="isSelected ? 4 : 2"
-                  :small="!isSelected"
-                  :ripple="false"
-                >
+                <v-btn v-bind="props" class="mx-1 tab-border-top rounded-b-0" :class="{
+                  active: isSelected,
+                  'primary--text': isSelected && !editing[item.id],
+                  'error--text': editing[item.id],
+                  'grey--text text--darken-2': !isSelected && !editing[item.id],
+                  'font-weight-bold': isSelected,
+                }" :color="isSelected ? 'primary' : 'grey lighten-4'" @click="toggle" :elevation="isSelected ? 4 : 2"
+                  :size="isSelected ? 'default' : 'small'" :ripple="false">
                   <div style="max-width: 160px" class="text-truncate">
                     {{
                       `${editing[item.id] ? "* " : ""}${calcSessionName(item)}`
                     }}
                   </div>
-                  <v-hover v-slot="{ isHovering }">
-                    <v-icon
-                      :color="isHovering ? 'red' : ''"
-                      :class="{ 'on-hover': isHovering }"
-                      @click.stop="closeReplacementTab(item)"
-                      right
-                      >mdi-close</v-icon
-                    >
-                  </v-hover>
+                  <v-btn density="compact" size="small" :color="isSelected ? 'primary' : 'grey lighten-4'"
+                    class="rounded-sm" icon="mdi-close" @click.stop="closeReplacementTab(item)"></v-btn>
                 </v-btn>
               </template>
               {{ calcSessionName(item) }}
@@ -57,64 +30,24 @@
           </div>
         </v-slide-group-item>
       </v-slide-group>
-      <!-- <v-tabs v-model="tab">
-        <v-tabs-slider></v-tabs-slider>
-        <v-tab v-for="session in sessions" :key="session.id">
-          <span class="text-h6">{{ session.name }}</span>
-          <v-icon class="btn-icon-close" :ripple="false" @click="cancelReplace(session)" right>mdi-close</v-icon>
-        </v-tab>
-      </v-tabs> -->
-      <!-- <v-hover v-slot="{ hover }">
-        <v-btn
-          @click="newReplacement"
-          height="100%"
-          color="transparent"
-          min-width="48"
-          class="px-2"
-          depressed
-          tile
-        >
-          <v-icon
-            :class="{ 'rotate-transition-180': hover, 'mb-n3': !hover }"
-            color="success"
-            >mdi-plus</v-icon
-          >
-        </v-btn>
-      </v-hover> -->
       <v-hover v-slot="{ isHovering, props }">
         <v-btn v-bind="props" @click="newReplacement" small icon>
-          <v-icon color="success"
-            >mdi-plus</v-icon
-          >
+          <v-icon color="success">mdi-plus</v-icon>
         </v-btn>
       </v-hover>
-      <v-menu
-        v-model="showReplaceMenu"
-        offset-y
-        :close-on-content-click="false"
-      >
+      <v-menu v-model="showReplaceMenu" offset-y :close-on-content-click="false">
         <template v-slot:activator="{ props }">
           <v-hover v-slot="{ isHovering, props: hoverProps }">
-            <v-btn
-              style="position: absolute; right: 16px"
-              v-bind="Object.assign(hoverProps, props)"
-              height="100%"
-              min-width="48"
-              class="px-2"
-              depressed
-              tile
-            >
-              <v-icon >mdi-dots-vertical</v-icon>
+            <v-btn style="position: absolute; right: 16px" v-bind="Object.assign(hoverProps, props)" height="100%"
+              min-width="48" class="px-2" depressed tile>
+              <v-icon>mdi-dots-vertical</v-icon>
             </v-btn>
           </v-hover>
         </template>
         <v-list min-width="280" density="comfortable">
-          <template
-            v-for="(
+          <template v-for="(
               { name, icon, shortcut, handler, disabled }, key
-            ) in dotMenuList"
-            :key="key"
-          >
+            ) in dotMenuList" :key="key">
             <v-list-item @click="handler" :disabled="disabled?.value">
               <template v-slot:prepend>
                 <v-icon :icon="icon"></v-icon>
@@ -130,20 +63,13 @@
     </v-app-bar>
     <v-window v-model="tab">
       <template v-if="sessions.length > 0">
-        <v-window-item v-for="session in sessions" :key="session.id">
+        <v-window-item v-for="item in sessions" :key="item.id">
           <keep-alive>
-            <replacementTab
-              :session="session"
-              @input="handleBusinessCategoryChange"
-            ></replacementTab>
+            <replacementTab :data="item"></replacementTab>
           </keep-alive>
         </v-window-item>
       </template>
-      <div
-        style="height: calc(100vh - 124px)"
-        class="d-flex flex-column justify-center align-center"
-        v-else
-      >
+      <div style="height: calc(100vh - 124px)" class="d-flex flex-column justify-center align-center" v-else>
         <div class="text-h2 font-weight-medium mb-12 mt-n12">
           <common-key :shortcuts="shortcutNew">
             <template v-slot:prepend><span class="text--disabled">按下&nbsp;</span></template>
@@ -169,7 +95,9 @@
 </template>
 
 <script setup lang="ts">
-import { Session } from '~/index';
+import { Workspace } from '@prisma/client';
+import { WorkData } from '~/index';
+// import { Session } from '~/index';
 
 definePageMeta({
   middleware: ['casbin'],
@@ -177,11 +105,101 @@ definePageMeta({
   index: 1
 });
 
+// mounted
+onMounted(() => {
+  $fetch('/api/replacements').then(({ data }) => {
+    sessions.value = data
+    //  else {
+    //   const bodyData: WorkData[] = [
+    //     {
+    //       id: '43ccacc1-a062-4a84-9219-ea1cd1a5704d',
+    //       name: '替换1',
+    //       businessCategory: '0c64ba41-e385-48d0-854c-fc26e716f717',
+    //       templates: [
+    //         {
+    //           id: '99fe65e0-90ac-41ef-91a1-aa3b4d4a09cd',
+    //           placeholders: [
+    //             {
+    //               id: '6369f6c3-67e1-45f1-ac9f-6bbcf325c434',
+    //               value: '原告1'
+    //             },
+    //             {
+    //               id: '7ef7390c-e78e-4681-b105-893e325457e6',
+    //               value: '被告1'
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           id: 'cfba1cfa-1f1c-45d5-b223-6145c75a0528',
+    //           placeholders: [
+    //             {
+    //               id: 'fec05590-6202-479b-8735-409ded3b9905',
+    //               value: '代理律师1'
+    //             },
+    //             {
+    //               id: 'd4e98926-a657-4412-9bb5-463a4419bdfa',
+    //               value: '2021-05-12'
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       id: '378cf3c1-1900-4a86-b7ae-28633a4e72b1',
+    //       name: '替换2',
+    //       businessCategory: '21f3bcf7-d3b4-49f2-9f96-3245b0caef0a',
+    //       templates: [
+    //         {
+    //           id: '6a9f12fe-cf86-4f39-bf55-86c33724d25c',
+    //           placeholders: [
+    //             {
+    //               id: '40b457f2-7708-40a9-a3f7-4c1f4da5d128',
+    //               value: '原告2'
+    //             },
+    //             {
+    //               id: 'bd99b029-0177-4030-82a7-b4a79bea497a',
+    //               value: '被告2'
+    //             }
+    //           ]
+    //         },
+    //         {
+    //           id: '9eb1db1c-639b-49e9-9341-bbf0b25f6841',
+    //           placeholders: [
+    //             {
+    //               id: 'a70d08eb-ca4e-44f7-8339-71885f115376',
+    //               value: '代理律师2'
+    //             },
+    //             {
+    //               id: '26d17448-3f72-4a9f-b6a4-b25bc635b062',
+    //               value: '2022-10-01'
+    //             }
+    //           ]
+    //         }
+    //       ]
+    //     }
+    //   ]
+    //   console.log('data:', bodyData)
+    //   useFetch('/api/replacements', {
+    //     method: 'POST',
+    //     body: {
+    //       data: bodyData
+    //     }
+    //   }).then(({ data, error }) => {
+    //     if (error.value) {
+    //       console.error(error.value)
+    //     } else {
+    //       console.log('create result:', data.value)
+    //     }
+    //   })
+    // }
+  })
+})
+
 // data
 const showDialog = ref(false)
-watch(showDialog, (val)=>console.log(val))
+watch(showDialog, (val) => console.log(val))
 const tab = ref(0)
-const sessions = ref([] as Session[])
+const sessions = ref([] as WorkData[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
 
@@ -248,10 +266,10 @@ const dotMenuList = computed(() => {
 })
 
 // methods
-function onChanged (index: number) {
+function onChanged(index: number) {
   console.log(index);
 }
-function calcSessionName(item: Session) {
+function calcSessionName(item: WorkData) {
   if (item.businessCategoryDisplay) {
     return `${item.businessCategoryDisplay}-${item.id}`;
   } else {
@@ -286,9 +304,15 @@ function doReplace() {
 function doReplaceAll() {
 
 }
-function handleBusinessCategoryChange(sessionId: string, businessCategoryDisplay: string) {
-  const session = sessions.value.find((s) => s.id == sessionId);
-  session!['businessCategoryDisplay'] = businessCategoryDisplay;
-  console.log(session);
-}
+// function handleBusinessCategoryChange(sessionId: string, businessCategoryDisplay: string) {
+//   const session = sessions.value.find((s) => s.id == sessionId);
+//   session!['businessCategoryDisplay'] = businessCategoryDisplay;
+//   console.log(session);
+// }
 </script>
+
+<style scoped>
+/* ::v-deep(.tab-border-top) {
+  border-top: 1px solid rgb(var(--v-theme-on-secondary)) !important;
+} */
+</style>

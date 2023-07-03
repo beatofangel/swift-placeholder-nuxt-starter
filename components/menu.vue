@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer rail-width="48" v-if="!showLogin" rail permanent :theme="isDarkMode ? 'dark' : 'light'">
+  <v-navigation-drawer rail-width="48" rail permanent>
     <v-tabs v-model="currentPage" grow direction="vertical">
       <template v-for="link in links" :key="link.name">
         <v-tooltip transition="fade-transition" right>
@@ -66,7 +66,7 @@
       <common-login @input="e=>showLogin = e"></common-login>
     </v-dialog> -->
     <!-- 避免遮罩层挡住app-bar -->
-    <v-overlay :absolute="true" :value="showLogin"></v-overlay>
+    <!-- <v-overlay :absolute="true" :value="showLogin"></v-overlay> -->
   </v-navigation-drawer>
 </template>
 
@@ -75,7 +75,7 @@ import { useTheme } from "vuetify";
 import { VBottomSheet } from "vuetify/lib/labs/components.mjs";
 import { Link } from "~/index";
 const theme = useTheme();
-const showLogin = ref(false);
+// const showLogin = ref(false);
 const dialog = ref({
   settingDialog: false,
 });
@@ -83,6 +83,19 @@ const currentPage = ref(0);
 
 const links = ref(new Array<Link>());
 const { status } = useAuth()
+
+const isDarkMode = computed(() => {
+  return theme.global.current.value.dark;
+});
+
+// watch
+watch(currentPage, (val) => {
+  const currentRoute = useRouter().currentRoute.value.path
+  // currentPage changed but currentRoute not changed, then currentPage rollback to currentRoute
+  if (currentRoute !== links.value[val].path) {
+    currentPage.value = links.value.findIndex(link => link.path === currentRoute)
+  }
+})
 watch(status, val => {
   if (val === 'authenticated') {
     useRouter().options.routes.filter(pRoute => !pRoute.meta?.invisible).forEach((pRoute) => {
@@ -98,19 +111,6 @@ watch(status, val => {
   links.value.sort((a, b) => a.index - b.index)
 }, {
   immediate: true
-})
-
-const isDarkMode = computed(() => {
-  return theme.global.current.value.dark;
-});
-
-// watch
-watch(currentPage, (val) => {
-  const currentRoute = useRouter().currentRoute.value.path
-  // currentPage changed but currentRoute not changed, then currentPage rollback to currentRoute
-  if (currentRoute !== links.value[val].path) {
-    currentPage.value = links.value.findIndex(link => link.path === currentRoute)
-  }
 })
 
 // methods

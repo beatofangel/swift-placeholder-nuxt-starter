@@ -1,5 +1,6 @@
 <template>
   <span
+    class="text-white"
     style="
       position: fixed;
       right: 0;
