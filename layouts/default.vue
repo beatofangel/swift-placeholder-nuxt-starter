@@ -40,7 +40,7 @@
         </template>
       </template>
     </v-app-bar>
-    <div v-show="status === 'authenticated'">
+    <div v-if="status === 'authenticated'">
       <Menu></Menu>
     </div>
     <v-main style="height: 100dvh;">

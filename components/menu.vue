@@ -79,7 +79,7 @@ const theme = useTheme();
 const dialog = ref({
   settingDialog: false,
 });
-const currentPage = ref(0);
+const currentPage = ref(-1);
 
 const links = ref(new Array<Link>());
 const { status } = useAuth()
@@ -93,6 +93,7 @@ watch(currentPage, (val) => {
   const currentRoute = useRouter().currentRoute.value.path
   // currentPage changed but currentRoute not changed, then currentPage rollback to currentRoute
   if (currentRoute !== links.value[val].path) {
+    console.log('currentPage changed')
     currentPage.value = links.value.findIndex(link => link.path === currentRoute)
   }
 })

@@ -103,6 +103,7 @@
           <v-col class="mt-2 pl-0"><v-divider></v-divider></v-col>
         </v-row>
         <v-row class="d-flex justify-center my-4">
+          <v-icon color="black" class="mx-4" @click="handleLoginWithGithub">mdi-github</v-icon>
           <v-icon color="green accent-4" class="mx-4">mdi-wechat</v-icon>
           <v-icon color="blue lighten-2" class="mx-4">mdi-qqchat</v-icon>
           <v-icon color="deep-orange accent-3" class="mx-4"
@@ -184,6 +185,12 @@ export default {
     clearInterval(this.timer)
   },
   methods: {
+    async handleLoginWithGithub() {
+      const { getCsrfToken } = useAuth()
+      await useAuth().signIn('github', { csrfToken: await getCsrfToken(), callbackUrl: useRoute().redirectedFrom?.fullPath || 'http://localhost:3000/' }).then((value)=>{
+        console.log(value)
+      })
+    },
     handleLogin() {
       useAuth().signIn('credentials', {username: this.formData.username, password: this.formData.password}).then(()=>{
         clearInterval(this.timer)
