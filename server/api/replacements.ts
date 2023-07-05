@@ -5,12 +5,11 @@ import { HTTPMethod, SessionWrapper } from "index"
 export default defineEventHandler(async event => {
   const session = await getServerSession(event)
   if (!session) throw createError({ statusMessage: 'Unauthenticated', statusCode: 401 })
-  console.log(session)
-  const username = (session as SessionWrapper).username
+  const uid = (session as SessionWrapper).uid
   const methods: Record<HTTPMethod, Function> = {
     async GET() {
       return await event.context.prisma.workspace.findFirst({
-        where: { type: 'REPLACEMENT', owner: username }
+        where: { type: 'REPLACEMENT', owner: uid }
       })
     },
     async POST() {
@@ -18,7 +17,7 @@ export default defineEventHandler(async event => {
       return await event.context.prisma.workspace.create({
         data: {
           type: 'REPLACEMENT',
-          owner: username,
+          owner: uid,
           data: Array.isArray(data) ? data : [data]
         }
       })

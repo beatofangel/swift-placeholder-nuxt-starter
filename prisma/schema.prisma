@@ -10,18 +10,18 @@ datasource db {
 }
 
 model Account {
-  id                 String  @id @default(uuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -37,17 +37,15 @@ model Session {
 }
 
 model User {
-  id         String      @id @default(uuid()) @db.VarChar(36)
-  // username   String      @unique
-  // password   String      @db.VarChar(60)
-  name       String      @default("user")
-  email      String?   @unique
+  id            String      @id @default(uuid()) @db.VarChar(36)
+  name          String      @default("user")
+  email         String?     @unique
   emailVerified DateTime?
-  image      String?
+  image         String?
   accounts      Account[]
   sessions      Session[]
-  roles      RoleRel[]
-  workspaces Workspace[]
+  roles         RoleRel[]
+  workspaces    Workspace[]
 }
 
 model VerificationToken {
@@ -95,26 +93,25 @@ model Workspace {
 
 model BusinessCategory {
   /// id
-  id        String             @id @default(uuid()) @db.VarChar(36)
+  id        String   @id @default(uuid()) @db.VarChar(36)
   /// pid
-  pid       String?            @db.VarChar(36)
+  pid       String?  @db.VarChar(36)
   /// 名称
-  name      String             @unique @db.VarChar(200)
+  name      String   @unique @db.VarChar(200)
   /// 图标
-  icon      String?            @db.VarChar(50)
+  icon      String?  @db.VarChar(50)
   /// 序号
-  ordinal   Int                @default(0)
+  ordinal   Int      @default(0)
   /// 创建日期
-  createdAt DateTime           @default(now())
+  createdAt DateTime @default(now())
   /// 更新日期
-  updatedAt DateTime           @updatedAt
+  updatedAt DateTime @updatedAt
   /// version
   version   Int
+
   templates BcTplRel[]
   parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id])
   children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
-
-  @@index([pid], map: "BusinessCategory_pid_fkey")
 }
 
 model Template {
@@ -125,28 +122,40 @@ model Template {
   updatedAt          DateTime      @updatedAt
   version            Int
   businessCategories BcTplRel[]
-  placeholderGroups  TplPhGrpRel[]
+  // placeholderGroups  TplPhGrpRel[]
+  placeholderItems   TplPhItmRel[]
 }
 
-model PlaceholderGroup {
-  id               String        @id @default(uuid()) @db.VarChar(36)
-  name             String        @unique @db.VarChar(200)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  version          Int
-  placeholderItems PhGrpItmRel[]
-  templates        TplPhGrpRel[]
-}
+// model PlaceholderGroup {
+//   id               String        @id @default(uuid()) @db.VarChar(36)
+//   name             String        @unique @db.VarChar(200)
+//   createdAt        DateTime      @default(now())
+//   updatedAt        DateTime      @updatedAt
+//   version          Int
+//   placeholderItems PhGrpItmRel[]
+//   templates        TplPhGrpRel[]
+// }
 
 model PlaceholderItem {
-  id                String        @id @default(uuid()) @db.VarChar(36)
-  name              String        @unique @db.VarChar(200)
-  type              String        @db.VarChar(20)
-  format            String?       @db.VarChar(100)
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  version           Int
-  placeholderGroups PhGrpItmRel[]
+  id              String           @id @default(uuid()) @db.VarChar(36)
+  name            String           @unique @db.VarChar(200)
+  type            String           @db.VarChar(20)
+  format          String?          @db.VarChar(100)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  version         Int
+  // placeholderGroups PhGrpItmRel[]
+  templates       TplPhItmRel[]
+  placeholderTags PhItmTagRel[]
+}
+
+model PlaceholderTag {
+  id               String            @id @default(uuid()) @db.VarChar(36)
+  name             String            @unique @db.VarChar(200)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  version          Int
+  placeholderItems PhItmTagRel[]
 }
 
 model BcTplRel {
@@ -160,33 +169,57 @@ model BcTplRel {
   template         Template         @relation(fields: [tplId], references: [id])
 
   @@id([bcId, tplId])
-  @@index([tplId], map: "BcTplRel_tplId_fkey")
 }
 
-model TplPhGrpRel {
-  tplId            String
-  phGrpId          String
-  ordinal          Int              @default(0)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  version          Int
-  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
-  template         Template         @relation(fields: [tplId], references: [id])
+// model TplPhGrpRel {
+//   tplId            String
+//   phGrpId          String
+//   ordinal          Int              @default(0)
+//   createdAt        DateTime         @default(now())
+//   updatedAt        DateTime         @updatedAt
+//   version          Int
+//   placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+//   template         Template         @relation(fields: [tplId], references: [id])
 
-  @@id([tplId, phGrpId])
-  @@index([phGrpId], map: "TplPhGrpRel_phGrpId_fkey")
+//   @@id([tplId, phGrpId])
+//   @@index([phGrpId], map: "TplPhGrpRel_phGrpId_fkey")
+// }
+
+// model PhGrpItmRel {
+//   phGrpId          String
+//   phItmId          String
+//   ordinal          Int              @default(0)
+//   createdAt        DateTime         @default(now())
+//   updatedAt        DateTime         @updatedAt
+//   version          Int
+//   placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
+//   placeholderItem  PlaceholderItem  @relation(fields: [phItmId], references: [id])
+
+//   @@id([phGrpId, phItmId])
+//   @@index([phItmId], map: "PhGrpItmRel_phItmId_fkey")
+// }
+
+model TplPhItmRel {
+  tplId           String
+  phItmId         String
+  ordinal         Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  version         Int
+  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id])
+  template        Template        @relation(fields: [tplId], references: [id])
+
+  @@id([tplId, phItmId])
 }
 
-model PhGrpItmRel {
-  phGrpId          String
-  phItmId          String
-  ordinal          Int              @default(0)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  version          Int
-  placeholderGroup PlaceholderGroup @relation(fields: [phGrpId], references: [id])
-  placeholderItem  PlaceholderItem  @relation(fields: [phItmId], references: [id])
-
-  @@id([phGrpId, phItmId])
-  @@index([phItmId], map: "PhGrpItmRel_phItmId_fkey")
+model PhItmTagRel {
+  phItmId   String
+  phTagId   String
+  ordinal   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  version   Int
+  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id])
+  placeholderTag PlaceholderTag @relation(fields: [phTagId], references: [id])
+  @@id([phItmId, phTagId])
 }

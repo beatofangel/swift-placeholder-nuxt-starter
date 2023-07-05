@@ -8,20 +8,20 @@
             <!-- 由于添加了tooltip，必须在外层嵌套一个容器否则会导致激活标签无法自动显示 -->
             <v-tooltip open-delay="1000" location="bottom">
               <template v-slot:activator="{ props }">
-                <v-btn v-bind="props" class="mx-1 tab-border-top rounded-b-0" :class="{
+                <v-btn v-bind="props" class="mx-1 tab-border-top rounded-b-0 bg-background" :class="{
                   active: isSelected,
                   'primary--text': isSelected && !editing[item.id],
                   'error--text': editing[item.id],
                   'grey--text text--darken-2': !isSelected && !editing[item.id],
                   'font-weight-bold': isSelected,
-                }" :color="isSelected ? 'primary' : 'grey lighten-4'" @click="toggle" :elevation="isSelected ? 4 : 2"
+                }" :color="isSelected ? 'primary' : 'grey lighten-3'" @click="toggle" :elevation="isSelected ? 4 : 2"
                   :size="isSelected ? 'default' : 'small'" :ripple="false">
                   <div style="max-width: 160px" class="text-truncate">
                     {{
                       `${editing[item.id] ? "* " : ""}${calcSessionName(item)}`
                     }}
                   </div>
-                  <v-btn density="compact" size="small" :color="isSelected ? 'primary' : 'grey lighten-4'"
+                  <v-btn density="compact" size="small" :color="isSelected ? 'primary' : 'grey lighten-3'"
                     class="rounded-sm" icon="mdi-close" @click.stop="closeReplacementTab(item)"></v-btn>
                 </v-btn>
               </template>
@@ -31,7 +31,7 @@
         </v-slide-group-item>
       </v-slide-group>
       <v-hover v-slot="{ isHovering, props }">
-        <v-btn v-bind="props" @click="newReplacement" small icon>
+        <v-btn v-bind="props" @click="newReplacement" class="align-self-end" size="x-small" icon>
           <v-icon color="success">mdi-plus</v-icon>
         </v-btn>
       </v-hover>

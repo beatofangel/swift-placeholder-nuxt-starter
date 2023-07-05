@@ -7,9 +7,8 @@
 // }
 import type { Session } from 'next-auth';
 export interface SessionWrapper extends Session {
-  id: string
+  uid: string
   username: string
-  roles: string[]
 }
 
 export interface WorkData extends Replacement {
@@ -65,3 +64,9 @@ export enum WsType {
 }
 
 export type HTTPMethod = "GET" | "HEAD" | "PATCH" | "POST" | "PUT" | "DELETE" | "CONNECT" | "OPTIONS" | "TRACE" | string
+
+export enum PlaceholderType {
+  TEXT = 'text',
+  NUMBER = 'number',
+  DATE = 'date'
+}

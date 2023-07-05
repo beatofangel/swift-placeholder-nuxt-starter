@@ -12,14 +12,8 @@ export default defineEventHandler(async event => {
           }
         },
         where: {
-          id: {
-            not: {
-              equals: event.context.prisma.businessCategory.fields.pid
-            }
-          },
           parent: {
-            name: '$root',
-            ordinal: 0
+            is: null
           }
         },
         orderBy: {

@@ -30,11 +30,11 @@ export default defineNuxtConfig({
         themes: {
           light: {
             dark: false,
-            // colors: {
-            //   primary: '#F37984',
-            //   secondary: '#F3BDB0',
-            //   'secondary-lighten-1': '#FFF0ED',
-            // },
+            colors: {
+              primary: colors.blue.lighten1,
+              // secondary: '#F3BDB0',
+              // 'secondary-lighten-1': '#FFF0ED',
+            },
             variables: {
               scrollbarTrack: colors.grey.lighten4,
               scrollbarThumb: colors.grey.lighten1,
@@ -43,10 +43,10 @@ export default defineNuxtConfig({
           },
           dark: {
             dark: true,
-            // colors: {
-            //   primary: '1B262C',
-            //   secondary: '0F4C75',
-            // },
+            colors: {
+              primary: colors.blue.darken1,
+              // secondary: '0F4C75',
+            },
             variables: {
               scrollbarTrack: colors.grey.darken1,
               scrollbarThumb: colors.grey.lighten1,

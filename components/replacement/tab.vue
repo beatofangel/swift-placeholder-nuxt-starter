@@ -13,7 +13,7 @@
           <v-col>
             <v-card>
               <v-toolbar
-                dark
+                density="compact" flat
               >
                 <v-tabs
                   v-model="tab"
@@ -37,7 +37,7 @@
                   v-for="{ id, path } in data.templates"
                   :key="id"
                 >
-                  {{ id }}
+                  {{ id }} {{ path }}
                   <!-- <replacement-edit
                     :session="session"
                     :tplId="id"

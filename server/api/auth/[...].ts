@@ -12,6 +12,7 @@ export default NuxtAuthHandler({
     signIn: '/login'
   },
   session: {
+    // use jwt session instead of database when custom adapter used
     strategy: "jwt"
   },
   adapter: PrismaAdapter(usePrisma()) as DefaultAdapter,
@@ -73,7 +74,7 @@ export default NuxtAuthHandler({
   callbacks: {
     // Callback when the JWT is created / updated, see https://next-auth.js.org/configuration/callbacks#jwt-callback
     jwt: async ({token, account, user, trigger}) => {
-      console.log('jwt callback for', trigger)
+      console.log('jwt callback for', account, trigger)
       const enforcer = await useCasbin()
       if (account && user) {
         if (trigger === 'signUp') { // user create
