@@ -46,7 +46,6 @@
     <v-main style="height: 100dvh;">
       <slot></slot>
     </v-main>
-    <Watermark />
   </v-layout>
 </template>
 

@@ -24,6 +24,14 @@ export default defineNuxtConfig({
   },
   vuetify: {
     vuetifyOptions: {
+      defaults: {
+        VTextField: {
+          variant: 'outlined'
+        },
+        VCascadeSelect: {
+          variant: 'outlined'
+        }
+      },
       blueprint: md2,
       // @TODO: list all vuetify options
       theme: {

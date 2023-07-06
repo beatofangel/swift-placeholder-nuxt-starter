@@ -1,5 +1,6 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GithubProvider from 'next-auth/providers/github'
+import EmailProvider from 'next-auth/providers/email'
 import { NuxtAuthHandler } from '#auth'
 import bcrypt from 'bcrypt'
 import { PrismaAdapter } from '@auth/prisma-adapter'
@@ -26,6 +27,63 @@ export default NuxtAuthHandler({
       clientId: process.env.GITHUB_CLIENT_ID || 'enter-your-client-id-here',
       clientSecret: process.env.GITHUB_CLIENT_SECRET || 'enter-your-client-secret-here' // TODO: Replace this with an env var like "process.env.GITHUB_CLIENT_SECRET". The secret should never end up in your github repository
     }),
+    useWeiboProvider({
+      clientId: process.env.WEIBO_CLIENT_ID || 'enter-your-client-id-here',
+      clientSecret: process.env.WEIBO_CLIENT_SECRET || 'enter-your-client-secret-here',
+    }),
+    // @ts-expect-error
+    EmailProvider.default({
+      server: {
+        host: process.env.EMAIL_SERVER_HOST,
+        port: process.env.EMAIL_SERVER_PORT,
+        auth: {
+          user: process.env.EMAIL_SERVER_USER,
+          pass: process.env.EMAIL_SERVER_PASSWORD
+        }
+      },
+      from: process.env.EMAIL_FROM
+    }),
+    // {
+    //   id: 'weibo',
+    //   name: 'Weibo',
+    //   type: 'oauth',
+    //   clientId: process.env.WEIBO_CLIENT_ID,
+    //   clientSecret: process.env.WEIBO_CLIENT_SECRET,
+    //   authorization: 'https://api.weibo.com/oauth2/authorize',
+    //   token: 'https://api.weibo.com/oauth2/access_token',
+    //   userinfo: {
+    //     url: 'https://api.weibo.com/2/users/show.json',
+    //     async request({ client, tokens }) {
+    //       const data = await $fetch('https://api.weibo.com/2/users/show.json', {
+    //         params: {
+    //           access_token: tokens.access_token,
+    //           uid: tokens.uid
+    //         }
+    //       })
+    //       // const email = await $fetch('https://api.weibo.com/2/account/profile/email.json', {
+    //       //   params: {
+    //       //     access_token: context.tokens.access_token,
+    //       //   }
+    //       // })
+    //       // console.log(data, email)
+    //       const userInfo = data as { id: string, name: string, profile_image_url: string }
+    //       return {
+    //         id: userInfo.id,
+    //         name: userInfo.name,
+    //         email: null,
+    //         image: userInfo.profile_image_url
+    //       }
+    //     }
+    //   },
+    //   profile(profile) {
+    //     return {
+    //       id: profile.id,
+    //       name: profile.name,
+    //       email: profile.email,
+    //       image: profile.image
+    //     }
+    //   }
+    // },
     // @ts-expect-error You need to use .default here for it to work during SSR. May be fixed via Vite at some point
     CredentialsProvider.default({
       // The name to display on the sign in form (e.g. 'Sign in with...')

@@ -31,7 +31,7 @@
         </v-slide-group-item>
       </v-slide-group>
       <v-hover v-slot="{ isHovering, props }">
-        <v-btn v-bind="props" @click="newReplacement" class="align-self-end" size="x-small" icon>
+        <v-btn v-bind="props" @click="newReplacement" class="align-self-end" size="small" density="comfortable" icon>
           <v-icon color="success">mdi-plus</v-icon>
         </v-btn>
       </v-hover>

@@ -40,6 +40,7 @@
     "casbin": "^5.26.1",
     "casbin-prisma-adapter": "^1.2.0",
     "next-auth": "^4.18.8",
+    "nodemailer": "^6.9.3",
     "uuid": "^9.0.0"
   }
 }

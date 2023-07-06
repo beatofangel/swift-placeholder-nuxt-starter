@@ -2,6 +2,7 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  <Watermark />
 </template>
 
 <style lang="css">

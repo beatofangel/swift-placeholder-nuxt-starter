@@ -1,17 +1,17 @@
 <template>
   <span
-    class="text-white"
+    class="text-grey"
     style="
       position: fixed;
       right: 0;
       bottom: 0;
-      opacity: 50%;
-      font-size: 28px;
+      opacity: 75%;
+      font-size: 32px;
       margin: 20px;
       z-index: 999999;
     "
   >
-    v{{ appVersion }}
+  测试版 v{{ appVersion }}
   </span>
 </template>
 

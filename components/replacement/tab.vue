@@ -5,7 +5,7 @@
         <v-row>
           <v-col>
             <VCascadeSelect v-model="props.data.businessCategory" :items="businessCategoryOptions" label="业务类型"
-              placeholder="请选择业务类型" persistent-placeholder item-title="name" item-value="id" chips clearable open-on-clear  variant="outlined"
+              placeholder="请选择业务类型" persistent-placeholder item-title="name" item-value="id" chips clearable open-on-clear
               :scroll-offset="0"></VCascadeSelect>
           </v-col>
         </v-row>
