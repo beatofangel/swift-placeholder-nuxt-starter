@@ -18,6 +18,9 @@ export default NuxtAuthHandler({
   },
   adapter: PrismaAdapter(usePrisma()) as DefaultAdapter,
   // TODO: ADD YOUR OWN AUTHENTICATION PROVIDER HERE, READ THE DOCS FOR MORE: https://sidebase.io/nuxt-auth
+  // CAUTIONS: https://authjs.dev/concepts/faq#security
+  // Automatic account linking on sign in is not secure between arbitrary providers
+  // As a fallback to oauth, EmailProvider will never create ACCOUNT!!!
   providers: [
     // @ts-expect-error You need to use .default here for it to work during SSR. May be fixed via Vite at some point
     GithubProvider.default({
@@ -107,6 +110,7 @@ export default NuxtAuthHandler({
             image: true,
             accounts: {
               select: {
+                providerAccountId: true,
                 access_token: true
               },
               where: {
@@ -115,11 +119,16 @@ export default NuxtAuthHandler({
             }
           },
           where: {
-            email: credentials?.username
+            accounts: {
+              some: {
+                type: 'credentials',
+                providerAccountId: credentials?.username
+              }
+            }
           }
         })
 
-        if (user && user.accounts.length > 0 && user.accounts[0].access_token && user.email) {
+        if (user && user.accounts.length > 0 && user.accounts[0].access_token && user.accounts[0].providerAccountId) {
           if (await bcrypt.compare(credentials?.password, user.accounts[0].access_token)) {
             return user
           }

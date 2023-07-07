@@ -199,7 +199,7 @@ export default {
   methods: {
     async handleLoginWithGithub() {
       const { getCsrfToken } = useAuth()
-      return await useAuth().signIn('github', { csrfToken: await getCsrfToken(), callbackUrl: useRoute().redirectedFrom?.fullPath || 'http://192.168.0.6:3000/' }).then((value) => {
+      return await useAuth().signIn('github', { csrfToken: await getCsrfToken(), callbackUrl: useRoute().redirectedFrom?.fullPath || 'http://192.168.0.7:3000/' }).then((value) => {
         console.log(value)
       })
     },
