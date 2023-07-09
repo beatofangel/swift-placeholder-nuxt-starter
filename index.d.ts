@@ -23,17 +23,22 @@ export interface Replacement extends Record<string, any> {
 
 export interface Template extends Record<string, any> {
   id: string
+  name: string
+  path: string
   placeholders: Placeholder[]
 }
 
 export interface Placeholder extends Record<string, any> {
   id: string
-  value: any
+  name: string
+  type: PlaceholderType
+  format?: string
+  value?: any
 }
 
-export enum EditMode {
-  Create = 1, Read = 2, Update = 3, Delete = 4
-}
+// export enum EditMode {
+//   Create = 1, Read = 2, Update = 3, Delete = 4
+// }
 
 export interface CommonListItem {
   id: string,
@@ -70,3 +75,9 @@ export enum PlaceholderType {
   NUMBER = 'number',
   DATE = 'date'
 }
+
+// export enum FileType {
+//   word = "word",
+//   cell = "cell",
+//   slide = "slide"
+// }

@@ -7,7 +7,14 @@ export default defineEventHandler(async event => {
         include: {
           children: {
             include: {
-              children: true
+              children: {
+                orderBy: {
+                  ordinal: "asc"
+                }
+              },
+            },
+            orderBy: {
+              ordinal: "asc"
             }
           }
         },

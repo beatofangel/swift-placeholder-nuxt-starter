@@ -37,15 +37,20 @@ model Session {
 }
 
 model User {
-  id            String      @id @default(uuid()) @db.VarChar(36)
-  name          String      @default("user")
-  email         String?     @unique
+  id            String         @id @default(uuid()) @db.VarChar(36)
+  name          String         @default("user")
+  email         String?        @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
   roles         RoleRel[]
   workspaces    Workspace[]
+  docFavourite  Boolean        @default(true)
+  docGroupId    String?
+  docGroup      DocGroup?      @relation(fields: [docGroupId], references: [id])
+  docPermId     String?
+  docPerm       DocPermission? @relation(fields: [docPermId], references: [id])
 }
 
 model VerificationToken {
@@ -54,6 +59,84 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// OnlyOffice
+model DocGroup {
+  id                  String                  @id @default(uuid()) @db.VarChar(36)
+  name                String
+  user                User[]
+  reviewGroups        DocReviewGroup[]
+  commentViewGroups   DocCommentViewGroup[]
+  commentEditGroups   DocCommentEditGroup[]
+  commentRemoveGroups DocCommentRemoveGroup[]
+  userInfoGroups      DocUserInfoGroup[]
+}
+
+// OnlyOffice
+model DocPermission {
+  id                      String                  @id @default(uuid()) @db.VarChar(36)
+  changeHistory           Boolean
+  chat                    Boolean
+  comment                 Boolean
+  copy                    Boolean
+  deleteCommentAuthorOnly Boolean
+  download                Boolean
+  edit                    Boolean
+  editCommentAuthorOnly   Boolean
+  fillForms               Boolean
+  modifyContentControl    Boolean
+  modifyFilter            Boolean
+  print                   Boolean
+  protect                 Boolean
+  rename                  Boolean
+  review                  Boolean
+  reviewGroups            DocReviewGroup[]
+  commentViewGroups       DocCommentViewGroup[]
+  commentEditGroups       DocCommentEditGroup[]
+  commentRemoveGroups     DocCommentRemoveGroup[]
+  userInfoGroups          DocUserInfoGroup[]
+  user                    User[]
+}
+
+// OnlyOffice
+model DocReviewGroup {
+  id         String          @id @default(uuid()) @db.VarChar(36)
+  docGroupId String
+  docGroup   DocGroup        @relation(fields: [docGroupId], references: [id])
+  docPerm    DocPermission[]
+}
+
+// OnlyOffice
+model DocCommentViewGroup {
+  id         String          @id @default(uuid()) @db.VarChar(36)
+  docGroupId String
+  docGroup   DocGroup        @relation(fields: [docGroupId], references: [id])
+  docPerm    DocPermission[]
+}
+
+// OnlyOffice
+model DocCommentEditGroup {
+  id         String          @id @default(uuid()) @db.VarChar(36)
+  docGroupId String
+  docGroup   DocGroup        @relation(fields: [docGroupId], references: [id])
+  docPerm    DocPermission[]
+}
+
+// OnlyOffice
+model DocCommentRemoveGroup {
+  id         String          @id @default(uuid()) @db.VarChar(36)
+  docGroupId String
+  docGroup   DocGroup        @relation(fields: [docGroupId], references: [id])
+  docPerm    DocPermission[]
+}
+
+// OnlyOffice
+model DocUserInfoGroup {
+  id         String          @id @default(uuid()) @db.VarChar(36)
+  docGroupId String
+  docGroup   DocGroup        @relation(fields: [docGroupId], references: [id])
+  docPerm    DocPermission[]
 }
 
 /// Casbin rbac访问控制
@@ -137,12 +220,12 @@ model Template {
 // }
 
 model PlaceholderItem {
-  id              String           @id @default(uuid()) @db.VarChar(36)
-  name            String           @unique @db.VarChar(200)
-  type            String           @db.VarChar(20)
-  format          String?          @db.VarChar(100)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id              String        @id @default(uuid()) @db.VarChar(36)
+  name            String        @unique @db.VarChar(200)
+  type            String        @db.VarChar(20)
+  format          String?       @db.VarChar(100)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   version         Int
   // placeholderGroups PhGrpItmRel[]
   templates       TplPhItmRel[]
@@ -150,10 +233,10 @@ model PlaceholderItem {
 }
 
 model PlaceholderTag {
-  id               String            @id @default(uuid()) @db.VarChar(36)
-  name             String            @unique @db.VarChar(200)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
+  id               String        @id @default(uuid()) @db.VarChar(36)
+  name             String        @unique @db.VarChar(200)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
   version          Int
   placeholderItems PhItmTagRel[]
 }
@@ -213,13 +296,14 @@ model TplPhItmRel {
 }
 
 model PhItmTagRel {
-  phItmId   String
-  phTagId   String
-  ordinal   Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  version   Int
+  phItmId         String
+  phTagId         String
+  ordinal         Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  version         Int
   placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id])
-  placeholderTag PlaceholderTag @relation(fields: [phTagId], references: [id])
+  placeholderTag  PlaceholderTag  @relation(fields: [phTagId], references: [id])
+
   @@id([phItmId, phTagId])
 }
