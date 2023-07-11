@@ -1,7 +1,6 @@
 import fs from 'fs'
 import mime from 'mime'
 import jwt from 'jsonwebtoken'
-import path from 'path'
 const {
   cfgSignatureSecret,
   cfgSignatureAuthorizationHeader,
@@ -17,7 +16,6 @@ export default defineEventHandler(async (event) => {
   const fileUtility = useFileUtility();
 
   const { filename: queryFilename } = getQuery(event);
-  console.log('download origin filename:', queryFilename)
   const headers = getRequestHeaders(event)
   let filename = queryFilename as string // fileUtility.getFilename(queryFilename as string);
 
@@ -38,15 +36,14 @@ export default defineEventHandler(async (event) => {
   //   }
   // }
 
-  console.log('working dir:', path.resolve(storageConfigFolder))
-  let path2 = docManager.forcesavePath(filename, false) ?? docManager.storagePath(filename);  // get the path to the force saved document version
-  console.log('download file from:', path2)
+  let path = docManager.forcesavePath(filename, false) ?? docManager.storagePath(filename);  // get the path to the force saved document version
+  console.log('download file from:', path)
 
-  res.setHeader("Content-Length", fs.statSync(path2).size);  // add headers to the response to specify the page parameters
-  res.setHeader("Content-Type", mime.getType(path2)!);
+  res.setHeader("Content-Length", fs.statSync(path).size);  // add headers to the response to specify the page parameters
+  res.setHeader("Content-Type", mime.getType(path)!);
 
   res.setHeader("Content-Disposition", "attachment; filename*=UTF-8\'\'" + encodeURIComponent(filename));
 
-  var filestream = fs.createReadStream(path2);
+  var filestream = fs.createReadStream(path);
   filestream.pipe(res);  // send file information to the response by streams
 })

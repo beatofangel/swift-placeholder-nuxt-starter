@@ -132,7 +132,7 @@ export const useDocManager = () => {
     return server + handler;
   }
   const storagePath = function (filename: string) {
-    const baseFilename = fileUtility.getFilename(filename); // get the file name with extension
+    // const baseFilename = fileUtility.getFilename(filename); // get the file name with extension
     const directory = storageConfigFolder;
     createDirectory(directory); // create a new directory if it doesn't exist
     // return path.join(directory, baseFilename); // put the given file to this directory
@@ -192,21 +192,37 @@ export const useDocManager = () => {
     filename: string,
     create?: boolean
   ) {
-    let directory = storageConfigFolder;
+    const directory = storageConfigFolder;
     if (!existsSync(directory)) {
       // the directory with host address doesn't exist
-      return "";
+      return null;
     }
-    directory = path.join(directory, filename + "-history"); // get the path to the history of the given file
-    if (!create && !existsSync(directory)) {
+    const historyDir = path.join(directory, filename + "-history"); // get the path to the history of the given file
+    if (!create && !existsSync(historyDir)) {
       // the history directory doesn't exist and we are not supposed to create it
-      return "";
+      return null;
     }
-    createDirectory(directory); // create history directory if it doesn't exist
-    directory = path.join(directory, filename); // and get the path to the given file
-    if (!create && !existsSync(directory)) {
-      return "";
+    createDirectory(historyDir); // create history directory if it doesn't exist
+    const fullpath = path.join(directory, filename); // and get the path to the given file
+    if (!create && !existsSync(fullpath)) {
+      return null;
     }
+
+    // let directory = storageConfigFolder;
+    // if (!existsSync(directory)) {
+    //   // the directory with host address doesn't exist
+    //   return "";
+    // }
+    // directory = path.join(directory, filename + "-history"); // get the path to the history of the given file
+    // if (!create && !existsSync(directory)) {
+    //   // the history directory doesn't exist and we are not supposed to create it
+    //   return "";
+    // }
+    // createDirectory(directory); // create history directory if it doesn't exist
+    // directory = path.join(directory, filename); // and get the path to the given file
+    // if (!create && !existsSync(directory)) {
+    //   return "";
+    // }
     return directory;
   };
   return {
