@@ -223,7 +223,7 @@ export const useDocManager = () => {
     // if (!create && !existsSync(directory)) {
     //   return "";
     // }
-    return directory;
+    return fullpath;
   };
   return {
     getCreateUrl,

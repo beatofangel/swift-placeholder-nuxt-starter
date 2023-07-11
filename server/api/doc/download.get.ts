@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
   res.setHeader("Content-Length", fs.statSync(path).size);  // add headers to the response to specify the page parameters
   res.setHeader("Content-Type", mime.getType(path)!);
 
-  res.setHeader("Content-Disposition", "attachment; filename*=UTF-8\'\'" + encodeURIComponent(filename));
+  res.setHeader("Content-Disposition", "attachment; filename*=UTF-8\'\'" + encodeURIComponent(fileUtility.getFilename(filename)));
 
   var filestream = fs.createReadStream(path);
   filestream.pipe(res);  // send file information to the response by streams

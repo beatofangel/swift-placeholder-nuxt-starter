@@ -114,7 +114,7 @@ export default defineEventHandler(async (event) => {
         ); // get the path to the forcesaved file
         if (forcesavePath != "") {
           // if this path is empty
-          fs.unlinkSync(forcesavePath); // remove it
+          fs.unlinkSync(forcesavePath!); // remove it
         }
       } catch (ex) {
         console.log(ex);
@@ -219,7 +219,7 @@ export default defineEventHandler(async (event) => {
         }
 
         console.log('callbackProcessForceSave:', forcesavePath)
-        fs.writeFileSync(forcesavePath, data as any);
+        fs.writeFileSync(forcesavePath!, data as any);
 
         if (isSubmitForm) {
           const uid = body.actions[0].userid;
