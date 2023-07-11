@@ -218,6 +218,7 @@ export default defineEventHandler(async (event) => {
           }
         }
 
+        console.log('callbackProcessForceSave:', forcesavePath)
         fs.writeFileSync(forcesavePath, data as any);
 
         if (isSubmitForm) {

@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
   // }
 
   let path = docManager.forcesavePath(filename, false) ?? docManager.storagePath(filename);  // get the path to the force saved document version
+  console.log('download file from:', path)
 
   res.setHeader("Content-Length", fs.statSync(path).size);  // add headers to the response to specify the page parameters
   res.setHeader("Content-Type", mime.getType(path)!);
