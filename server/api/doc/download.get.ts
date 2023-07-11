@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
   const fileUtility = useFileUtility();
 
   const { filename: queryFilename } = getQuery(event);
+  console.log('download origin filename:', queryFilename)
   const headers = getRequestHeaders(event)
   let filename = queryFilename as string // fileUtility.getFilename(queryFilename as string);
 
