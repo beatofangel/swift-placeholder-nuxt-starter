@@ -1,1 +1,0 @@
-{"serverVersion":"7.3.3","changes":[{"created":"2023-07-09 15:14:55","user":{"id":"5eb1fa9f-edeb-4dbe-8fd8-0199d1b8b74b","name":"doc-group-admin administrator"}}]}
