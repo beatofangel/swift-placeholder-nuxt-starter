@@ -13,7 +13,7 @@
     "postinstall": "nuxt prepare",
     "lint": "eslint --max-warnings 0 .",
     "typecheck": "nuxt typecheck",
-    "start": "source .env.production && NODE_ENV=production node .output/server/index.mjs"
+    "start": "NODE_ENV=production node .output/server/index.mjs"
   },
   "devDependencies": {
     "@invictus.codes/nuxt-vuetify": "^0.2.20",

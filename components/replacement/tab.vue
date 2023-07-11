@@ -72,7 +72,7 @@
                 </v-navigation-drawer>
                 <v-main>
                   <DocumentEditor v-if="config.document" :id="docEditorId"
-                    :document-server-url="`http://192.168.0.7/ds-vpath/`" :config="config"
+                    :document-server-url="documentServerApiUrl" :config="config"
                     :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
                     :on-load-component-error="onLoadComponentError" />
                 </v-main>
@@ -91,6 +91,7 @@ import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
 import { SessionWrapper, Template, WorkData, Placeholder } from '~/index';
 import { queue } from 'async-es'
 import { throttle } from 'lodash-es'
+const { documentServerApiUrl } = useRuntimeConfig().public
 const props = defineProps<{ data: WorkData }>()
 const businessCategoryOptions = ref([])
 const tab = ref(0)

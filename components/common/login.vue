@@ -199,7 +199,8 @@ export default {
   methods: {
     async handleLoginWithGithub() {
       const { getCsrfToken } = useAuth()
-      return await useAuth().signIn('github', { csrfToken: await getCsrfToken(), callbackUrl: useRoute().redirectedFrom?.fullPath || 'http://192.168.0.7:3000/' }).then((value) => {
+      const { loginCallbackUrl } = useRuntimeConfig().public
+      return await useAuth().signIn('github', { csrfToken: await getCsrfToken(), callbackUrl: useRoute().redirectedFrom?.fullPath || loginCallbackUrl }).then((value) => {
         console.log(value)
       })
     },

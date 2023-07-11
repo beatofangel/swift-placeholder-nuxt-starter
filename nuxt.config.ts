@@ -13,6 +13,12 @@ export default defineNuxtConfig({
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
+  runtimeConfig: {
+    public: {
+      loginCallbackUrl: process.env.AUTH_ORIGIN,
+      documentServerApiUrl: process.env.DOCUMENT_SERVER_API_URL
+    }
+  },
   // sourcemap: {
   //   server: true,
   //   client: true
