@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
   const { filename: queryFilename } = getQuery(event);
   const headers = getRequestHeaders(event)
-  let filename = fileUtility.getFilename(queryFilename as string);
+  let filename = queryFilename as string // fileUtility.getFilename(queryFilename as string);
 
   // if (!!userAddress
   //   && cfgSignatureEnable && cfgSignatureUseForRequest) {
