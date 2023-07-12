@@ -14,7 +14,7 @@ export default defineEventHandler(async event => {
   const docService = useDocService()
   if (!session) throw createError({ statusMessage: 'Unauthenticated', statusCode: 401 })
   const uid = (session as SessionWrapper).uid
-  const createUrl = docManager.getCreateUrl(serverUrl.toString(), FileType.word, uid, 'desktop', 'zh')
+  // const createUrl = docManager.getCreateUrl(serverUrl.toString(), FileType.word, uid, 'desktop', 'zh')
   const methods: Record<HTTPMethod, Function> = {
     async GET() {
       return await event.context.prisma.user.findFirst({
@@ -93,7 +93,8 @@ export default defineEventHandler(async event => {
           // width: '100%',
           document: {
             fileType: "docx",
-            key: key || "",
+            key: docManager.getKey(url as string),
+            // key: key || "",
             title: title,
             url: docManager.getDownloadUrl(url as string),
             info: {
@@ -131,7 +132,7 @@ export default defineEventHandler(async event => {
               mode: 'fast',
               change: true
             },
-            createUrl: createUrl,
+            createUrl: '', // createUrl,
             lang: 'zh',
             location: '',
             mode: mode || 'edit',

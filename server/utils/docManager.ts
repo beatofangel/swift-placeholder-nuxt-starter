@@ -2,6 +2,7 @@ import { useMisc } from "./misc";
 import fs from "fs";
 import path from "path";
 const { storageConfigFolder, siteUrl } = useDocConfig()
+const { generateRevisionId } = useDocService()
 
 export const useDocManager = () => {
   const { FileType } = useMisc();
@@ -225,6 +226,21 @@ export const useDocManager = () => {
     // }
     return fullpath;
   };
+  const getKey = function (filename: string) {
+    // userAddress = userAddress || curUserHostAddress();
+    let key = filename;  // get document key by adding local file url to the current user host address
+
+    let histPath = historyPath(filename);  // get the path to the file history
+    if (histPath != ""){  // if the path to the file history exists
+        key += countVersion(histPath);  // add file version number to the document key
+    }
+
+    let stPath = storagePath(filename);  // get the storage path to the given file
+    const stat = fs.statSync(stPath);  // get file information
+    key += stat.mtime.getTime();  // and add creation time to the document key
+
+    return generateRevisionId(key);  // generate the document key value
+}
   return {
     getCreateUrl,
     storagePath,
@@ -239,6 +255,7 @@ export const useDocManager = () => {
     getCorrectName,
     saveFileData,
     getCallback,
+    getKey,
     getDownloadUrl
   };
 };
