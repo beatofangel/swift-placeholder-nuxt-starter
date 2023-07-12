@@ -1,7 +1,5 @@
 <template>
-  <span
-    class="text-grey"
-    style="
+  <span class="text-grey no-click" style="
       position: fixed;
       right: 0;
       bottom: 0;
@@ -9,9 +7,8 @@
       font-size: 32px;
       margin: 20px;
       z-index: 999999;
-    "
-  >
-  测试版 v{{ appVersion }}
+    ">
+    测试版 v{{ appVersion }}
   </span>
 </template>
 

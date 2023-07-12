@@ -1,32 +1,89 @@
 <template>
-  <v-container>
+  <v-container :fluid="expand">
     <v-card>
       <v-card-text>
-        <v-row>
-          <v-col>
-            <VCascadeSelect v-model="props.data.businessCategory" :items="businessCategoryOptions" label="业务类型"
-              placeholder="请选择业务类型" persistent-placeholder item-title="name" item-value="id" chips clearable open-on-clear
-              :scroll-offset="0"></VCascadeSelect>
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-card>
-              <v-toolbar density="compact" flat>
-                <v-tabs v-model="tab" ref="templateTabs" align-with-title>
-                  <v-tab v-for="{ id, name } in data.templates" :key="id">
-                    <span class="text-h6">{{ name }}</span>
-                  </v-tab>
-                  <v-banner v-if="!data.businessCategory">
+    <!-- <v-expansion-panels v-model="panels" multiple>
+      <v-expansion-panel value="bc">
+        <v-expansion-panel-title>业务类型</v-expansion-panel-title>
+        <v-expansion-panel-text> -->
+          <v-row>
+            <v-col>
+              <VCascadeSelect v-model="props.data.businessCategory" :items="businessCategoryOptions" label="业务类型"
+                placeholder="请选择业务类型" persistent-placeholder item-title="name" item-value="id" chips clearable
+                open-on-clear :scroll-offset="0"></VCascadeSelect>
+            </v-col>
+          </v-row>
+        <!-- </v-expansion-panel-text>
+      </v-expansion-panel>
+      <v-expansion-panel value="tpl">
+        <v-expansion-panel-title>模板</v-expansion-panel-title>
+        <v-expansion-panel-text> -->
+          <v-row>
+            <v-col>
+              <v-card>
+                <v-toolbar density="compact" flat>
+                  <v-tabs v-model="tab" ref="templateTabs" align-with-title>
+                    <v-tab v-for="{ id, name } in data.templates" :key="id">
+                      <span class="text-h6">{{ name }}</span>
+                    </v-tab>
+                    <!-- <v-banner v-if="!data.businessCategory">
                     <v-icon class="mt-n1 mr-1" color="warning">mdi-alert</v-icon>
                     <span class="text-h6">未选择业务类型</span>
-                  </v-banner>
-                </v-tabs>
-              </v-toolbar>
-              <v-layout style="height: calc(100dvh - 350px);">
-                <v-navigation-drawer width="440" permanent :expand-on-hover="!placeholderDrawerPinned"
-                  :rail="!placeholderDrawerPinned">
-                  <v-window v-model="tab">
+                  </v-banner> -->
+                  </v-tabs>
+                  <v-spacer></v-spacer>
+                  <v-tooltip :text="expand ? '收缩' : '展开'" location="top">
+                    <template v-slot:activator="{ props }">
+                      <v-btn height="100%" v-bind="props" @click="expand = !expand" min-width="48" color="text" class="px-2" depressed
+                        tile>
+                        <v-icon :icon="expand ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"></v-icon>
+                      </v-btn>
+                    </template>
+                  </v-tooltip>
+                </v-toolbar>
+                <v-layout style="height: calc(100dvh - 350px);">
+                  <v-navigation-drawer width="440" permanent :expand-on-hover="!pinned"
+                    :rail="!pinned">
+                    <v-row>
+                      <v-col>
+                        <v-list density="comfortable">
+                          <v-list-item prepend-icon="mdi-menu" title="占位符">
+                            <template v-slot:append>
+                              <v-tooltip>
+                                <template v-slot:activator="{ props }"><v-btn v-bind="props"
+                                    :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'"
+                                    :color="pinned ? 'primary' : 'grey'" variant="text" density="compact"
+                                    @click="pinned = !pinned">
+                                  </v-btn>
+                                </template>
+                                {{ pinned ? '取消固定' : '固定' }}
+                              </v-tooltip>
+                            </template>
+                          </v-list-item>
+                          <v-divider class="my-2"></v-divider>
+                          <v-list-item v-for="placeholder in data.templates[tab].placeholders" :key="placeholder.id">
+                            <v-list-item-title>
+                              <v-text-field :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
+                                :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
+                                @update:model-value="$v => placeholderUpdate($v, placeholder)">
+                                <template v-slot:prepend>
+                                  <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
+                                </template>
+                                <template v-slot:prepend-inner>
+                                  <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
+                                    :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
+                                      :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
+                                        placeholder.name }}</v-chip>
+                                </template>
+                                <v-tooltip :disabled="!placeholder.value" activator="parent" location="bottom">{{
+                                  placeholder.value }}</v-tooltip>
+                              </v-text-field>
+                            </v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-col>
+                    </v-row>
+                    <!-- <v-window v-model="tab">
                     <v-window-item v-for="template in data.templates" :key="template.id">
                       <v-row>
                         <v-col>
@@ -35,12 +92,12 @@
                               <template v-slot:append>
                                 <v-tooltip>
                                   <template v-slot:activator="{ props }"><v-btn v-bind="props"
-                                      :icon="placeholderDrawerPinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'"
-                                      :color="placeholderDrawerPinned ? 'primary' : 'grey'" variant="text"
-                                      density="compact" @click="placeholderDrawerPinned = !placeholderDrawerPinned">
+                                      :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'"
+                                      :color="pinned ? 'primary' : 'grey'" variant="text"
+                                      density="compact" @click="pinned = !pinned">
                                     </v-btn>
                                   </template>
-                                  {{ placeholderDrawerPinned ? '取消固定' : '固定' }}
+                                  {{ pinned ? '取消固定' : '固定' }}
                                 </v-tooltip>
                               </template>
                             </v-list-item>
@@ -68,21 +125,22 @@
                         </v-col>
                       </v-row>
                     </v-window-item>
-                  </v-window>
-                </v-navigation-drawer>
-                <v-main>
-                  <DocumentEditor v-if="config.document" :id="docEditorId"
-                    :document-server-url="documentServerApiUrl" :config="config"
-                    :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
-                    :on-load-component-error="onLoadComponentError" />
-                </v-main>
-              </v-layout>
-            </v-card>
-          </v-col>
-        </v-row>
+                  </v-window> -->
+                  </v-navigation-drawer>
+                  <v-main>
+                    <DocumentEditor v-if="config.document" :id="docEditorId" :document-server-url="documentServerApiUrl"
+                      :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
+                      :on-load-component-error="onLoadComponentError" />
+                  </v-main>
+                </v-layout>
+              </v-card>
+            </v-col>
+          </v-row>
+        <!-- </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels> -->
       </v-card-text>
     </v-card>
-
   </v-container>
 </template>
 
@@ -92,10 +150,13 @@ import { SessionWrapper, Template, WorkData, Placeholder } from '~/index';
 import { queue } from 'async-es'
 import { throttle } from 'lodash-es'
 const { documentServerApiUrl } = useRuntimeConfig().public
+const zoom = ref(100)
+const expand = useTemplateExpanded()
+const pinned = usePlaceholderPinned()
+const panels = ref(['bc', 'tpl'])
 const props = defineProps<{ data: WorkData }>()
 const businessCategoryOptions = ref([])
 const tab = ref(0)
-const placeholderDrawerPinned = ref(true)
 const { data: session } = useAuth()
 type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2: Function) => void }
 const connector = ref({} as Connector)
@@ -171,7 +232,7 @@ function onLoadComponentError(errorCode: number, errorDescription: string) {
 async function getConfig(template: Template) {
   const { data: config } = await useFetch('/api/doc/config', {
     query: {
-      key: `${props.data.id}@${template.id}`, title: template.name, url: template.path, mode: 'edit'
+      zoom: zoom, title: template.name, url: template.path, mode: 'edit'
     }
   })
   return config.value

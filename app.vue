@@ -7,7 +7,10 @@
 
 <style lang="css">
 html {
-  overflow-y: hidden !important;
+  overflow-y: auto !important;
+}
+.no-click {
+  pointer-events: none;
 }
 *::-webkit-scrollbar {
   width: 4px;

@@ -8,7 +8,7 @@ export default defineEventHandler(async event => {
     xForwardedProto: true
   })
   const { FileType } = useMisc()
-  const { key, title, url, mode } = getQuery(event)
+  const { zoom, title, url, mode } = getQuery(event)
   const session = await getServerSession(event)
   const docManager = useDocManager()
   const docService = useDocService()
@@ -144,6 +144,9 @@ export default defineEventHandler(async event => {
               id: uid,
               name: result.name
             },
+            customization: {
+              zoom: zoom ?? 100
+            }
           }
         }
         const token = docService.getToken(configuration)
