@@ -343,14 +343,18 @@ export default defineEventHandler(async (event) => {
     }
     if (!payload) {
       // event.node.res.write(JSON.stringify(resWithError))
+      // event.node.res.end()
+      // return;
       return resWithError;
     }
     // event.node.res.write(JSON.stringify(await processTrack()))
+    // event.node.res.end()
     return await processTrack()
   } else {
     // TODO still neet to determin that?
     // if (body.hasOwnProperty("status")) {  // if the request body has status parameter
     // event.node.res.write(JSON.stringify(await processTrack())) // track file changes
+    // event.node.res.end()
     return await processTrack() // track file changes
     // } else {
     //   await readbody(req, res, filename, userAddress);  // otherwise, read request body first

@@ -38,12 +38,14 @@ export default defineEventHandler(async (event) => {
 
   let path = docManager.forcesavePath(filename, false) ?? docManager.storagePath(filename);  // get the path to the force saved document version
   console.log('download file from:', path)
+  return sendStream(event, fs.createReadStream(path))
+  // console.log('download file from:', path)
 
-  res.setHeader("Content-Length", fs.statSync(path).size);  // add headers to the response to specify the page parameters
-  res.setHeader("Content-Type", mime.getType(path)!);
+  // res.setHeader("Content-Length", fs.statSync(path).size);  // add headers to the response to specify the page parameters
+  // res.setHeader("Content-Type", mime.getType(path)!);
 
-  res.setHeader("Content-Disposition", "attachment; filename*=UTF-8\'\'" + encodeURIComponent(fileUtility.getFilename(filename)));
+  // res.setHeader("Content-Disposition", "attachment; filename*=UTF-8\'\'" + encodeURIComponent(fileUtility.getFilename(filename)));
 
-  var filestream = fs.createReadStream(path);
-  filestream.pipe(res);  // send file information to the response by streams
+  // var filestream = fs.createReadStream(path);
+  // filestream.pipe(res);  // send file information to the response by streams
 })
