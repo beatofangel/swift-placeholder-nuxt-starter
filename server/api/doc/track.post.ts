@@ -56,13 +56,13 @@ export default defineEventHandler(async (event) => {
         const storagePath = docManager.storagePath(newFilename);
 
         let historyPath = docManager.historyPath(newFilename); // get the path to the history data
-        if (historyPath == "") {
+        if (!historyPath) {
           // if the history path doesn't exist
           historyPath = docManager.historyPath(newFilename, true); // create it
-          docManager.createDirectory(historyPath); // and create a directory for the history data
+          docManager.createDirectory(historyPath!); // and create a directory for the history data
         }
 
-        const count_version = docManager.countVersion(historyPath); // get the next file version number
+        const count_version = docManager.countVersion(historyPath!); // get the next file version number
         version = count_version + 1;
         const versionPath = docManager.versionPath(
           newFilename,
@@ -112,7 +112,7 @@ export default defineEventHandler(async (event) => {
           newFilename,
           false
         ); // get the path to the forcesaved file
-        if (forcesavePath != "") {
+        if (forcesavePath) {
           // if this path is empty
           fs.unlinkSync(forcesavePath!); // remove it
         }
@@ -210,7 +210,7 @@ export default defineEventHandler(async (event) => {
             filename,
             false
           );
-          if (forcesavePath == "") {
+          if (!forcesavePath) {
             forcesavePath = docManager.forcesavePath(
               filename,
               true

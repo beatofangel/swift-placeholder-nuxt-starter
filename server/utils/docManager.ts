@@ -72,10 +72,10 @@ export const useDocManager = () => {
       sec;
 
     const file_info = historyPath(filename, true); // get file history information
-    createDirectory(file_info); // create a new history directory if it doesn't exist
+    createDirectory(file_info!); // create a new history directory if it doesn't exist
 
     fs.writeFileSync(
-      path.join(file_info, filename + ".txt"),
+      path.join(file_info!, filename + ".txt"),
       date_format + "," + userid + "," + username
     ); // write all the file information to a new txt file
   };
@@ -145,11 +145,11 @@ export const useDocManager = () => {
   ) {
     let directory = storageConfigFolder;
     if (!existsSync(directory)) {
-      return "";
+      return null;
     }
     directory = path.join(directory, filename + "-history");
     if (!create && !existsSync(path.join(directory, "1"))) {
-      return "";
+      return null;
     }
     return directory;
   };
@@ -166,7 +166,7 @@ export const useDocManager = () => {
     version: number
   ) {
     const hp = historyPath(filename, true); // get the path to the history of a given file or create it if it doesn't exist
-    return path.join(hp, "" + version);
+    return path.join(hp!, "" + version);
   };
   const diffPath = function (
     filename: string,
@@ -204,7 +204,7 @@ export const useDocManager = () => {
       return null;
     }
     createDirectory(historyDir); // create history directory if it doesn't exist
-    const fullpath = path.join(directory, filename); // and get the path to the given file
+    const fullpath = path.join(historyDir, filename); // and get the path to the given file
     if (!create && !existsSync(fullpath)) {
       return null;
     }
@@ -231,7 +231,7 @@ export const useDocManager = () => {
     let key = filename;  // get document key by adding local file url to the current user host address
 
     let histPath = historyPath(filename);  // get the path to the file history
-    if (histPath != ""){  // if the path to the file history exists
+    if (histPath){  // if the path to the file history exists
         key += countVersion(histPath);  // add file version number to the document key
     }
 
