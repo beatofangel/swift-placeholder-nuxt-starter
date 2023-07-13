@@ -81,3 +81,10 @@ export enum PlaceholderType {
 //   cell = "cell",
 //   slide = "slide"
 // }
+export type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2: Function) => void }
+
+declare global {
+  interface Window {
+    connector: Ref<Connector>;
+  }
+}

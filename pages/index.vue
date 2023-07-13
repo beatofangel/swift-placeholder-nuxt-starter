@@ -4,7 +4,7 @@
       <v-card-text>
         <v-row>
           <v-col>
-            <div :class="`text-xl-h1 text-lg-h2 text-md-h3 text-h4 d-flex justify-center text-white`">Welcome to Swift Placeholder!</div>
+            <div :class="`text-xl-h1 text-lg-h2 text-md-h3 text-h4 d-flex justify-center text-white`">Welcome to Lawyer Pioneer!</div>
           </v-col>
         </v-row>
         <v-row v-if="status === 'unauthenticated'">

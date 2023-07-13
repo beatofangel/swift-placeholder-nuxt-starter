@@ -48,6 +48,7 @@
     "casbin": "^5.26.1",
     "casbin-prisma-adapter": "^1.2.0",
     "config": "^3.3.9",
+    "dayjs": "^1.11.9",
     "jsonwebtoken": "^9.0.1",
     "mime": "^3.0.0",
     "next-auth": "^4.18.8",

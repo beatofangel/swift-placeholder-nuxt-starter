@@ -61,44 +61,80 @@
         </v-list>
       </v-menu>
     </v-app-bar>
-    <v-window v-model="tab">
-      <template v-if="sessions.length > 0">
-        <v-window-item v-for="item in sessions" :key="item.id">
-          <keep-alive>
-            <replacementTab :data="item"></replacementTab>
-          </keep-alive>
-        </v-window-item>
-      </template>
-      <div style="height: calc(100vh - 124px)" class="d-flex flex-column justify-center align-center" v-else>
-        <div class="text-h2 font-weight-medium mb-12 mt-n12">
-          <common-key :shortcuts="shortcutNew">
-            <template v-slot:prepend><span class="text--disabled">按下&nbsp;</span></template>
-            <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
-          </common-key>
+    <v-layout full-height>
+      <v-navigation-drawer v-if="sessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :rail="!pinned">
+        <v-row>
+          <v-col>
+            <v-list density="comfortable">
+              <v-list-item prepend-icon="mdi-menu" title="替换">
+                <template v-slot:append>
+                  <v-tooltip>
+                    <template v-slot:activator="{ props }"><v-btn v-bind="props"
+                        :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'" :color="pinned ? 'primary' : 'grey'"
+                        variant="text" density="compact" @click="pinned = !pinned">
+                      </v-btn>
+                    </template>
+                    {{ pinned ? '取消固定' : '固定' }}
+                  </v-tooltip>
+                </template>
+              </v-list-item>
+              <v-divider class="my-2"></v-divider>
+              <replacementTab v-if="sessions.length > 0" :data="sessions[tab]" @update:config="updateDocConfig">
+              </replacementTab>
+            </v-list>
+          </v-col>
+        </v-row>
+      </v-navigation-drawer>
+      <!-- <v-window v-model="tab">
+        <template v-if="sessions.length > 0">
+          <v-window-item v-for="item in sessions" :key="item.id">
+            <replacementTab :data="item" @update:config="updateDocConfig"></replacementTab>
+          </v-window-item>
+        </template>
+        <div style="height: calc(100vh - 124px)" class="d-flex flex-column justify-center align-center" v-else>
+          <div class="text-h2 font-weight-medium mb-12 mt-n12">
+            <common-key :shortcuts="shortcutNew">
+              <template v-slot:prepend><span class="text--disabled">按下&nbsp;</span></template>
+              <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
+            </common-key>
+          </div>
+          <div class="text-h2 font-weight-medium text--disabled mb-12">
+            开启全新替换旅程！
+          </div>
         </div>
-        <div class="text-h2 font-weight-medium text--disabled mb-12">
-          开启全新替换旅程！
-        </div>
-      </div>
-    </v-window>
-    <!-- <common-progress
-      v-model="showProgress"
-      :indeterminate="indeterminate"
-      :total="total"
-      :progressed="progressed"
-      :completed="completed"
-    >
-    </common-progress> -->
-    <!-- <v-btn @click="showDialog = !showDialog">show</v-btn>
-    <CommonDialog v-model="showDialog" text="测试"></CommonDialog> -->
+      </v-window> -->
+      <v-main>
+        <v-card flat>
+          <v-card-text style="height: calc(100dvh - 140px);">
+            <div v-if="sessions.length == 0" style="height: calc(100vh - 124px);"
+              class="d-flex flex-column justify-center align-center no-click">
+              <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
+                <common-key :shortcuts="shortcutNew">
+                  <template v-slot:prepend><span class="text--disabled text-no-wrap">按下&nbsp;</span></template>
+                  <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
+                </common-key>
+              </div>
+              <div
+                class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium text--disabled mt-8 mb-12">
+                开启全新替换旅程！
+              </div>
+            </div>
+            <DocumentEditor v-if="config.document" id="doc-editor" :document-server-url="documentServerApiUrl"
+              :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
+              :on-load-component-error="onLoadComponentError" />
+          </v-card-text>
+        </v-card>
+      </v-main>
+    </v-layout>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { Workspace } from '@prisma/client';
-import { WorkData } from '~/index';
+import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
+import { SessionWrapper, Template, WorkData, Placeholder, PlaceholderType } from '~/index';
 // import { Session } from '~/index';
-
+const pinned = ref(true)
 definePageMeta({
   middleware: ['casbin'],
   icon: "mdi-file-replace",
@@ -107,6 +143,7 @@ definePageMeta({
 
 // mounted
 onMounted(() => {
+  pinned.value = usePlaceholderPinned().value
   $fetch('/api/replacements').then(({ data }) => {
     sessions.value = data
   })
@@ -119,6 +156,11 @@ const tab = ref(0)
 const sessions = ref([] as WorkData[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
+
+// watch
+watch(pinned, (val) => {
+  usePlaceholderPinned().value = val
+})
 
 // computed
 const noSessionDisabled = computed(() => {
@@ -226,6 +268,39 @@ function doReplaceAll() {
 //   session!['businessCategoryDisplay'] = businessCategoryDisplay;
 //   console.log(session);
 // }
+
+// ============================= Document Editor ====================================
+const config = ref({} as IConfig)
+type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2: Function) => void }
+const connector = ref({} as Connector)
+const zoom = ref(100)
+const { documentServerApiUrl } = useRuntimeConfig().public
+async function getConfig(template: Template) {
+  const { data: config } = await useFetch('/api/doc/config', {
+    query: {
+      zoom: zoom, title: template.name, url: template.path, mode: 'edit'
+    }
+  })
+  return config.value
+}
+async function updateDocConfig(template: Template) {
+  await getConfig(template).then(data => {
+    console.log('documentConfig', data)
+    config.value = data as any
+  })
+}
+function onDocumentReady() {
+  connector.value = window.DocEditor.instances['doc-editor'].createConnector()
+  window.connector = connector
+  console.log("Document is loaded");
+}
+function onAppReady() {
+  console.log('OnlyOffice is Ready')
+}
+function onLoadComponentError(errorCode: number, errorDescription: string) {
+  console.error(errorCode, errorDescription)
+}
+// ============================= Document Editor ====================================
 </script>
 
 <style scoped>
