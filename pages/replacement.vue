@@ -65,8 +65,11 @@
       <v-navigation-drawer v-if="sessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :rail="!pinned">
         <v-row>
           <v-col>
-            <v-list density="comfortable">
+            <v-list width="600" density="comfortable">
               <v-list-item prepend-icon="mdi-menu" title="替换">
+                <template v-slot:prepend>
+                  <v-icon color="red">mdi-swap-horizontal-variant</v-icon>
+                </template>
                 <template v-slot:append>
                   <v-tooltip>
                     <template v-slot:activator="{ props }"><v-btn v-bind="props"
@@ -79,33 +82,41 @@
                 </template>
               </v-list-item>
               <v-divider class="my-2"></v-divider>
-              <replacementTab v-if="sessions.length > 0" :data="sessions[tab]" @update:config="updateDocConfig">
-              </replacementTab>
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-tooltip
+                    location="top"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <v-icon class="mr-0 mb-5" v-bind="props" size="large" :color="['primary', 'light-green', 'orange'][selectedBusinessCategory.level ?? 0]" :icon="selectedBusinessCategory.selected?.icon"></v-icon>
+                    </template>
+                    <span>{{ selectedBusinessCategory.selected?.name }}</span>
+                  </v-tooltip>
+                </template>
+                <v-list-item-title>
+                  <v-card>
+                    <v-card-text>
+                      <v-row>
+                        <v-col>
+                          <BusinessCategoryPanel ref="selectedBusinessCategory" v-model="sessions[tab].businessCategory"></BusinessCategoryPanel>
+                        </v-col>
+                      </v-row>
+                    </v-card-text>
+                  </v-card>
+                </v-list-item-title>
+              </v-list-item>
+              <!-- <替换>面板 -->
+              <v-list-item class="px-0">
+                <ReplacementTab v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
+                </ReplacementTab>
+              </v-list-item>
             </v-list>
           </v-col>
         </v-row>
       </v-navigation-drawer>
-      <!-- <v-window v-model="tab">
-        <template v-if="sessions.length > 0">
-          <v-window-item v-for="item in sessions" :key="item.id">
-            <replacementTab :data="item" @update:config="updateDocConfig"></replacementTab>
-          </v-window-item>
-        </template>
-        <div style="height: calc(100vh - 124px)" class="d-flex flex-column justify-center align-center" v-else>
-          <div class="text-h2 font-weight-medium mb-12 mt-n12">
-            <common-key :shortcuts="shortcutNew">
-              <template v-slot:prepend><span class="text--disabled">按下&nbsp;</span></template>
-              <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
-            </common-key>
-          </div>
-          <div class="text-h2 font-weight-medium text--disabled mb-12">
-            开启全新替换旅程！
-          </div>
-        </div>
-      </v-window> -->
       <v-main>
-        <v-card flat>
-          <v-card-text style="height: calc(100dvh - 140px);">
+        <v-card style="height: calc(100dvh - 114px);" flat>
+          <!-- <v-card-text style="height: calc(100dvh - 140px);"> -->
             <div v-if="sessions.length == 0" style="height: calc(100vh - 124px);"
               class="d-flex flex-column justify-center align-center no-click">
               <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
@@ -122,7 +133,7 @@
             <DocumentEditor v-if="config.document" id="doc-editor" :document-server-url="documentServerApiUrl"
               :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
               :on-load-component-error="onLoadComponentError" />
-          </v-card-text>
+          <!-- </v-card-text> -->
         </v-card>
       </v-main>
     </v-layout>
@@ -156,9 +167,11 @@ const tab = ref(0)
 const sessions = ref([] as WorkData[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
+const selectedBusinessCategory = ref({} as { selected: {icon: string; name: string} | null, level: number | undefined })
 
 // watch
 watch(pinned, (val) => {
+  console.log('pinned:', val)
   usePlaceholderPinned().value = val
 })
 

@@ -210,12 +210,12 @@ export const VCascadeSelect = genericComponent<new <
     console.log(items)
     const cascadeSelections = computed(() => {
       const path: number[] = []
-      const cascadeSelections: ListItem[][] = []
+      const cascadeSelectionsInner: ListItem[][] = []
       const findPath = (obj: ListItem[] | undefined, level: number): Boolean => {
         if (obj && Array.isArray(obj)) {
           for (let i = 0; i < obj.length; i++) {
             path.push(i);
-            cascadeSelections.push([obj[i]])
+            cascadeSelectionsInner.push([obj[i]])
             if (model.value.length > 0 && obj[i].value == model.value[0].value) {
               return true;
             } else {
@@ -224,11 +224,11 @@ export const VCascadeSelect = genericComponent<new <
                   return true;
                 } else {
                   path.pop();
-                  cascadeSelections.pop()
+                  cascadeSelectionsInner.pop()
                 }
               } else {
                 path.pop();
-                cascadeSelections.pop()
+                cascadeSelectionsInner.pop()
               }
             }
           }
@@ -238,21 +238,21 @@ export const VCascadeSelect = genericComponent<new <
 
       findPath(items.value, 1)
 
-      console.log(cascadeSelections)
+      console.log(cascadeSelectionsInner)
 
-      return cascadeSelections
+      return cascadeSelectionsInner
     })
     const cascadeSelected = computed(() => {
       return cascadeSelections.value.map((selection) => [selection[0].value])
     })
     console.log("cascadeSelected", cascadeSelected.value)
     const cascadeDisplayItems = computed(() => {
-      const cascadeDisplayItems: ListItem[][] = []
+      const cascadeDisplayItemsInner: ListItem[][] = []
       // cascadeDisplayItems.push(items.value)
       const findPath = (obj: ListItem[] | undefined, level: number): Boolean => {
         if (obj && Array.isArray(obj)) {
           for (let i = 0; i < obj.length; i++) {
-            cascadeDisplayItems.push(obj);
+            cascadeDisplayItemsInner.push(obj);
             if (model.value.length > 0 && obj[i].value == model.value[0].value) {
               return true;
             } else {
@@ -260,10 +260,10 @@ export const VCascadeSelect = genericComponent<new <
                 if (findPath(obj[i].children, level + 1)) {
                   return true;
                 } else {
-                  cascadeDisplayItems.pop();
+                  cascadeDisplayItemsInner.pop();
                 }
               } else {
-                cascadeDisplayItems.pop();
+                cascadeDisplayItemsInner.pop();
               }
             }
           }
@@ -273,13 +273,13 @@ export const VCascadeSelect = genericComponent<new <
 
       if (model.value.length > 0) {
         findPath(items.value, 1)
-        const nextLevelItems = cascadeDisplayItems.at(-1)?.find(item=>item.value == model.value[0].value)?.children
-        nextLevelItems && cascadeDisplayItems.push(nextLevelItems)
+        const nextLevelItems = cascadeDisplayItemsInner.at(-1)?.find(item=>item.value == model.value[0].value)?.children
+        nextLevelItems && cascadeDisplayItemsInner.push(nextLevelItems)
       } else {
-        cascadeDisplayItems.push(items.value)
+        cascadeDisplayItemsInner.push(items.value)
       }
 
-      return cascadeDisplayItems
+      return cascadeDisplayItemsInner
     })
     console.log("cascadeDisplayItems", cascadeDisplayItems.value)
     const isFocused = ref(false)
@@ -813,6 +813,7 @@ export const VCascadeSelect = genericComponent<new <
     return forwardRefs({
       isFocused,
       menu,
+      cascadeSelections,
       cascadeSelect,
     }, vTextFieldRef)
   },

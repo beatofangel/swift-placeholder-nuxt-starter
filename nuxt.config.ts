@@ -13,6 +13,10 @@ export default defineNuxtConfig({
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
+  // components: {
+  //   global: true,
+  //   dirs: ['~/components']
+  // },
   runtimeConfig: {
     public: {
       loginCallbackUrl: process.env.AUTH_ORIGIN,
@@ -48,6 +52,12 @@ export default defineNuxtConfig({
               primary: colors.blue.lighten1,
               // secondary: '#F3BDB0',
               // 'secondary-lighten-1': '#FFF0ED',
+              // cascade1st: colors.blue.lighten1,
+              // cascade2nd: colors.lightGreen,
+              // cascade3rd: colors.orange,
+              // cascade4th: colors.pink,
+              // cascade5th: colors.cyan,
+              // cascade6th: colors.blueGrey
             },
             variables: {
               scrollbarTrack: colors.grey.lighten4,
@@ -60,6 +70,12 @@ export default defineNuxtConfig({
             colors: {
               primary: colors.blue.darken1,
               // secondary: '0F4C75',
+              // cascade1st: colors.blue.lighten1,
+              // cascade2nd: colors.lightGreen,
+              // cascade3rd: colors.orange,
+              // cascade4th: colors.pink,
+              // cascade5th: colors.cyan,
+              // cascade6th: colors.blueGrey
             },
             variables: {
               scrollbarTrack: colors.grey.darken1,

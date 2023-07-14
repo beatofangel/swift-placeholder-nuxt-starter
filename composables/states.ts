@@ -16,6 +16,8 @@ export const usePersistedState = <T extends Object>(identifier: string, defaultO
   return persistedObject
 }
 
-export const useTemplateExpanded = () => usePersistedState<boolean>('STATE_TEMPLATE_EXPANDED', false)
+export const useTemplateRailed = () => usePersistedState<boolean>('STATE_TEMPLATE_RAILED', false)
 
 export const usePlaceholderPinned = () => usePersistedState<boolean>('STATE_PLACEHOLDER_PINNED', true)
+
+export const useSelectedTemplate = (replacementId: string) => usePersistedState<number>(`STATE_REPLACEMENT_${replacementId}_SELECTED_TEMPLATE`, 0)
