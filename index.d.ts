@@ -6,6 +6,7 @@
 //   declare templates: string[]
 // }
 import type { Session } from 'next-auth';
+import type { QueueObject } from 'async-es'
 export interface SessionWrapper extends Session {
   uid: string
   username: string
@@ -81,10 +82,33 @@ export enum PlaceholderType {
 //   cell = "cell",
 //   slide = "slide"
 // }
-export type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2: Function) => void }
+export interface PlaceholderStatistic {
+  id: string,
+  count: number
+}
+
+export type ValidatePlaceholdersResult = {
+  warning: boolean,
+  valid?: {
+    placeholders?: placeholders[],
+  },
+  invalid?: {
+    placeholders?: Placeholder[],
+    contentControls?: {
+      InternalId: number,
+      Tag: string
+    }[]
+  }
+}
+
+export type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2?: Function) => void, callCommand: () => void }
+
+export type Asc = { scope: Record<string, any> }
 
 declare global {
   interface Window {
     connector: Ref<Connector>;
+    Asc: Ref<Asc>;
+    docQueue: Ref<QueueObject<T>>
   }
 }

@@ -52,7 +52,7 @@
                   <v-menu location="bottom" :close-on-content-click="false" :offset="[20, 88]">
                     <template v-slot:activator="{ props }">
                       <v-text-field :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
-                        v-bind="props" :placeholder="`请输入${placeholder.name}`" clearable
+                        v-bind="props" :placeholder="`请输入${placeholder.name}`" clearable :disabled="!placeholder.sync"
                         :value="dayjs(placeholder.value).format(placeholder.format)" readonly>
                         <template v-slot:prepend>
                           <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
@@ -61,7 +61,7 @@
                           <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
                             :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
                               :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
-                                placeholder.name }}</v-chip>
+                                `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
                         </template>
                         <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
                           dayjs(placeholder.value).format(placeholder.format) }}</v-tooltip>
@@ -72,7 +72,7 @@
                   </v-menu>
                 </template>
                 <v-text-field v-else :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
-                  :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
+                  :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value" :disabled="!placeholder.sync"
                   @update:model-value="$v => placeholderUpdate($v, placeholder)">
                   <template v-slot:prepend>
                     <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
@@ -81,7 +81,7 @@
                     <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
                       :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
                         :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
-                          placeholder.name }}</v-chip>
+                          `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
                   </template>
                   <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
                     placeholder.value }}</v-tooltip>
@@ -97,14 +97,9 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { SessionWrapper, Template, WorkData, Placeholder, PlaceholderType } from '~/index';
+import type { Template, Placeholder } from '~/index';
 import { VDatePicker } from 'vuetify/labs/VDatePicker'
-import { queue } from 'async-es'
 import { throttle } from 'lodash-es'
-import { useSelectedTemplate, useTemplateRailed } from '#imports'
-const zoom = ref(100)
-// const selectedBusinessCategory = ref({} as { selected: { icon: string; name: string } | null })
-const panels = ref(['bc', 'tpl'])
 const selectedTemplateIndex = ref([0])
 const templateListRailed = ref(true)
 const props = defineProps<{ id: string, templates: Template[] | null }>()
@@ -113,15 +108,6 @@ const emit = defineEmits([
   // 'update:businessCategory',
   'update:config'
 ])
-// const businessCategory = computed({
-//   get() {
-//     return props.businessCategory
-//   },
-//   set(val) {
-//     emit('update:businessCategory', val)
-//   }
-// })
-// const tab = ref(0)
 type refItem = Element | ComponentPublicInstance | null
 const refMap: Record<string, refItem> = {}
 onMounted(() => {
@@ -148,10 +134,20 @@ watch(templateListRailed, val => {
   useTemplateRailed().value = val
 })
 
-// 每个replacementTab共享一个docEditorId
-const docEditorId = computed(() => {
-  return `docEditor-${props.id}`
+watch(props.templates![selectedTemplateIndex.value[0]].placeholders, val => {
+  console.log(val)
 })
+
+const placeholders = computed({
+  get() {
+    return props.templates![selectedTemplateIndex.value[0]].placeholders
+  },
+  set(val) {
+    props.templates![selectedTemplateIndex.value[0]].placeholders = val
+  }
+})
+
+defineExpose({ placeholders: placeholders })
 
 // method
 function setRefMap(el: refItem, name: string) {
@@ -159,30 +155,6 @@ function setRefMap(el: refItem, name: string) {
     refMap[name] = el
   }
 }
-const placeholderUpdate = throttle(($v: string, placeholder: Placeholder) => doSyncContent(placeholder), 500, { leading: false })
-function doSyncContent(placeholder: Placeholder) {
-  window.connector.value.executeMethod("GetAllContentControls", null, function (data: any) {
-    //console.log(ctrls);
-    for (var ctrl of data) {
-      //console.log(ctrl.InternalId);
-      if (ctrl.Tag === placeholder.id) {
-        const doc = [{
-          "Props": {
-            "InternalId": ctrl.InternalId
-          },
-          "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("${placeholder.value}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
-        }];
-        q.push({ doc });
-      }
-    }
-  });
-}
+const placeholderUpdate = throttle(($v: string, placeholder: Placeholder) => useDocumentHelper().value.writeContentControl(placeholder), 500, { leading: false })
 
-var q = queue(function ({ doc }: any, callback: Function) {
-  console.log('hello ' + doc);
-  window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback);
-}, 1);
-q.drain(function () {
-  console.log('all items have been processed');
-});
 </script>

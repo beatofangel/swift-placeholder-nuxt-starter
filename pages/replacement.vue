@@ -107,7 +107,7 @@
               </v-list-item>
               <!-- <替换>面板 -->
               <v-list-item class="px-0">
-                <ReplacementTab v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
+                <ReplacementTab ref="currentReplaceTab" v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
                 </ReplacementTab>
               </v-list-item>
             </v-list>
@@ -141,10 +141,9 @@
 </template>
 
 <script setup lang="ts">
-import { Workspace } from '@prisma/client';
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
-import { SessionWrapper, Template, WorkData, Placeholder, PlaceholderType } from '~/index';
-// import { Session } from '~/index';
+import type { Template, WorkData, Placeholder, Connector } from '~/index';
+import { queue } from 'async-es'
 const pinned = ref(true)
 definePageMeta({
   middleware: ['casbin'],
@@ -168,6 +167,7 @@ const sessions = ref([] as WorkData[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
 const selectedBusinessCategory = ref({} as { selected: {icon: string; name: string} | null, level: number | undefined })
+const currentReplaceTab = ref({} as { placeholders: Placeholder[]})
 
 // watch
 watch(pinned, (val) => {
@@ -284,8 +284,6 @@ function doReplaceAll() {
 
 // ============================= Document Editor ====================================
 const config = ref({} as IConfig)
-type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2: Function) => void }
-const connector = ref({} as Connector)
 const zoom = ref(100)
 const { documentServerApiUrl } = useRuntimeConfig().public
 async function getConfig(template: Template) {
@@ -303,12 +301,29 @@ async function updateDocConfig(template: Template) {
   })
 }
 function onDocumentReady() {
-  connector.value = window.DocEditor.instances['doc-editor'].createConnector()
-  window.connector = connector
   console.log("Document is loaded");
+  // initialize connector
+  window.connector = ref(window.DocEditor.instances['doc-editor'].createConnector())
+  // syncDocument()
+  const { validatePlaceholders } = useDocumentHelper().value
+  validatePlaceholders(currentReplaceTab.value.placeholders, true, result => {
+    if (result.warning) {
+      console.log(result)
+    }
+
+  })
 }
 function onAppReady() {
   console.log('OnlyOffice is Ready')
+  // initialize docQueue
+  window.docQueue = ref(queue(function ({ doc }: any, callback: Function) {
+    console.log('consume queue');
+    window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback);
+  }, 1 /* no concurrency */));
+  window.docQueue.value.drain(function () {
+    console.log('all items have been processed');
+    useDocumentHelper().value.moveCursorToStart()
+  });
 }
 function onLoadComponentError(errorCode: number, errorDescription: string) {
   console.error(errorCode, errorDescription)
