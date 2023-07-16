@@ -84,6 +84,52 @@
                   </template>
                 </v-list-item>
                 <v-divider class="my-2"></v-divider>
+                <!-- <v-expansion-panels multiple variant="accordion">
+                  <v-expansion-panel>
+                    <v-expansion-panel-title>
+                      <v-icon color="primary" start class="ml-n1 mr-8">mdi-family-tree</v-icon>业务分类
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <v-list-item class="px-0 mx-n2">
+                        <template v-slot:prepend>
+                          <v-tooltip location="top">
+                            <template v-slot:activator="{ props }">
+                              <v-icon class="mr-0 mb-5" v-bind="props" size="large"
+                                :color="['primary', 'light-green', 'orange'][selectedBusinessCategory?.level ?? 0]"
+                                :icon="selectedBusinessCategory?.selected?.icon"></v-icon>
+                            </template>
+                            <span>{{ selectedBusinessCategory?.selected?.name }}</span>
+                          </v-tooltip>
+                        </template>
+                        <v-list-item-title>
+                          <v-card>
+                            <v-card-text>
+                              <v-row>
+                                <v-col>
+                                  <BusinessCategoryPanel ref="selectedBusinessCategory"
+                                    v-model="replacementSessions[tab].businessCategory"></BusinessCategoryPanel>
+                                </v-col>
+                              </v-row>
+                            </v-card-text>
+                          </v-card>
+                        </v-list-item-title>
+                      </v-list-item>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+                <v-expansion-panels multiple>
+                  <v-expansion-panel>
+                    <v-expansion-panel-title>
+                      <v-icon color="primary" start class="ml-n1 mr-8">mdi-file-document-multiple-outline</v-icon>模板
+                    </v-expansion-panel-title>
+                    <v-expansion-panel-text>
+                      <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
+                        v-model:id="replacementSessions[tab].id" v-model:templates="replacementSessions[tab].templates"
+                        @update:config="updateDocConfig">
+                      </ReplacementPanel>
+                    </v-expansion-panel-text>
+                  </v-expansion-panel>
+                </v-expansion-panels> -->
                 <v-list-item>
                   <template v-slot:prepend>
                     <v-tooltip location="top">
@@ -260,6 +306,10 @@ function closeReplacement({ id }: { id: string }) {
       const index = replacementSessions.value.findIndex((session) => session.id == id);
       if (index != -1) {
         const session = replacementSessions.value.splice(index, 1);
+        // prevent index overflow
+        if (replacementSessions.value.length <= tab.value) {
+          tab.value = replacementSessions.value.length - 1
+        }
         if (session.length > 0) {
           // TODO
           console.log('TODO: remove from Workspace')

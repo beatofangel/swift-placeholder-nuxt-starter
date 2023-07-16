@@ -130,14 +130,17 @@ onMounted(() => {
 watch(() => props.id, (val) => {
   console.log('当替换标签页切换时', val)
   selectedTemplateIndex.value = [useSelectedTemplate(val).value]
+  // 手动触发
+  onSelectedTemplateChanged(selectedTemplateIndex.value[0])
   // emit('update:config', props.templates![selectedTemplateIndex.value[0] || 0])
 })
-watch(selectedTemplateIndex, async (val) => {
+const onSelectedTemplateChanged = (val: number) => {
   console.log('当模板菜单切换时', val)
   docWarnings.value.splice(0) // 重置警告
-  useSelectedTemplate(props.id).value = val[0]
-  emit('update:config', props.templates![val[0] || 0])
-}, {
+  useSelectedTemplate(props.id).value = val
+  emit('update:config', props.templates![val || 0])
+}
+watch(() => selectedTemplateIndex.value[0], onSelectedTemplateChanged, {
   immediate: true
 })
 
