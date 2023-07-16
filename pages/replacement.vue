@@ -45,19 +45,15 @@
           </v-hover>
         </template>
         <v-list min-width="280" density="comfortable">
-          <template v-for="(
-              { name, icon, shortcut, handler, disabled }, key
-            ) in dotMenuList" :key="key">
-            <v-list-item @click="handler" :disabled="disabled?.value">
-              <template v-slot:prepend>
-                <v-icon :icon="icon"></v-icon>
-              </template>
-              <v-list-item-title v-text="name"></v-list-item-title>
-              <v-list-item-subtitle class="text-no-wrap d-flex justify-start">
-                <CommonKey :shortcuts="shortcut" no-decorate></CommonKey>
-              </v-list-item-subtitle>
-            </v-list-item>
-          </template>
+          <v-list-item v-for="({ name, icon, shortcut, handler, disabled }, index) in dotMenuList" :key="index" @click="handler" :disabled="disabled">
+            <template v-slot:prepend>
+              <v-icon :icon="icon"></v-icon>
+            </template>
+            <v-list-item-title v-text="name"></v-list-item-title>
+            <v-list-item-subtitle class="text-no-wrap d-flex justify-start">
+              <CommonKey :shortcuts="shortcut" no-decorate></CommonKey>
+            </v-list-item-subtitle>
+          </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
@@ -195,6 +191,8 @@
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
 import type { Template, WorkData, Placeholder, DocWarning } from '~/index';
 import { queue } from 'async-es'
+// @ts-ignore
+import Mousetrap from "mousetrap"
 const { $confirm } = useDialog()
 const pinned = ref(true)
 definePageMeta({
@@ -208,7 +206,13 @@ onMounted(() => {
   pinned.value = usePlaceholderPinned().value
   $fetch('/api/replacements').then(({ data }) => {
     replacementSessions.value = data
+    bindHotkeys()
   })
+})
+
+onUnmounted(() => {
+  console.log('unbind hotkeys for replacement')
+  Mousetrap.unbind()
 })
 
 // data
@@ -228,7 +232,7 @@ watch(pinned, (val) => {
 })
 
 // computed
-const noSessionDisabled = computed(() => {
+const noSessionExisted = computed(() => {
   return replacementSessions.value.length == 0
 })
 const shortcutNew = computed(() => {
@@ -239,50 +243,83 @@ const shortcuts = computed(() => {
     {
       id: "new",
       handler: () => {
+        console.log('[new] command triggered')
         showReplaceMenu.value = false;
         newReplacement();
       },
       icon: "mdi-plus",
       name: "新建",
       shortcut: [
-        ["ctrl", "n"],
+        // ["ctrl", "n"], // TODO
         ["shift", "n"],
       ],
     },
     {
       id: "close",
       handler: () => {
+        console.log('[close] command triggered')
         replacementSessions.value[tab.value] &&
           closeReplacement(replacementSessions.value[tab.value]);
       },
       name: "关闭",
-      shortcut: ["ctrl", "w"],
+      shortcut: [
+        // ["ctrl", "w"], // TODO
+        ["shift", "w"],
+      ],
       invisible: true,
     },
     {
       id: "replace",
       handler: () => {
-        if (noSessionDisabled) return;
+        console.log('[replace] command triggered')
+        if (noSessionExisted.value) return;
         showReplaceMenu.value = false;
         doReplace();
       },
       icon: "mdi-file-document-outline",
       name: "替换",
-      disabled: noSessionDisabled,
+      disabled: noSessionExisted.value,
       shortcut: ["ctrl", "r"],
     },
     {
       id: "replaceAll",
       handler: () => {
-        if (noSessionDisabled) return;
+        console.log('[replaceAll] command triggered')
+        if (noSessionExisted.value) return;
         showReplaceMenu.value = false;
         doReplaceAll();
       },
       icon: "mdi-file-document-multiple-outline",
       name: "全部替换",
-      disabled: noSessionDisabled,
-      shortcut: ["ctrl", "shift", "r"],
+      disabled: noSessionExisted.value,
+      shortcut: ["ctrl", "alt", "r"],
     },
+    {
+      id: "save",
+      handler: () => {
+        console.log('[save] command triggered')
+        if (noSessionExisted.value) return;
+        showReplaceMenu.value = false;
+        doSave();
+      },
+      icon: "mdi-content-save-outline",
+      name: "保存",
+      disabled: noSessionExisted.value,
+      shortcut: ["ctrl", "s"],
+    },
+    {
+      id: "saveAll",
+      handler: () => {
+        console.log('[saveAll] command triggered')
+        if (noSessionExisted.value) return;
+        showReplaceMenu.value = false;
+        doSaveAll();
+      },
+      icon: "mdi-content-save-all-outline",
+      name: "全部保存",
+      disabled: noSessionExisted.value,
+      shortcut: ["ctrl", "alt", "s"],
+    }
   ];
 })
 const dotMenuList = computed(() => {
@@ -322,13 +359,19 @@ function closeReplacement({ id }: { id: string }) {
  * 新建替换（标签页）
  */
 function newReplacement() {
-
+  $confirm({ title: '新建', text:'', onOk: ()=>console.log('newReplacement') })
 }
 function doReplace() {
-
+  $confirm({ title: '替换', text:'', onOk: ()=>console.log('doReplace') })
 }
 function doReplaceAll() {
-
+  $confirm({ title: '全部替换', text:'', onOk: ()=>console.log('doReplaceAll') })
+}
+function doSave() {
+  $confirm({ title: '保存替换', text:'', onOk: ()=>console.log('doSave') })
+}
+function doSaveAll() {
+  $confirm({ title: '保存全部替换', text:'', onOk: ()=>console.log('doSaveAll') })
 }
 // function handleBusinessCategoryChange(sessionId: string, businessCategoryDisplay: string) {
 //   const session = replacementSessions.value.find((s) => s.id == sessionId);
@@ -398,6 +441,24 @@ function onLoadComponentError(errorCode: number, errorDescription: string) {
   console.error(errorCode, errorDescription)
 }
 // ============================= Document Editor ====================================
+function bindHotkeys() {
+  for (const shortcut of shortcuts.value) {
+    if (shortcut.shortcut.length > 0) {
+      const shortcutSet = []
+      if (Array.isArray(shortcut.shortcut[0])) {
+        shortcutSet.push(...shortcut.shortcut.map(keys=>Array.isArray(keys) ? keys.join('+') : keys))
+      } else {
+        shortcutSet.push(shortcut.shortcut.join('+'))
+      }
+      const hotkeyStr = shortcutSet.join(',')
+      console.log(`bind hotkeys ${shortcut.name}-'${hotkeyStr}'for replacement`)
+      Mousetrap.bind(shortcutSet, function () {
+        shortcut.handler()
+        return false
+      })
+    }
+  }
+}
 </script>
 
 <style scoped>
