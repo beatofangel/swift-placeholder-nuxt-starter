@@ -135,7 +135,7 @@
                     <v-tooltip location="top">
                       <template v-slot:activator="{ props }">
                         <v-icon class="mr-0 mb-5" v-bind="props" size="large"
-                          :color="['primary', 'light-green', 'orange'][selectedBusinessCategory.level ?? 0]"
+                          :color="['primary', 'light-green', 'orange', 'teal'][selectedBusinessCategory.level ?? 3]"
                           :icon="selectedBusinessCategory.selected?.icon"></v-icon>
                       </template>
                       <span>{{ selectedBusinessCategory.selected?.name }}</span>

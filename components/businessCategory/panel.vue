@@ -18,7 +18,7 @@ const businessCategory = computed({
   }
 })
 const cascadeSelect = ref({} as { cascadeSelections: ListItem[][] })
-const selected: Ref<Pick<ListItem, 'icon' | 'name'>> = ref({ icon: 'mdi-blank', name: '请选择业务分类' })
+const selected: Ref<Pick<ListItem, 'icon' | 'name'>> = ref({ icon: 'mdi-family-tree', name: '请选择业务分类' })
 const level: Ref<number | undefined> = ref(undefined)
 const businessCategoryOptions = ref([])
 onMounted(() => {
@@ -33,7 +33,7 @@ const selectedItems = computed(()=>{
   }) : []
 })
 watch(selectedItems, (val) => {
-  selected.value = val.length > 0 ? val.at(-1).raw : { icon: 'mdi-blank', name: '请选择业务分类' }
+  selected.value = val.length > 0 ? val.at(-1).raw : { icon: 'mdi-family-tree', name: '请选择业务分类' }
   level.value = val.length > 0 ? val.length - 1 : undefined
 })
 defineExpose({ selected, level })
