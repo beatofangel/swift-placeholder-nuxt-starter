@@ -62,7 +62,7 @@
       </v-menu>
     </v-app-bar>
     <v-layout full-height>
-      <v-navigation-drawer v-if="replacementSessions.length > 0" width="600" :expand-on-hover="!pinned" permanent
+      <v-navigation-drawer v-if="replacementSessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :floating="pinned"
         :rail="!pinned">
         <v-card style="height: 100%" variant="text">
           <v-row>
