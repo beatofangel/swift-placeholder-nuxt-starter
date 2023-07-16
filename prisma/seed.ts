@@ -1101,7 +1101,7 @@ async function main() {
               id: "99fe65e0-90ac-41ef-91a1-aa3b4d4a09cd",
               name: "小分类229-模板A",
               key: fileKeys[0],
-              path: `/files/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[0]}.docx`,
+              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[0]}.docx`,
               placeholders: [
                 {
                   id: "6369f6c3-67e1-45f1-ac9f-6bbcf325c434",
@@ -1123,7 +1123,7 @@ async function main() {
               id: "cfba1cfa-1f1c-45d5-b223-6145c75a0528",
               name: "小分类229-模板B",
               key: fileKeys[1],
-              path: `/files/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[1]}.docx`,
+              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[1]}.docx`,
               placeholders: [
                 {
                   id: "fec05590-6202-479b-8735-409ded3b9905",
@@ -1156,7 +1156,7 @@ async function main() {
               id: "6a9f12fe-cf86-4f39-bf55-86c33724d25c",
               name: "中分类21-模板A",
               key: fileKeys[2],
-              path: `/files/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[2]}.docx`,
+              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[2]}.docx`,
               placeholders: [
                 {
                   id: "40b457f2-7708-40a9-a3f7-4c1f4da5d128",
@@ -1178,7 +1178,7 @@ async function main() {
               id: "9eb1db1c-639b-49e9-9341-bbf0b25f6841",
               name: "中分类21-模板B",
               key: fileKeys[3],
-              path: `/files/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[3]}.docx`,
+              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[3]}.docx`,
               placeholders: [
                 {
                   id: "a70d08eb-ca4e-44f7-8339-71885f115376",
