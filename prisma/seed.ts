@@ -1,6 +1,6 @@
 // yarn prisma db seed
 import { PrismaClient } from "@prisma/client";
-import { PlaceholderType } from "../index";
+// import { PlaceholderType } from "../index";
 import { v4 as uuid } from "uuid";
 const prisma = new PrismaClient();
 
@@ -870,7 +870,7 @@ async function main() {
       {
         id: "6369f6c3-67e1-45f1-ac9f-6bbcf325c434",
         name: "原告",
-        type: PlaceholderType.TEXT,
+        type: "text",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -879,7 +879,7 @@ async function main() {
       {
         id: "7ef7390c-e78e-4681-b105-893e325457e6",
         name: "被告",
-        type: PlaceholderType.TEXT,
+        type: "text",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -888,7 +888,7 @@ async function main() {
       {
         id: "fec05590-6202-479b-8735-409ded3b9905",
         name: "金额",
-        type: PlaceholderType.NUMBER,
+        type: "number",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -897,7 +897,7 @@ async function main() {
       {
         id: "d4e98926-a657-4412-9bb5-463a4419bdfa",
         name: "日期",
-        type: PlaceholderType.DATE,
+        type: "date",
         format: "YYYY年MM月DD日",
         createdAt: createAt,
         updatedAt: updateAt,
@@ -906,7 +906,7 @@ async function main() {
       {
         id: "40b457f2-7708-40a9-a3f7-4c1f4da5d128",
         name: "法院",
-        type: PlaceholderType.TEXT,
+        type: "text",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -915,7 +915,7 @@ async function main() {
       {
         id: "bd99b029-0177-4030-82a7-b4a79bea497a",
         name: "案由",
-        type: PlaceholderType.TEXT,
+        type: "text",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -924,7 +924,7 @@ async function main() {
       {
         id: "a70d08eb-ca4e-44f7-8339-71885f115376",
         name: "地址",
-        type: PlaceholderType.TEXT,
+        type: "text",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -933,7 +933,7 @@ async function main() {
       {
         id: "26d17448-3f72-4a9f-b6a4-b25bc635b062",
         name: "电话号码",
-        type: PlaceholderType.NUMBER,
+        type: "number",
         format: null,
         createdAt: createAt,
         updatedAt: updateAt,
@@ -1107,14 +1107,14 @@ async function main() {
                   {
                     id: "6369f6c3-67e1-45f1-ac9f-6bbcf325c434",
                     name: "原告",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "原告1",
                   },
                   {
                     id: "7ef7390c-e78e-4681-b105-893e325457e6",
                     name: "被告",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "被告1",
                   },
@@ -1129,14 +1129,14 @@ async function main() {
                   {
                     id: "fec05590-6202-479b-8735-409ded3b9905",
                     name: "金额",
-                    type: PlaceholderType.NUMBER,
+                    type: "number",
                     format: null,
                     value: "10000",
                   },
                   {
                     id: "d4e98926-a657-4412-9bb5-463a4419bdfa",
                     name: "日期",
-                    type: PlaceholderType.DATE,
+                    type: "date",
                     format: "YYYY年MM月DD日",
                     value: "2021-05-12",
                   },
@@ -1164,14 +1164,14 @@ async function main() {
                   {
                     id: "40b457f2-7708-40a9-a3f7-4c1f4da5d128",
                     name: "法院",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "法院1",
                   },
                   {
                     id: "bd99b029-0177-4030-82a7-b4a79bea497a",
                     name: "案由",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "案由1",
                   },
@@ -1186,14 +1186,14 @@ async function main() {
                   {
                     id: "a70d08eb-ca4e-44f7-8339-71885f115376",
                     name: "地址",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "地址1",
                   },
                   {
                     id: "26d17448-3f72-4a9f-b6a4-b25bc635b062",
                     name: "电话号码",
-                    type: PlaceholderType.TEXT,
+                    type: "text",
                     format: null,
                     value: "+8613812345678",
                   },
