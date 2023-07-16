@@ -97,6 +97,8 @@ export type ValidatePlaceholdersResult = {
   }
 }
 
+export type DocWarning = { text?: string[], title?: string, ignore?: boolean }
+
 export type Connector = { executeMethod: (arg0: string, arg1: [any] | null, arg2?: Function) => void, callCommand: () => void }
 
 export type Asc = { scope: Record<string, any> }

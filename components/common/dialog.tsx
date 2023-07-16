@@ -146,12 +146,12 @@ export default defineComponent({
     unmounted: () => true,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     "update:modelValue": (val: boolean) => true,
-    confirm: () => true,
+    ok: () => true,
     cancel: () => true,
   },
   methods: {
-    onConfirm() {
-      this.$emit("confirm");
+    onOk() {
+      this.$emit("ok");
       this.visible = false;
       this.$emit("update:modelValue", this.visible);
     },
@@ -227,7 +227,7 @@ export default defineComponent({
               color={this.iconColor}
               variant="elevated"
               // @ts-ignore
-              onClick={this.onConfirm}
+              onClick={this.onOk}
             >
               {this.okButtonText}
             </VBtn>

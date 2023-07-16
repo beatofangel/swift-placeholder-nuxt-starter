@@ -10,6 +10,8 @@ export type DialogParams = {
   cancelable?: boolean,
   closable?: boolean,
   persistent?: boolean,
+  onOk?: () => void,
+  onCancel?: () => void,
   onClosed?: () => void
 }
 

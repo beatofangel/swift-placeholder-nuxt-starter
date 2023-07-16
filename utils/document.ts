@@ -21,7 +21,7 @@ export const useDocumentHelper = () => {
   const moveCursorToStart = () => {
     window.connector.value.executeMethod("MoveCursorToStart", [true]);
   }
-  const validatePlaceholders = (placeholders: Placeholder[], withWrite?: boolean, callback?: ((checkResult: any) => void)) => {
+  const validatePlaceholders = (placeholders: Placeholder[], withWrite?: boolean, callback?: ((checkResult: ValidatePlaceholdersResult) => void)) => {
     window.connector.value.executeMethod("GetAllContentControls", null, function (ctrls: any[]) {
       console.log(ctrls);
       const result: ValidatePlaceholdersResult = { warning: false }

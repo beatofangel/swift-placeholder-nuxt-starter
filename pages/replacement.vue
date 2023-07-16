@@ -3,7 +3,7 @@
     <v-app-bar density="compact" flat>
       <v-slide-group v-model="tab" @change="onChanged" show-arrows mandatory style="max-width: calc(100vw - 176px)"
         class="align-self-end">
-        <v-slide-group-item v-for="(item, index) in sessions" :key="index" v-slot="{ isSelected, toggle }">
+        <v-slide-group-item v-for="(item, index) in replacementSessions" :key="index" v-slot="{ isSelected, toggle }">
           <div class="align-self-end">
             <!-- 由于添加了tooltip，必须在外层嵌套一个容器否则会导致激活标签无法自动显示 -->
             <v-tooltip open-delay="1000" location="bottom">
@@ -62,77 +62,82 @@
       </v-menu>
     </v-app-bar>
     <v-layout full-height>
-      <v-navigation-drawer v-if="sessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :rail="!pinned">
-        <v-row>
-          <v-col>
-            <v-list width="600" density="comfortable">
-              <v-list-item prepend-icon="mdi-menu" title="替换">
-                <template v-slot:prepend>
-                  <v-icon color="red">mdi-swap-horizontal-variant</v-icon>
-                </template>
-                <template v-slot:append>
-                  <v-tooltip>
-                    <template v-slot:activator="{ props }"><v-btn v-bind="props"
-                        :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'" :color="pinned ? 'primary' : 'grey'"
-                        variant="text" density="compact" @click="pinned = !pinned">
-                      </v-btn>
-                    </template>
-                    {{ pinned ? '取消固定' : '固定' }}
-                  </v-tooltip>
-                </template>
-              </v-list-item>
-              <v-divider class="my-2"></v-divider>
-              <v-list-item>
-                <template v-slot:prepend>
-                  <v-tooltip
-                    location="top"
-                  >
-                    <template v-slot:activator="{ props }">
-                      <v-icon class="mr-0 mb-5" v-bind="props" size="large" :color="['primary', 'light-green', 'orange'][selectedBusinessCategory.level ?? 0]" :icon="selectedBusinessCategory.selected?.icon"></v-icon>
-                    </template>
-                    <span>{{ selectedBusinessCategory.selected?.name }}</span>
-                  </v-tooltip>
-                </template>
-                <v-list-item-title>
-                  <v-card>
-                    <v-card-text>
-                      <v-row>
-                        <v-col>
-                          <BusinessCategoryPanel ref="selectedBusinessCategory" v-model="sessions[tab].businessCategory"></BusinessCategoryPanel>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                  </v-card>
-                </v-list-item-title>
-              </v-list-item>
-              <!-- <替换>面板 -->
-              <v-list-item class="px-0">
-                <ReplacementPanel ref="currentReplaceTab" v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
-                </ReplacementPanel>
-              </v-list-item>
-            </v-list>
-          </v-col>
-        </v-row>
+      <v-navigation-drawer v-if="replacementSessions.length > 0" width="600" :expand-on-hover="!pinned" permanent
+        :rail="!pinned">
+        <v-card style="height: 100%" variant="text">
+          <v-row>
+            <v-col>
+              <v-list width="600" density="comfortable">
+                <v-list-item prepend-icon="mdi-menu" title="替换">
+                  <template v-slot:prepend>
+                    <v-icon color="red">mdi-swap-horizontal-variant</v-icon>
+                  </template>
+                  <template v-slot:append>
+                    <v-tooltip>
+                      <template v-slot:activator="{ props }"><v-btn v-bind="props"
+                          :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'" :color="pinned ? 'primary' : 'grey'"
+                          variant="text" density="compact" @click="pinned = !pinned">
+                        </v-btn>
+                      </template>
+                      {{ pinned ? '取消固定' : '固定' }}
+                    </v-tooltip>
+                  </template>
+                </v-list-item>
+                <v-divider class="my-2"></v-divider>
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-tooltip location="top">
+                      <template v-slot:activator="{ props }">
+                        <v-icon class="mr-0 mb-5" v-bind="props" size="large"
+                          :color="['primary', 'light-green', 'orange'][selectedBusinessCategory.level ?? 0]"
+                          :icon="selectedBusinessCategory.selected?.icon"></v-icon>
+                      </template>
+                      <span>{{ selectedBusinessCategory.selected?.name }}</span>
+                    </v-tooltip>
+                  </template>
+                  <v-list-item-title>
+                    <v-card>
+                      <v-card-text>
+                        <v-row>
+                          <v-col>
+                            <BusinessCategoryPanel ref="selectedBusinessCategory"
+                              v-model="replacementSessions[tab].businessCategory"></BusinessCategoryPanel>
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+                  </v-list-item-title>
+                </v-list-item>
+                <!-- <替换>面板 -->
+                <v-list-item class="px-0">
+                  <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
+                    v-model:id="replacementSessions[tab].id" v-model:templates="replacementSessions[tab].templates"
+                    @update:config="updateDocConfig">
+                  </ReplacementPanel>
+                </v-list-item>
+              </v-list>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-navigation-drawer>
-      <v-main>
+      <v-main tag="editor">
         <v-card style="height: calc(100dvh - 114px);" flat>
           <!-- <v-card-text style="height: calc(100dvh - 140px);"> -->
-            <div v-if="sessions.length == 0" style="height: calc(100vh - 124px);"
-              class="d-flex flex-column justify-center align-center no-click">
-              <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
-                <common-key :shortcuts="shortcutNew">
-                  <template v-slot:prepend><span class="text--disabled text-no-wrap">按下&nbsp;</span></template>
-                  <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
-                </common-key>
-              </div>
-              <div
-                class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium text--disabled mt-8 mb-12">
-                开启全新替换旅程！
-              </div>
+          <div v-if="replacementSessions.length == 0" style="height: calc(100vh - 124px);"
+            class="d-flex flex-column justify-center align-center no-click">
+            <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
+              <common-key :shortcuts="shortcutNew">
+                <template v-slot:prepend><span class="text--disabled text-no-wrap">按下&nbsp;</span></template>
+                <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
+              </common-key>
             </div>
-            <DocumentEditor v-if="config.document" id="doc-editor" :document-server-url="documentServerApiUrl"
-              :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
-              :on-load-component-error="onLoadComponentError" />
+            <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium text--disabled mt-8 mb-12">
+              开启全新替换旅程！
+            </div>
+          </div>
+          <DocumentEditor v-else-if="config.document" id="doc-editor" :document-server-url="documentServerApiUrl"
+            :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
+            :on-load-component-error="onLoadComponentError" />
           <!-- </v-card-text> -->
         </v-card>
       </v-main>
@@ -142,8 +147,9 @@
 
 <script setup lang="ts">
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
-import type { Template, WorkData, Placeholder, Connector } from '~/index';
+import type { Template, WorkData, Placeholder, DocWarning } from '~/index';
 import { queue } from 'async-es'
+const { $confirm } = useDialog()
 const pinned = ref(true)
 definePageMeta({
   middleware: ['casbin'],
@@ -155,7 +161,7 @@ definePageMeta({
 onMounted(() => {
   pinned.value = usePlaceholderPinned().value
   $fetch('/api/replacements').then(({ data }) => {
-    sessions.value = data
+    replacementSessions.value = data
   })
 })
 
@@ -163,11 +169,11 @@ onMounted(() => {
 const showDialog = ref(false)
 watch(showDialog, (val) => console.log(val))
 const tab = ref(0)
-const sessions = ref([] as WorkData[])
+const replacementSessions = ref([] as WorkData[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
-const selectedBusinessCategory = ref({} as { selected: {icon: string; name: string} | null, level: number | undefined })
-const currentReplaceTab = ref({} as { placeholders: Placeholder[]})
+const selectedBusinessCategory = ref({} as { selected: { icon: string; name: string } | null, level: number | undefined })
+const currentReplaceTab = ref({} as { placeholders: Placeholder[], docWarnings: DocWarning[] })
 
 // watch
 watch(pinned, (val) => {
@@ -177,7 +183,7 @@ watch(pinned, (val) => {
 
 // computed
 const noSessionDisabled = computed(() => {
-  return sessions.value.length == 0
+  return replacementSessions.value.length == 0
 })
 const shortcutNew = computed(() => {
   return shortcuts.value.find((e) => e.id == "new")!.shortcut;
@@ -200,8 +206,8 @@ const shortcuts = computed(() => {
     {
       id: "close",
       handler: () => {
-        sessions.value[tab.value] &&
-          closeReplacement(sessions.value[tab.value]);
+        replacementSessions.value[tab.value] &&
+          closeReplacement(replacementSessions.value[tab.value]);
       },
       name: "关闭",
       shortcut: ["ctrl", "w"],
@@ -249,20 +255,18 @@ function calcSessionName(item: WorkData) {
   }
 }
 function closeReplacement({ id }: { id: string }) {
-  // $dialog
-  //   .confirm({ text: `即将删除本次替换，是否继续？` })
-  //   .then((res) => {
-  //     if (res) {
-  //       const index = sessions.value.findIndex((e) => e.id == id);
-  //       if (index != -1) {
-  //         const session = sessions.value.splice(index, 1);
-  //         if (session.length > 0) {
-  //           // TODO
-  //           // window.store.deleteSession(session[0].id);
-  //         }
-  //       }
-  //     }
-  //   });
+  $confirm({
+    text: `即将删除本次替换，是否继续？`, onOk: () => {
+      const index = replacementSessions.value.findIndex((session) => session.id == id);
+      if (index != -1) {
+        const session = replacementSessions.value.splice(index, 1);
+        if (session.length > 0) {
+          // TODO
+          console.log('TODO: remove from Workspace')
+        }
+      }
+    }
+  })
 }
 /**
  * 新建替换（标签页）
@@ -277,7 +281,7 @@ function doReplaceAll() {
 
 }
 // function handleBusinessCategoryChange(sessionId: string, businessCategoryDisplay: string) {
-//   const session = sessions.value.find((s) => s.id == sessionId);
+//   const session = replacementSessions.value.find((s) => s.id == sessionId);
 //   session!['businessCategoryDisplay'] = businessCategoryDisplay;
 //   console.log(session);
 // }
@@ -309,6 +313,21 @@ function onDocumentReady() {
   validatePlaceholders(currentReplaceTab.value.placeholders, true, result => {
     if (result.warning) {
       console.log(result)
+      result.invalid?.placeholders?.forEach((placeholder) => {
+        currentReplaceTab.value.docWarnings.push({
+          text: [
+            `占位符<${placeholder.name}>无效。`
+          ]
+        })
+      })
+      result.invalid?.contentControls?.forEach((contentControl) => {
+        currentReplaceTab.value.docWarnings.push({
+          text: [
+            `未能匹配占位符。`,
+            `ID: ${contentControl.InternalId} 名称: ${contentControl.Tag || '<未命名>'}`
+          ]
+        })
+      })
     }
 
   })

@@ -1,5 +1,5 @@
 <template>
-  <v-layout style="height: calc(100dvh - 338px);">
+  <v-layout>
     <v-row>
       <v-col class="d-flex flex-row">
         <v-navigation-drawer :rail="templateListRailed" floating @click="templateListRailed = false" permanent>
@@ -66,8 +66,8 @@
                   </v-menu>
                 </template>
                 <v-text-field v-else :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
-                  :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value" :disabled="!placeholder.sync"
-                  @update:model-value="$v => placeholderUpdate($v, placeholder)">
+                  :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
+                  :disabled="!placeholder.sync" @update:model-value="$v => placeholderUpdate($v, placeholder)">
                   <template v-slot:prepend>
                     <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
                   </template>
@@ -82,6 +82,21 @@
                 </v-text-field>
               </v-list-item-title>
             </v-list-item>
+            <v-card variant="text">
+              <v-card-text>
+                <v-fade-transition group mode="in-out">
+                  <template v-for="(docWarning, index) in docWarnings" :key="index">
+                    <v-alert v-if="!docWarning.ignore" class="my-2" border="start" density="compact" variant="tonal" closable type="warning" :title="docWarning.title" elevation="1" @click:close="docWarning.ignore=true">
+                      <template v-slot:text>
+                        <div v-for="p in docWarning.text">
+                          {{ p }}
+                        </div>
+                      </template>
+                    </v-alert>
+                  </template>
+                </v-fade-transition>
+              </v-card-text>
+            </v-card>
           </v-list>
         </v-main>
       </v-col>
@@ -91,13 +106,14 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import type { Template, Placeholder } from '~/index';
+import type { Template, Placeholder, DocWarning } from '~/index';
 import { VDatePicker } from 'vuetify/labs/VDatePicker'
 import { throttle } from 'lodash-es'
 const selectedTemplateIndex = ref([0])
 const templateListRailed = ref(true)
 const props = defineProps<{ id: string, templates: Template[] | null }>()
 const businessCategoryOptions = ref([])
+const docWarnings = ref([] as DocWarning[])
 const emit = defineEmits([
   // 'update:businessCategory',
   'update:config'
@@ -114,10 +130,11 @@ onMounted(() => {
 watch(() => props.id, (val) => {
   console.log('当替换标签页切换时', val)
   selectedTemplateIndex.value = [useSelectedTemplate(val).value]
-  emit('update:config', props.templates![selectedTemplateIndex.value[0] || 0])
+  // emit('update:config', props.templates![selectedTemplateIndex.value[0] || 0])
 })
 watch(selectedTemplateIndex, async (val) => {
   console.log('当模板菜单切换时', val)
+  docWarnings.value.splice(0) // 重置警告
   useSelectedTemplate(props.id).value = val[0]
   emit('update:config', props.templates![val[0] || 0])
 }, {
@@ -141,7 +158,7 @@ const placeholders = computed({
   }
 })
 
-defineExpose({ placeholders: placeholders })
+defineExpose({ placeholders, docWarnings })
 
 // method
 function setRefMap(el: refItem, name: string) {
