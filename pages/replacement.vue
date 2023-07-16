@@ -22,7 +22,7 @@
                     }}
                   </div>
                   <v-btn density="compact" size="small" :color="isSelected ? 'primary' : 'grey lighten-3'"
-                    class="rounded-sm" icon="mdi-close" @click.stop="closeReplacementTab(item)"></v-btn>
+                    class="rounded-sm" icon="mdi-close" @click.stop="closeReplacement(item)"></v-btn>
                 </v-btn>
               </template>
               {{ calcSessionName(item) }}
@@ -107,8 +107,8 @@
               </v-list-item>
               <!-- <替换>面板 -->
               <v-list-item class="px-0">
-                <ReplacementTab ref="currentReplaceTab" v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
-                </ReplacementTab>
+                <ReplacementPanel ref="currentReplaceTab" v-if="sessions.length > 0" v-model:id="sessions[tab].id" v-model:templates="sessions[tab].templates" @update:config="updateDocConfig">
+                </ReplacementPanel>
               </v-list-item>
             </v-list>
           </v-col>
@@ -201,7 +201,7 @@ const shortcuts = computed(() => {
       id: "close",
       handler: () => {
         sessions.value[tab.value] &&
-          closeReplacementTab(sessions.value[tab.value]);
+          closeReplacement(sessions.value[tab.value]);
       },
       name: "关闭",
       shortcut: ["ctrl", "w"],
@@ -248,7 +248,7 @@ function calcSessionName(item: WorkData) {
     return `替换-${item.id}`;
   }
 }
-function closeReplacementTab({ id }: { id: string }) {
+function closeReplacement({ id }: { id: string }) {
   // $dialog
   //   .confirm({ text: `即将删除本次替换，是否继续？` })
   //   .then((res) => {

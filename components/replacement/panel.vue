@@ -2,12 +2,6 @@
   <v-layout style="height: calc(100dvh - 338px);">
     <v-row>
       <v-col class="d-flex flex-row">
-        <!-- <v-tabs v-model="tab" ref="templateTabs" direction="vertical" align-with-title>
-          <v-tab v-for="{ id, name } in templates" :key="id">
-            <v-icon size="large" start>mdi-home</v-icon>
-            <span class="text-h6">{{ name }}</span>
-          </v-tab>
-        </v-tabs> -->
         <v-navigation-drawer :rail="templateListRailed" floating @click="templateListRailed = false" permanent>
           <v-list v-model:selected="selectedTemplateIndex" style="max-width: 255px" class="text-truncate" color="primary"
             mandatory>

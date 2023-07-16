@@ -37,10 +37,6 @@ export interface Placeholder extends Record<string, any> {
   value?: any
 }
 
-// export enum EditMode {
-//   Create = 1, Read = 2, Update = 3, Delete = 4
-// }
-
 export interface CommonListItem {
   id: string,
   name: string,

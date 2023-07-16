@@ -1,12 +1,8 @@
 // yarn prisma db seed
 import { PrismaClient } from "@prisma/client";
+import { PlaceholderType } from "~/index";
 import { v4 as uuid } from "uuid";
 const prisma = new PrismaClient();
-enum PlaceholderType {
-  TEXT = "text",
-  NUMBER = "number",
-  DATE = "date",
-}
 
 async function main() {
   // create view

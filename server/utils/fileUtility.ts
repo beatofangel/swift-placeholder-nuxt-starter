@@ -1,8 +1,6 @@
 import path from "path"
-import { useMisc } from "./misc"
 
 export const useFileUtility = () => {
-  const { FileType } = useMisc()
   const documentExts = [".doc", ".docx", ".oform", ".docm", ".dot", ".dotx", ".dotm", ".odt", ".fodt", ".ott", ".rtf", ".txt", ".html", ".htm", ".mht", ".xml", ".pdf", ".djvu", ".fb2", ".epub", ".xps", ".oxps"]
   const spreadsheetExts = [".xls", ".xlsx", ".xlsm", ".xlsb", ".xlt", ".xltx", ".xltm", ".ods", ".fods", ".ots", ".csv"]
   const presentationExts = [".pps", ".ppsx", ".ppsm", ".ppt", ".pptx", ".pptm", ".pot", ".potx", ".potm", ".odp", ".fodp", ".otp"]

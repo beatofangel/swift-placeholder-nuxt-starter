@@ -7,7 +7,6 @@ export default defineEventHandler(async event => {
     xForwardedHost: true,
     xForwardedProto: true
   })
-  const { FileType } = useMisc()
   const { zoom, title, url, mode } = getQuery(event)
   const session = await getServerSession(event)
   const docManager = useDocManager()

@@ -19,25 +19,25 @@ import { VHover } from "vuetify/components/VHover";
 //   return (isString(val) && val == "auto") || isBoolean(val);
 // };
 
-export interface CommonDialogProps {
-  width: number | string;
-  minWidth: number | string;
-  modelValue: boolean;
-  attach: string | boolean | Element;
-  title: string;
-  text: string;
-  info: boolean;
-  warning: boolean;
-  error: boolean;
-  persistent: boolean | "auto";
-  closable: boolean | "auto";
-  cancelable: boolean | "auto";
-  cancelButtonText: string;
-  okButtonText: string;
-}
+// export interface CommonDialogProps {
+//   width: number | string;
+//   minWidth: number | string;
+//   modelValue: boolean;
+//   attach: string | boolean | Element;
+//   title: string;
+//   text: string;
+//   info: boolean;
+//   warning: boolean;
+//   error: boolean;
+//   persistent: boolean | "auto";
+//   closable: boolean | "auto";
+//   cancelable: boolean | "auto";
+//   cancelButtonText: string;
+//   okButtonText: string;
+// }
 
 export default defineComponent({
-  // name: "CommonDialog",
+  name: "CommonDialog",
   props: {
     width: {
       type: [Number, String],
@@ -53,11 +53,11 @@ export default defineComponent({
     },
     attach: {
       type: [String, Boolean, Element],
-      default: ".v-application",
+      default: false, //"#__nuxt", //".v-application",
     },
     title: {
       type: String,
-      default: 'TEST', // appName,
+      default: "",
     },
     text: {
       type: [String, Function],
@@ -96,19 +96,19 @@ export default defineComponent({
       return this.dialogInfo
         ? "mdi-information"
         : this.dialogWarning
-        ? "mdi-alert"
-        : this.dialogError
-        ? "mdi-information"
-        : "mdi-blank";
+          ? "mdi-alert"
+          : this.dialogError
+            ? "mdi-information"
+            : "mdi-blank";
     },
     iconColor(): string {
       return this.dialogInfo
         ? "primary"
         : this.dialogWarning
-        ? "orange-darken-2"
-        : this.dialogError
-        ? "red"
-        : "default";
+          ? "orange-darken-2"
+          : this.dialogError
+            ? "red"
+            : "default";
     },
     dialogInfo(): boolean {
       if (this.info && (this.error || this.warning)) {
@@ -161,7 +161,7 @@ export default defineComponent({
       this.$emit("update:modelValue", this.visible);
     },
     onDialogClosed() {
-      console.log("onDialogClosed");
+      // console.log("onDialogClosed");
       this.$emit("closed");
     },
   },
@@ -224,8 +224,8 @@ export default defineComponent({
               </VBtn>
             )}
             <VBtn
-              variant="flat"
               color={this.iconColor}
+              variant="elevated"
               // @ts-ignore
               onClick={this.onConfirm}
             >

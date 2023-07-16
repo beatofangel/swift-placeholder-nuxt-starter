@@ -1,11 +1,14 @@
-import { useMisc } from "./misc";
 import fs from "fs";
 import path from "path";
 const { storageConfigFolder, siteUrl } = useDocConfig()
 const { generateRevisionId } = useDocService()
 
+export enum FileType {
+  word = "word",
+  cell = "cell",
+  slide = "slide"
+}
 export const useDocManager = () => {
-  const { FileType } = useMisc();
   const fileUtility = useFileUtility();
   const runtimeConfig = useRuntimeConfig()
   const baseUrl = runtimeConfig.app.baseURL
@@ -231,8 +234,8 @@ export const useDocManager = () => {
     let key = filename;  // get document key by adding local file url to the current user host address
 
     let histPath = historyPath(filename);  // get the path to the file history
-    if (histPath){  // if the path to the file history exists
-        key += countVersion(histPath);  // add file version number to the document key
+    if (histPath) {  // if the path to the file history exists
+      key += countVersion(histPath);  // add file version number to the document key
     }
 
     let stPath = storagePath(filename);  // get the storage path to the given file
@@ -240,7 +243,7 @@ export const useDocManager = () => {
     key += stat.mtime.getTime();  // and add creation time to the document key
 
     return generateRevisionId(key);  // generate the document key value
-}
+  }
   return {
     getCreateUrl,
     storagePath,

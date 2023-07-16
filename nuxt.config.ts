@@ -20,7 +20,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       loginCallbackUrl: process.env.AUTH_ORIGIN,
-      documentServerApiUrl: process.env.DOCUMENT_SERVER_API_URL
+      documentServerApiUrl: process.env.DOCUMENT_SERVER_API_URL,
+      appName: process.env.APP_NAME
     }
   },
   // sourcemap: {
