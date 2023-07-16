@@ -8,20 +8,25 @@ export default defineEventHandler(async event => {
   const uid = (session as SessionWrapper).uid
   const methods: Record<HTTPMethod, Function> = {
     async GET() {
-      return await event.context.prisma.workspace.findFirst({
-        where: { type: 'REPLACEMENT', owner: uid }
+      return await event.context.prisma.workspace.findMany({
+        where: { type: 'REPLACEMENT', owner: uid },
+        orderBy: {
+          ordinal: 'asc'
+        }
       })
     },
     async POST() {
       const { data } = await readBody(event)
       return await event.context.prisma.workspace.create({
         data: {
+          id: data.id,
+          name: data.name,
           type: 'REPLACEMENT',
           owner: uid,
-          data: Array.isArray(data) ? data : [data]
+          data: data
         }
       })
-    }
+    },
   }
   const method = methods[getMethod(event)]
   return method && (method())

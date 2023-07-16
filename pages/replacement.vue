@@ -189,12 +189,11 @@
 
 <script setup lang="ts">
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
-import type { Template, WorkData, Placeholder, DocWarning } from '~/index';
+import type { Template, WorkData, Placeholder, DocWarning, Replacement } from '~/index';
 import { queue } from 'async-es'
 // @ts-ignore
 import Mousetrap from "mousetrap"
 const { $confirm } = useDialog()
-const pinned = ref(true)
 definePageMeta({
   middleware: ['casbin'],
   icon: "mdi-file-replace",
@@ -204,18 +203,22 @@ definePageMeta({
 // mounted
 onMounted(() => {
   pinned.value = usePlaceholderPinned().value
-  $fetch('/api/replacements').then(({ data }) => {
-    replacementSessions.value = data
+  $fetch('/api/replacements').then((rows: { id: string, name: string, type: string, data: Replacement }[]) => {
+    replacementSessions.value = rows.map(row=>{
+      return { id: row.id, name: row.name, type: row.type, businessCategory: row.data.businessCategory, templates: row.data.templates }
+    })
     bindHotkeys()
   })
 })
 
 onUnmounted(() => {
   console.log('unbind hotkeys for replacement')
-  Mousetrap.unbind()
+  unbindHotkeys()
 })
 
 // data
+const saveWithPrompt = ref(true)
+const pinned = ref(true)
 const showDialog = ref(false)
 watch(showDialog, (val) => console.log(val))
 const tab = ref(0)
@@ -331,8 +334,9 @@ function onChanged(index: number) {
   console.log(index);
 }
 function calcSessionName(item: WorkData) {
-  if (item.businessCategoryDisplay) {
-    return `${item.businessCategoryDisplay}-${item.id}`;
+  if (item.name) {
+    // return `${item.businessCategoryDisplay}-${item.id}`;
+    return `${item.name}`;
   } else {
     return `替换-${item.id}`;
   }
@@ -367,10 +371,16 @@ function doReplace() {
 function doReplaceAll() {
   $confirm({ title: '全部替换', text:'', onOk: ()=>console.log('doReplaceAll') })
 }
+import { VRow, VCol, VCheckboxBtn } from 'vuetify/components'
 function doSave() {
-  $confirm({ title: '保存替换', text:'', onOk: ()=>console.log('doSave') })
+  console.log(replacementSessions.value[tab.value], tab.value)
+  saveWithPrompt.value ? $confirm({ title: '保存替换', text:() =>h(VRow,null, h(VCol, null, h(VCheckboxBtn, { label: '不再提示' }, []))), onOk: saveWorkSession}) : saveWorkSession()
+}
+function saveWorkSession() {
+  console.log('doSave')
 }
 function doSaveAll() {
+  console.log(replacementSessions.value)
   $confirm({ title: '保存全部替换', text:'', onOk: ()=>console.log('doSaveAll') })
 }
 // function handleBusinessCategoryChange(sessionId: string, businessCategoryDisplay: string) {
@@ -441,23 +451,32 @@ function onLoadComponentError(errorCode: number, errorDescription: string) {
   console.error(errorCode, errorDescription)
 }
 // ============================= Document Editor ====================================
+function getShortcutSet(shortcut: { shortcut: string[][] | string[] }) {
+  const shortcutSet = []
+  if (Array.isArray(shortcut.shortcut[0])) {
+    shortcutSet.push(...shortcut.shortcut.map(keys=>Array.isArray(keys) ? keys.join('+') : keys))
+  } else {
+    shortcutSet.push(shortcut.shortcut.join('+'))
+  }
+  return shortcutSet
+}
 function bindHotkeys() {
   for (const shortcut of shortcuts.value) {
     if (shortcut.shortcut.length > 0) {
-      const shortcutSet = []
-      if (Array.isArray(shortcut.shortcut[0])) {
-        shortcutSet.push(...shortcut.shortcut.map(keys=>Array.isArray(keys) ? keys.join('+') : keys))
-      } else {
-        shortcutSet.push(shortcut.shortcut.join('+'))
-      }
-      const hotkeyStr = shortcutSet.join(',')
-      console.log(`bind hotkeys ${shortcut.name}-'${hotkeyStr}'for replacement`)
+      const shortcutSet = getShortcutSet(shortcut)
+      console.log(`bind hotkeys ${shortcut.name}-'${shortcutSet.join(',')}'for replacement`)
       Mousetrap.bind(shortcutSet, function () {
         shortcut.handler()
         return false
       })
     }
   }
+}
+function unbindHotkeys() {
+  for (const shortcut of shortcuts.value) {
+      const shortcutSet = getShortcutSet(shortcut)
+      Mousetrap.unbind(shortcutSet);
+    }
 }
 </script>
 

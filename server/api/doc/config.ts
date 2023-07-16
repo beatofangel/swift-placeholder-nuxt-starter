@@ -154,14 +154,14 @@ export default defineEventHandler(async event => {
       })
     },
     async POST() {
-      const { data } = await readBody(event)
-      return await event.context.prisma.workspace.create({
-        data: {
-          type: 'REPLACEMENT',
-          owner: uid,
-          data: Array.isArray(data) ? data : [data]
-        }
-      })
+      // const { data } = await readBody(event)
+      // return await event.context.prisma.workspace.create({
+      //   data: {
+      //     type: 'REPLACEMENT',
+      //     owner: uid,
+      //     data: Array.isArray(data) ? data : [data]
+      //   }
+      // })
     }
   }
   const method = methods[getMethod(event)]

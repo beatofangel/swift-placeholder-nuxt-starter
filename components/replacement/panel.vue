@@ -2,8 +2,8 @@
   <v-layout>
     <v-row>
       <v-col class="d-flex flex-row">
-        <v-navigation-drawer :rail="templateListRailed" floating @click="templateListRailed = false" permanent>
-          <v-list v-model:selected="selectedTemplateIndex" style="max-width: 255px" class="text-truncate" color="primary"
+        <v-navigation-drawer :rail="templateListRailed" @click="templateListRailed = false" permanent>
+          <v-list v-model:selected="selectedTemplateIndex" style="max-width: 255px;" class="text-truncate" color="primary"
             mandatory>
             <v-list-item title="模板" class="pr-0" density="comfortable">
               <template v-slot:prepend>
@@ -32,7 +32,7 @@
           </v-list>
         </v-navigation-drawer>
         <v-main>
-          <v-list density="comfortable" class="mx-auto">
+          <v-list density="comfortable" style="height: calc(100dvh - 310px);" class="mx-auto">
             <v-list-item title="占位符">
               <template v-slot:prepend>
                 <v-icon color="orange">mdi-bookmark-multiple-outline</v-icon>

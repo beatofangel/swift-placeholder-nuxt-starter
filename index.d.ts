@@ -15,6 +15,7 @@ export interface SessionWrapper extends Session {
 export interface WorkData extends Replacement {
   id: string
   name: string
+  type: string
 }
 
 export interface Replacement extends Record<string, any> {

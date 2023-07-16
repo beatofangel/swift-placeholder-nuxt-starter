@@ -2,7 +2,7 @@ import { CommonDialog } from "#components"
 import { Plugin, createApp, App } from "vue"
 export type DialogParams = {
   title?: string,
-  text: string,
+  text: string | Function,
   op?: EditMode,
   error?: boolean,
   info?: boolean,

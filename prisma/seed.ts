@@ -1090,12 +1090,12 @@ async function main() {
   const workspace = await prisma.workspace.createMany({
     data: [
       {
+        id: "43ccacc1-a062-4a84-9219-ea1cd1a5704d",
+        name: "替换1",
         type: "REPLACEMENT",
         owner: adminUserId,
         data: [
           {
-            id: "43ccacc1-a062-4a84-9219-ea1cd1a5704d",
-            name: "替换1",
             businessCategory: "5c1bdfcf-3cde-47bd-a099-834664196470",
             templates: [
               {
@@ -1143,10 +1143,16 @@ async function main() {
                 ],
               },
             ],
-          },
+          }
+        ],
+      },
+      {
+        id: "378cf3c1-1900-4a86-b7ae-28633a4e72b1",
+        name: "替换2",
+        type: "REPLACEMENT",
+        owner: adminUserId,
+        data: [
           {
-            id: "378cf3c1-1900-4a86-b7ae-28633a4e72b1",
-            name: "替换2",
             businessCategory: "0c1617ec-2d21-44d8-8e7e-48390f78fa7f",
             templates: [
               {
