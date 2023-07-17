@@ -14,7 +14,7 @@
         </v-col>
       </v-row>
     </v-layout>
-    <v-navigation-drawer permanent location="right" sticky style="height:90dvh;">
+    <v-navigation-drawer permanent location="right" style="height:90dvh;">
       <v-list>
         <v-tabs v-model="tab" color="primary" direction="vertical">
           <v-tab v-for="(item, idx) in items" :value="item.title" :key="idx" @click="selectTab(item)">
@@ -37,6 +37,7 @@ definePageMeta({
   icon: "mdi-text-box-edit",
   index: 2
 });
+let timer: NodeJS.Timer
 const items = ref([
   { title: 'twitter', prependIcon: 'mdi-twitter', color: 'info' },
   { title: 'google', prependIcon: 'mdi-google', color: 'error' },
@@ -62,7 +63,9 @@ onMounted(() => {
   threshold.value = window.innerHeight * 0.4
   onScroll()
 })
-let timer: NodeJS.Timer
+onUnmounted(() => {
+  clearTimeout(timer)
+})
 const selectTab = (item: { title: any; }) => {
   clearTimeout(timer)
   onScrollLock.value = true
