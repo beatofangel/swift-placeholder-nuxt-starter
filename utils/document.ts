@@ -11,7 +11,7 @@ export const useDocumentHelper = () => {
             "Props": {
               "InternalId": ctrl.InternalId
             },
-            "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("${placeholder.value}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
+            "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("${placeholder.value || ''}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
           }];
           window.docQueue.value.push({ doc });
         }

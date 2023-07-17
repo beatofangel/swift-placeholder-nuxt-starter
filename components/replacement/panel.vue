@@ -108,7 +108,7 @@
 import dayjs from 'dayjs'
 import type { Template, Placeholder, DocWarning } from '~/index';
 import { VDatePicker } from 'vuetify/labs/VDatePicker'
-import { throttle } from 'lodash-es'
+import { debounce } from 'lodash-es'
 const selectedTemplateIndex = ref([0])
 const templateListRailed = ref(true)
 const props = defineProps<{ id: string, templates: Template[] | null }>()
@@ -148,9 +148,9 @@ watch(templateListRailed, val => {
   useTemplateRailed().value = val
 })
 
-watch(props.templates![selectedTemplateIndex.value[0]].placeholders, val => {
-  console.log(val)
-})
+// watch(props.templates![selectedTemplateIndex.value[0]].placeholders, val => {
+//   console.log(val)
+// })
 
 const placeholders = computed({
   get() {
@@ -169,6 +169,6 @@ function setRefMap(el: refItem, name: string) {
     refMap[name] = el
   }
 }
-const placeholderUpdate = throttle(($v: string, placeholder: Placeholder) => useDocumentHelper().value.writeContentControl(placeholder), 500, { leading: false })
+const placeholderUpdate = debounce(($v: string, placeholder: Placeholder) => useDocumentHelper().value.writeContentControl(placeholder), 300, { leading: false })
 
 </script>
