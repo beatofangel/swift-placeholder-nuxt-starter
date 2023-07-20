@@ -22,7 +22,12 @@ const selected: Ref<Pick<ListItem, 'icon' | 'name'>> = ref({ icon: 'mdi-family-t
 const level: Ref<number | undefined> = ref(undefined)
 const businessCategoryOptions = ref([])
 onMounted(() => {
-  $fetch('/api/businessCategories').then((data) => {
+  // $fetch('/api/businessCategories').then((data) => {
+  $fetch('/api/businesscategories', { query:
+    {
+      cascaded: true
+    }
+  }).then((data) => {
     businessCategoryOptions.value = data
   })
 })

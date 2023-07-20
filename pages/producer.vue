@@ -1,9 +1,17 @@
 <template>
   <v-container fluid>
     <v-layout class="d-flex flex-column" v-scroll="onScroll" v-resize="onResize">
+      <v-row>
+        <v-col>
+          <v-card>
+            <!-- <business-category-list :visible="true"></business-category-list> -->
+            <CommonTable model="/api/businesscategories" :headers="dummyHeaders" :condition="{ pid: '' }" :visible="true"></CommonTable>
+          </v-card>
+        </v-col>
+      </v-row>
       <v-row v-for="(item, idx) in items" :key="idx">
         <v-col>
-          <v-card :id="item.title">
+          <v-card :id="item.title" class="mb-2">
             <v-toolbar class="pl-4" :color="tab == item.title ? 'primary' : ''">
               <v-icon start :icon="item.prependIcon"></v-icon>
               {{ item.title }}
@@ -14,7 +22,7 @@
         </v-col>
       </v-row>
     </v-layout>
-    <v-navigation-drawer permanent location="right" style="height:90dvh;">
+    <v-navigation-drawer permanent location="right">
       <v-list>
         <v-tabs v-model="tab" color="primary" direction="vertical">
           <v-tab v-for="(item, idx) in items" :value="item.title" :key="idx" @click="selectTab(item)">
@@ -32,6 +40,7 @@
 
 <script setup lang="ts">
 import { throttle } from 'lodash-es'
+import { POSITION, useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
   icon: "mdi-text-box-edit",
@@ -59,9 +68,33 @@ const onScroll = throttle(() => {
 const onResize = throttle(() => {
   threshold.value = window.innerHeight * 0.4
 }, 50)
+const dummyHeaders = ref([
+        {
+          title: "No.",
+          key: "index",
+        },
+        {
+          title: "名称",
+          key: "name",
+          class: "nameClass",
+          cellClass: "nameClass text-truncate ",
+        },
+        {
+          title: "图标",
+          key: "icon",
+          class: "iconClass",
+        },
+        {
+          title: "操作",
+          key: "actions",
+          class: "actionsClass",
+          align: "center",
+        },
+      ])
 onMounted(() => {
   threshold.value = window.innerHeight * 0.4
   onScroll()
+  useToast().success(`Hello world!`, { position: POSITION.TOP_CENTER })
 })
 onUnmounted(() => {
   clearTimeout(timer)
