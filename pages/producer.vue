@@ -1,17 +1,16 @@
 <template>
   <v-container fluid>
     <v-layout class="d-flex flex-column" v-scroll="onScroll" v-resize="onResize">
-      <v-row>
+      <v-row key="businessCategory">
         <v-col>
-          <v-card>
-            <!-- <business-category-list :visible="true"></business-category-list> -->
-            <CommonTable model="/api/businesscategories" :headers="dummyHeaders" :condition="{ pid: '' }" :visible="true"></CommonTable>
-          </v-card>
+          <!-- <v-card id="businessCategory" class="mb-2"> -->
+            <business-category-list id="businessCategory" class="mb-2" :visible="true"></business-category-list>
+          <!-- </v-card> -->
         </v-col>
       </v-row>
-      <v-row v-for="(item, idx) in items" :key="idx">
+      <v-row v-for="item in itemsDummy" :key="item.id">
         <v-col>
-          <v-card :id="item.title" class="mb-2">
+          <v-card :id="item.id" class="mb-2">
             <v-toolbar class="pl-4" :color="tab == item.title ? 'primary' : ''">
               <v-icon start :icon="item.prependIcon"></v-icon>
               {{ item.title }}
@@ -25,7 +24,7 @@
     <v-navigation-drawer permanent location="right">
       <v-list>
         <v-tabs v-model="tab" color="primary" direction="vertical">
-          <v-tab v-for="(item, idx) in items" :value="item.title" :key="idx" @click="selectTab(item)">
+          <v-tab v-for="item in items" :value="item.id" :key="item.id" @click="selectTab(item)">
             <v-icon :icon="item.prependIcon" start></v-icon>{{ item.title }}
           </v-tab>
         </v-tabs>
@@ -40,19 +39,23 @@
 
 <script setup lang="ts">
 import { throttle } from 'lodash-es'
-import { POSITION, useToast } from 'vue-toastification';
+import { useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
   icon: "mdi-text-box-edit",
   index: 2
 });
 let timer: NodeJS.Timer
+const itemsDummy = ref([
+  { title: 'twitter', id: 'twitter', prependIcon: 'mdi-twitter', color: 'info' },
+  { title: 'google', id: 'google', prependIcon: 'mdi-google', color: 'error' },
+  { title: 'facebook', id: 'facebook', prependIcon: 'mdi-facebook', color: 'info' },
+  { title: 'youtube', id: 'youtube', prependIcon: 'mdi-youtube', color: 'error' },
+  { title: 'linkedin', id: 'linkedin', prependIcon: 'mdi-linkedin', color: 'info' },
+])
 const items = ref([
-  { title: 'twitter', prependIcon: 'mdi-twitter', color: 'info' },
-  { title: 'google', prependIcon: 'mdi-google', color: 'error' },
-  { title: 'facebook', prependIcon: 'mdi-facebook', color: 'info' },
-  { title: 'youtube', prependIcon: 'mdi-youtube', color: 'error' },
-  { title: 'linkedin', prependIcon: 'mdi-linkedin', color: 'info' },
+  { title: '业务分类', id: 'businessCategory', prependIcon: 'mdi-family-tree' },
+  ...itemsDummy.value
 ])
 const tab = ref('')
 const offset = 0
@@ -61,48 +64,25 @@ const threshold = ref(0)
 const onScroll = throttle(() => {
   if (onScrollLock.value) return
   items.value.forEach(item=>{
-    const top = (document.querySelector(`#${item.title}`) as Element).getBoundingClientRect().top
-    if (top <= threshold.value && top > 0) tab.value = item.title
+    const top = (document.querySelector(`#${item.id}`) as Element).getBoundingClientRect().top
+    if (top <= threshold.value && top > 0) tab.value = item.id
   })
 }, 50)
 const onResize = throttle(() => {
   threshold.value = window.innerHeight * 0.4
 }, 50)
-const dummyHeaders = ref([
-        {
-          title: "No.",
-          key: "index",
-        },
-        {
-          title: "名称",
-          key: "name",
-          class: "nameClass",
-          cellClass: "nameClass text-truncate ",
-        },
-        {
-          title: "图标",
-          key: "icon",
-          class: "iconClass",
-        },
-        {
-          title: "操作",
-          key: "actions",
-          class: "actionsClass",
-          align: "center",
-        },
-      ])
 onMounted(() => {
   threshold.value = window.innerHeight * 0.4
-  onScroll()
-  useToast().success(`Hello world!`, { position: POSITION.TOP_CENTER })
+  // onScroll()
+  // useToast().success(`Hello world!`, { position: POSITION.TOP_CENTER })
 })
 onUnmounted(() => {
   clearTimeout(timer)
 })
-const selectTab = (item: { title: any; }) => {
+const selectTab = (item: { id: any; }) => {
   clearTimeout(timer)
   onScrollLock.value = true
-  const top = (document.querySelector(`#${item.title}`) as HTMLElement).offsetTop
+  const top = (document.querySelector(`#${item.id}`) as HTMLElement).offsetTop
   window.scrollTo({
     top: top - offset,
     left: 0,

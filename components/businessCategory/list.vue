@@ -1,7 +1,7 @@
 <template>
   <v-card>
-    <v-toolbar color="primary" dark>
-      <v-icon>mdi-format-list-bulleted</v-icon>
+    <v-toolbar class="pl-4" color="primary">
+      <v-icon start>mdi-format-list-bulleted</v-icon>
       <span class="text-h5 ml-1 mt-1">业务类型列表</span>
       <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
@@ -12,19 +12,23 @@
       <v-col v-for="level in 3" cols="4" :key="level" class="pa-0">
         <v-card elevation="0" tile>
           <v-card-text class="d-flex flex-nowrap pa-2">
-            <common-list
-              style="width: 100%; max-height: 649px"
+            <CommonTable
+              style="width: 100%;"
+              height="576"
               hide-tool-bar
               hide-select-btn
               flat
               :condition="conditions[level - 1]"
-              model="/api/businesscategories"
+              api="/api/businesscategories"
               :title="getCategoryName(level)"
               :headers="categoryHeaders"
               :item-names="['name', 'icon', 'ordinal', 'pid']"
               :visible="visible"
               :show-select="level != 3"
               cascade
+              draggable
+              show-index
+              fixed-header
               :selected-id="formData.businessCategories[level - 1]"
               :hide-create="level > 1 && !formData.businessCategories[level - 2]"
               @selectionChange="(val) => selectionChangeHandler(val, level)"
@@ -36,33 +40,14 @@
                 }}</v-icon>
               </template>
               <template
-                v-slot="{
-                  id,
-                  pid,
-                  name,
-                  icon,
-                  ordinal,
-                  isEdit,
-                  visible,
-                  title,
-                  cancel,
-                  save,
-                }"
+                v-slot:editor="props"
               >
                 <business-category-detail
-                  :id="id"
-                  :pid="pid"
-                  :name="name"
-                  :icon="icon"
-                  :ordinal="ordinal"
-                  :isEdit="isEdit"
-                  :visible="visible"
-                  :title="title"
-                  @cancel="cancel"
-                  @save="save"
+                  v-bind="props"
+                  :title="getCategoryName(level)"
                 ></business-category-detail>
               </template>
-            </common-list>
+            </CommonTable>
           </v-card-text>
         </v-card>
       </v-col>
@@ -140,12 +125,12 @@ export default {
     changeHandler() {
       this.$emit('change');
     },
-    selectionChangeHandler(val, level) {
-      if (val.length > 0) {
-        console.log("selectionChangeHandler", level, val[0].id);
-        this.formData.businessCategories[level - 1] = val[0].id;
+    selectionChangeHandler(itemId, level) {
+      if (itemId) {
+        console.log("selectionChangeHandler", level, itemId);
+        this.formData.businessCategories[level - 1] = itemId;
         this.conditions[level] = {
-          pid: val[0].id,
+          pid: itemId,
         }
         // this.$set(this.conditions, level, {
         //   pid: val[0].id,
@@ -169,10 +154,10 @@ export default {
         businessCategories: [],
       },
       categoryHeaders: [
-        {
-          title: "No.",
-          key: "index",
-        },
+        // {
+        //   title: "No.",
+        //   key: "index",
+        // },
         {
           title: "名称",
           key: "name",
@@ -184,12 +169,12 @@ export default {
           key: "icon",
           class: "iconClass",
         },
-        {
-          title: "操作",
-          key: "actions",
-          class: "actionsClass",
-          align: "center",
-        },
+        // {
+        //   title: "操作",
+        //   key: "actions",
+        //   class: "actionsClass",
+        //   align: "center",
+        // },
       ],
       conditions: [{ pid: '' }, null, null],
     };

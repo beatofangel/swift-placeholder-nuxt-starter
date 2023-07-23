@@ -7,7 +7,8 @@ import { md1, md2, md3 } from 'vuetify/blueprints'
 export default defineNuxtConfig({
   modules: [
     '@sidebase/nuxt-auth',
-    '@invictus.codes/nuxt-vuetify'
+    '@invictus.codes/nuxt-vuetify',
+    '@vee-validate/nuxt'
   ],
   css: [
     'vuetify/styles',
@@ -32,6 +33,9 @@ export default defineNuxtConfig({
     // baseURL: process.env.AUTH_ORIGIN,
     origin: process.env.AUTH_ORIGIN,
     enableGlobalAppMiddleware: true
+  },
+  veeValidate: {
+    autoImports: true
   },
   vuetify: {
     vuetifyOptions: {
