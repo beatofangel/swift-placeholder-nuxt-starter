@@ -123,7 +123,12 @@ const refMap: Record<string, refItem> = {}
 onMounted(() => {
   selectedTemplateIndex.value = [useSelectedTemplate(props.id).value]
   templateListRailed.value = useTemplateRailed().value
-  $fetch('/api/businessCategories').then((data) => {
+  // $fetch('/api/businessCategories', {
+  $fetch('/api/businesscategories', {
+    query: {
+      cascaded: true
+    }
+  }).then((data) => {
     businessCategoryOptions.value = data
   })
 })

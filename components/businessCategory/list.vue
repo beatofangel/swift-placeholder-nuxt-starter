@@ -176,7 +176,7 @@ export default {
         //   align: "center",
         // },
       ],
-      conditions: [{ pid: '' }, null, null],
+      conditions: [{ pid: null }, null, null],
     };
   },
 };

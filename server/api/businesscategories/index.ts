@@ -1,5 +1,7 @@
-import { Prisma } from "@prisma/client"
+import { BusinessCategory, Prisma } from "@prisma/client"
 import { HTTPMethod } from "index"
+import { isEmpty, pick } from "lodash-es";
+import { v4 as uuid } from "uuid";
 
 export default defineEventHandler(async event => {
   const methods: Record<HTTPMethod, Function> = {
@@ -35,8 +37,7 @@ export default defineEventHandler(async event => {
         // get list
         // where
         const whereClause: Prisma.BusinessCategoryWhereInput = {}
-        if (query.pid == null) return []
-        if (query.pid === '') {
+        if (isEmpty(query.pid)) {
           whereClause.parent = {
             is: null
           }
@@ -54,16 +55,38 @@ export default defineEventHandler(async event => {
         })
       }
     },
-    // async POST() {
-    //   const { data } = await readBody(event)
-    //   return await event.context.prisma.workspace.create({
-    //     data: {
-    //       type: 'REPLACEMENT',
-    //       owner: username,
-    //       data: Array.isArray(data) ? data : [data]
-    //     }
-    //   })
-    // }
+    async POST() {
+      const data = await readBody<BusinessCategory>(event)
+      const whereClause: Prisma.BusinessCategoryWhereInput = {}
+      if (isEmpty(data.pid)) {
+        whereClause.parent = {
+          is: null
+        }
+      } else {
+        whereClause.pid = data.pid as string
+      }
+      const newData = await event.context.prisma.$transaction(async prisma => {
+        // ordinal start with 0, so new ordinal equals the COUNT
+        const newOrdinal = await prisma.businessCategory.count({
+          where: whereClause
+        })
+        const dataForCreate = pick(data, [ 'pid', 'name', 'icon' ])
+        return await prisma.businessCategory.create({
+          data: {
+            id: uuid(),
+            ...dataForCreate,
+            ordinal: newOrdinal,
+            createdAt: new Date(),
+            version: 0
+          }
+        }).catch(reason => {
+          console.log(reason)
+          return null
+        })
+      })
+
+      return newData
+    }
   }
   const method = methods[getMethod(event)]
   return method && (method())

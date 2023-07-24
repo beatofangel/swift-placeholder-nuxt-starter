@@ -17,6 +17,7 @@ import {
 } from "vuetify/components";
 import Draggable from "vuedraggable";
 import { ClientOnly } from '#components';
+import { uniqueId } from 'lodash-es';
 
 export interface Item extends Record<string, any> {
   id?: string;
@@ -114,6 +115,7 @@ export default defineComponent({
   emits: {
     selectionChange: (selection?: string) => true,
     close: (val: boolean) => true,
+    change: () => true,
   },
   computed: {
     tableHeight() {
@@ -181,61 +183,66 @@ export default defineComponent({
     },
     handleDelete(item: Item) {
       console.log('handleDelete', item)
-      // this.item = JSON.parse(JSON.stringify(item))
-      // useDialog().$confirm({
-      //   text: `确定要删除${this.title}${item["name"] ? `：${item["name"]}` : ""
-      //     }？`,
-      //   onOk: () => {
-      //     const path = item.path;
-      //     const ordinal = item.ordinal;
-      //     item.delete = true;
-      //     let targetArr = [item];
-      //     for (const e of this.items) {
-      //       if (e.ordinal > ordinal) {
-      //         const moveUpItem = {} as Item;
-      //         for (const key in e) {
-      //           moveUpItem[key] = key == "ordinal" ? e.ordinal - 1 : e[key];
-      //         }
-      //         moveUpItem.sort = true;
-      //         targetArr.push(moveUpItem);
-      //       }
-      //     }
+      this.item = JSON.parse(JSON.stringify(item))
+      useDialog().$warning({
+        text: `确定要删除${this.title}${item.name ? `：${item.name}` : ""
+          }？`,
+        onOk: () => {
+          // const path = item.path;
+          // const ordinal = item.ordinal;
+          // item.delete = true;
+          // let targetArr = [item];
+          // for (const e of this.items) {
+          //   if (e.ordinal > ordinal) {
+          //     const moveUpItem = {} as Item;
+          //     for (const key in e) {
+          //       moveUpItem[key] = key == "ordinal" ? e.ordinal - 1 : e[key];
+          //     }
+          //     moveUpItem.sort = true;
+          //     targetArr.push(moveUpItem);
+          //   }
+          // }
 
-      //     useFetch(this.api, { method: "POST", params: { items: targetArr } })
-      //       .then(() => {
-      //         useFetch(this.api, { query: this.condition }).then(
-      //           ({ data }) => {
-      //             this.items = data.value as [];
-      //           }
-      //         );
-      //         this.$emit("change");
-      //         useToast().success(`${this.title}删除成功！`);
-      //       })
-      //       .catch((err) => {
-      //         console.error(err);
-      //         useToast().error(`${this.title}删除失败！`);
-      //       })
-      //       .finally(() => {
-      //         // this.item = null
-      //       });
-      //   },
-      // });
+          // useFetch(this.api, { method: "POST", params: { items: targetArr } })
+          //   .then(() => {
+          //     useFetch(this.api, { query: this.condition }).then(
+          //       ({ data }) => {
+          //         this.items = data.value as [];
+          //       }
+          //     );
+          //     this.$emit("change");
+          //     useToast().success(`${this.title}删除成功！`);
+          //   })
+          //   .catch((err) => {
+          //     console.error(err);
+          //     useToast().error(`${this.title}删除失败！`);
+          //   })
+          //   .finally(() => {
+          //     // this.item = null
+          //   });
+        },
+      });
     },
     handleSave(item: Item) {
       console.log('handleSave', item)
-      // useFetch(this.api, { method: "POST", params: { item } })
-      //   .then(() => {
-      //     this.dialog.showDetail = false;
-      //     useFetch(this.api, { query: this.condition }).then(({ data }) => {
-      //       this.items = data.value as [];
-      //     });
-      //     this.$emit("change");
-      //     useToast().success(`${this.title}保存成功！`);
-      //   })
-      //   .catch((err: any) => {
-      //     console.error(err);
-      //     useToast().error(`${this.title}保存失败！`);
-      //   });
+      useFetch(this.api, { method: "POST", body: item })
+        .then(({ data, error }) => {
+          if (error.value) {
+            useToast().error(`${this.title}保存失败！`);
+          } else {
+            console.log(data.value)
+            this.$emit("change");
+            useToast().success(`${this.title}保存成功！`);
+            this.dialog.showDetail = false;
+            useFetch(this.api, { query: this.condition }).then(({ data }) => {
+              this.items = data.value as [];
+            });
+          }
+        })
+        .catch((err: any) => {
+          console.error(err);
+          useToast().error(`${this.title}保存失败！`);
+        })
     },
     // handleSelectAll() {
     //   const toggleSelect = this.items.length != this.selectedLength
@@ -336,8 +343,10 @@ export default defineComponent({
                 // @ts-ignore
                 <Draggable
                   modelValue={this.items}
+                  group={uniqueId('table-draggable-')}
                   animation="200"
                   ghost-class="ghost"
+                  handle=".data-table-draggable"
                   itemKey="name"
                   tag="tbody"
                   onStart={this.onDragRow}
@@ -360,7 +369,7 @@ export default defineComponent({
                                     <VHover>
                                       {{
                                         default({ isHovering, props }) {
-                                          return <td {...props} style={{ cursor: isHovering ? 'move' : 'auto' }} key={key}><VIcon color='grey'>mdi-drag-vertical</VIcon></td>
+                                          return <td {...props} style={{ cursor: isHovering ? 'move' : 'auto' }} key={key}><VIcon color='grey' class="data-table-draggable">mdi-drag-vertical</VIcon></td>
                                         },
                                       }}
                                     </VHover>

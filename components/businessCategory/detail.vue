@@ -59,6 +59,7 @@ import VIconPicker from '../VIconPicker.vue'
 import { Item } from 'components/common/table'
 import * as yup from 'yup';
 const props = defineProps({
+  pid: String,
   id: String,
   name: String,
   icon: String,
@@ -94,9 +95,11 @@ const onSave = handleSubmit((values, ctx) => {
   emits('save', {
     // id: this.formData.id,
     // pid: this.formData.pid,
+    pid: props.pid,
+    id: props.id,
     name: values.name,
     icon: `mdi-${values.icon}`,
-    // ordinal: this.formData.ordinal,
+    ordinal: props.version ?? 0,
     insert: !isEdit.value,
   } as Item)
 }, (ctx) => {
