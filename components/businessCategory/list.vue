@@ -24,7 +24,7 @@
               :headers="categoryHeaders"
               :item-names="['name', 'icon', 'ordinal', 'pid']"
               :visible="visible"
-              :show-select="level != 3"
+              show-select
               cascade
               draggable
               show-index
@@ -161,13 +161,15 @@ export default {
         {
           title: "名称",
           key: "name",
-          class: "nameClass",
-          cellClass: "nameClass text-truncate ",
+          class: "text-center",
+          cellClass: "nameClass text-center text-truncate ",
         },
         {
           title: "图标",
           key: "icon",
-          class: "iconClass",
+          class: "text-center",
+          cellClass: "text-center",
+          style: "min-width: 64px;"
         },
         // {
         //   title: "操作",

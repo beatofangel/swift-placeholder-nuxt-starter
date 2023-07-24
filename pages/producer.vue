@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <v-layout class="d-flex flex-column" v-scroll="onScroll" v-resize="onResize">
+    <v-layout class="d-flex flex-column px-2" v-scroll="onScroll" v-resize="onResize">
       <v-row key="businessCategory">
         <v-col>
           <!-- <v-card id="businessCategory" class="mb-2"> -->

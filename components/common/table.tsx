@@ -17,7 +17,8 @@ import {
 } from "vuetify/components";
 import Draggable from "vuedraggable";
 import { ClientOnly } from '#components';
-import { uniqueId } from 'lodash-es';
+import { v4 as uuid } from 'uuid';
+import './table.scss';
 
 export interface Item extends Record<string, any> {
   id?: string;
@@ -144,35 +145,37 @@ export default defineComponent({
     },
     onDropRow(event: any) {
       console.log('onDropRow')
-      this.drag = false;
-      let targetArr = [] as Item[];
-      this.items.forEach((item, index) => {
-        const oriOrdinal = index + 1;
-        if (oriOrdinal != item.ordinal) {
-          item.ordinal = oriOrdinal;
-          item.sort = true;
-          targetArr.push(item);
-        }
-      });
-      console.log("update range:", targetArr);
-      this.items.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
-      // targetArr.length > 0 &&
-      //   useFetch(this.api, { method: "POST", params: { items: targetArr } })
-      //     .then(() => {
-      //       useFetch(this.api, { query: this.condition })
-      //         .then(({ data }) => {
-      //           this.items = data.value as [];
-      //         })
-      //         .catch((err) => {
-      //           console.log(err);
-      //         });
-      //       this.$emit("change");
-      //       useToast().success(`${this.title}更新成功！`);
-      //     })
-      //     .catch((err) => {
-      //       console.error(err);
-      //       useToast().error(`${this.title}更新失败！`);
-      //     });
+      if (event.newIndex != event.oldIndex) {
+        this.drag = false;
+        let targetArr = [] as Item[];
+        this.items.forEach((item, index) => {
+          const oriOrdinal = index + 1;
+          if (oriOrdinal != item.ordinal) {
+            item.ordinal = oriOrdinal;
+            item.sort = true;
+            targetArr.push(item);
+          }
+        });
+        console.log("update range:", targetArr);
+        this.items.sort((a, b) => (a.ordinal ?? 0) - (b.ordinal ?? 0))
+        // targetArr.length > 0 &&
+        //   useFetch(this.api, { method: "POST", params: { items: targetArr } })
+        //     .then(() => {
+        //       useFetch(this.api, { query: this.condition })
+        //         .then(({ data }) => {
+        //           this.items = data.value as [];
+        //         })
+        //         .catch((err) => {
+        //           console.log(err);
+        //         });
+        //       this.$emit("change");
+        //       useToast().success(`${this.title}更新成功！`);
+        //     })
+        //     .catch((err) => {
+        //       console.error(err);
+        //       useToast().error(`${this.title}更新失败！`);
+        //     });
+      }
     },
     onClose() {
       this.$emit("close", false);
@@ -262,10 +265,10 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const indexCol = { title: "No.", key: "index", style: "width: 64px" } as Header
-    const draggableCol = { title: '', key: 'data-table-draggable', style: "width: 48px;" } as Header
-    const selectableCol = { title: '', key: 'data-table-select', style: "width: 64px;",  class: "text-center" } as Header
-    const actionCol = { title: "操作", key: "actions", class: "actionsClass text-center", align: "center" } as Header
+    const indexCol = { title: "No.", key: "index", style: "min-width: 64px", class: "text-center" } as Header
+    const draggableCol = { title: '', key: 'data-table-draggable', style: "min-width: 21px;", class: "px-0", cellClass: "px-0" } as Header
+    const selectableCol = { title: '', key: 'data-table-select', style: "min-width: 64px;", class: "text-center" } as Header
+    const actionCol = { title: "操作", key: "actions", class: "actionsClass text-center", align: "center", style: "min-width: 72px;" } as Header
     const item = ref({
       isEdit: true,
     } as Item);
@@ -290,6 +293,7 @@ export default defineComponent({
     };
   },
   render() {
+    const group = uuid()
     return (
       <VCard flat={this.flat}>
         {
@@ -316,7 +320,7 @@ export default defineComponent({
           )
         }
         { /* @ts-ignore */ }
-        <ClientOnly>
+        {/* <ClientOnly> */}
           <VTable theme='primary' fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
             <thead>
               <tr>
@@ -343,7 +347,7 @@ export default defineComponent({
                 // @ts-ignore
                 <Draggable
                   modelValue={this.items}
-                  group={uniqueId('table-draggable-')}
+                  group={group}
                   animation="200"
                   ghost-class="ghost"
                   handle=".data-table-draggable"
@@ -366,13 +370,7 @@ export default defineComponent({
                               this.innerHeaders.map(({ key, cellClass }) => {
                                 return (
                                   key == "data-table-draggable" && (
-                                    <VHover>
-                                      {{
-                                        default({ isHovering, props }) {
-                                          return <td {...props} style={{ cursor: isHovering ? 'move' : 'auto' }} key={key}><VIcon color='grey' class="data-table-draggable">mdi-drag-vertical</VIcon></td>
-                                        },
-                                      }}
-                                    </VHover>
+                                    <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable">mdi-drag-vertical</VIcon></td>
                                   ) ||
                                   key == "data-table-select" && (
                                     <td class="text-center" key={key}><VIcon
@@ -383,10 +381,10 @@ export default defineComponent({
                                     ></VIcon></td>
                                   ) ||
                                   key == 'index' && (
-                                    <td class="text-start" key={`item.${key}`} >{index + 1}</td>
+                                    <td class="text-center" key={`item.${key}`} >{index + 1}</td>
                                   ) ||
                                   !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                    <td class={`text-start ${cellClass || ''}`} key={`item.${key}`}>
+                                    <td class={cellClass} key={`item.${key}`}>
                                       {
                                         // @ts-ignore
                                         this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
@@ -432,7 +430,7 @@ export default defineComponent({
               )
             }
           </VTable>
-        </ClientOnly>
+        {/* </ClientOnly> */}
         <VDivider></VDivider>
         <VCardActions>
           <VSpacer></VSpacer>

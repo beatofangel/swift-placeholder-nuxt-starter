@@ -1,0 +1,11 @@
+/* table row drag transition */
+.flip-chip-move {
+  transition: transform 0.5s;
+}
+.no-move {
+  transition: transform 0s;
+}
+.ghost {
+  opacity: 1;
+  background: rgb(200, 235, 251, 0.4);
+}
