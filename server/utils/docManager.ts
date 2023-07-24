@@ -1,7 +1,5 @@
 import fs from "fs";
 import path from "path";
-const { storageConfigFolder, siteUrl } = useDocConfig()
-const { generateRevisionId } = useDocService()
 
 export enum FileType {
   word = "word",
@@ -9,8 +7,10 @@ export enum FileType {
   slide = "slide"
 }
 export const useDocManager = () => {
+  const { storageConfigFolder, siteUrl } = useDocConfig()
   const fileUtility = useFileUtility();
   const runtimeConfig = useRuntimeConfig()
+  const { generateRevisionId } = useDocService()
   const baseUrl = runtimeConfig.app.baseURL
 
   const existsSync = function (path: string) {
