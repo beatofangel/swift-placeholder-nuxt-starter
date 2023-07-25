@@ -14,6 +14,7 @@ html {
 }
 *::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 *::-webkit-scrollbar-track {
   background: rgb(var(--v-scrollbarTrack));

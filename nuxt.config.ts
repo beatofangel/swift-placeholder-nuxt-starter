@@ -14,6 +14,11 @@ export default defineNuxtConfig({
     'vuetify/styles',
     '@mdi/font/css/materialdesignicons.min.css'
   ],
+  build: {
+    transpile: [
+      'vue-toastification'
+    ]
+  },
   // components: {
   //   global: true,
   //   dirs: ['~/components']

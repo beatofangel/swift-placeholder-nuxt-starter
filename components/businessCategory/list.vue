@@ -56,7 +56,7 @@
 </template>
 
 <script>
-import CommonList from "../common/list.vue";
+// import CommonList from "../common/list.vue";
 import BusinessCategoryDetail from "./detail.vue";
 export default {
   name: "business-category-list",
@@ -71,7 +71,7 @@ export default {
     // })
   },
   components: {
-    CommonList,
+    // CommonList,
     BusinessCategoryDetail,
   },
   watch: {

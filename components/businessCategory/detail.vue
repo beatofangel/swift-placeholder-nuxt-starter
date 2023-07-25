@@ -1,8 +1,8 @@
 <template>
   <v-card>
     <v-toolbar class="pl-4" color="primary">
-      <v-icon>{{ isEdit ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
-      <span class="text-h5 ml-1 mt-1">{{ `${isEdit ? '编辑' : '新建'} - ${title}` }}</span>
+      <v-icon>{{ editIcon }}</v-icon>
+      <span class="text-h5 ml-1 mt-1">{{ editTitle }}</span>
       <v-spacer></v-spacer>
       <v-btn @click="onCancel" icon size="small">
         <v-icon color="error">mdi-close</v-icon>
@@ -55,19 +55,27 @@
 </template>
 
 <script setup lang="ts">
+// import type { BusinessCategory } from '@prisma/client';
 import VIconPicker from '../VIconPicker.vue'
-import { Item } from 'components/common/table'
+import { Item } from '@/components/common/table'
 import * as yup from 'yup';
-const props = defineProps({
-  pid: String,
-  id: String,
-  name: String,
-  icon: String,
-  ordinal: Number,
-  title: String,
-  version: Number,
-  isEdit: Boolean,
+
+// const props = withDefaults(defineProps<Pick<BusinessCategory, 'id' | 'pid' | 'name' | 'icon' | 'ordinal' | 'version'> & { id: string, pid: string | null, name: string, icon: string | null, ordinal: number, version: number, title: string | null, mode: EditMode }>(), {
+//   mode: EditMode.Create
+// })
+const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: string, icon?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
+  mode: EditMode.Create
 })
+// const props = defineProps({
+//   pid: String,
+//   id: String,
+//   name: String,
+//   icon: String,
+//   ordinal: Number,
+//   title: String,
+//   version: Number,
+//   mode: Number
+// })
 const { defineComponentBinds, handleSubmit } = useForm({
   validationSchema: yup.object({
     name: yup.string().required(),
@@ -84,7 +92,20 @@ const icon = useField('icon', undefined, { initialValue: formData.value.icon })
 const processing = ref({
   submit: false
 })
-const isEdit = ref(props.isEdit ?? false)
+const editIcon = computed(() => {
+  return props.mode == EditMode.Create ?
+    'mdi-plus' :
+    props.mode == EditMode.Update ?
+      'mdi-pencil' :
+      Error('Unexpected edit mode!')
+})
+const editTitle = computed(() => {
+  return props.mode == EditMode.Create ?
+    `新建 - ${props.title}` :
+    props.mode == EditMode.Update ?
+      `编辑 - ${props.title}` :
+      Error('Unexpected edit mode!')
+})
 const emits = defineEmits({
   'save': (item: Item) => true,
   'cancel': (val: boolean) => true,
@@ -99,8 +120,9 @@ const onSave = handleSubmit((values, ctx) => {
     id: props.id,
     name: values.name,
     icon: `mdi-${values.icon}`,
-    ordinal: props.version ?? 0,
-    insert: !isEdit.value,
+    ordinal: props.ordinal ?? 0,
+    version: props.version,
+    mode: props.mode
   } as Item)
 }, (ctx) => {
   console.log(ctx.errors)

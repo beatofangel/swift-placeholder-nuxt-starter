@@ -5,6 +5,15 @@
 .no-move {
   transition: transform 0s;
 }
+.draggable-hover i.data-table-draggable {
+  display: none;
+}
+.draggable-hover:hover i.data-table-draggable {
+  display: inline-block;
+}
+.draggable-drag i.data-table-draggable {
+  display: inline-block;
+}
 .ghost {
   opacity: 1;
   background: rgb(200, 235, 251, 0.4);

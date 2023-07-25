@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { throttle } from 'lodash-es'
-import { useToast } from 'vue-toastification';
+// import { useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
   icon: "mdi-text-box-edit",
@@ -74,7 +74,7 @@ const onResize = throttle(() => {
 onMounted(() => {
   threshold.value = window.innerHeight * 0.4
   // onScroll()
-  // useToast().success(`Hello world!`, { position: POSITION.TOP_CENTER })
+  // useToast().success(`Hello world!`)
 })
 onUnmounted(() => {
   clearTimeout(timer)
