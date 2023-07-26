@@ -49,6 +49,7 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/mime": "^3.0.1",
     "@types/uuid": "^9.0.2",
+    "@vee-validate/i18n": "^4.10.8",
     "@vee-validate/nuxt": "^4.10.8",
     "@vee-validate/yup": "^4.10.8",
     "bcrypt": "^5.1.0",

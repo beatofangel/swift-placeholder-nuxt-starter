@@ -18,6 +18,7 @@ import {
 import Draggable from "vuedraggable";
 import { v4 as uuid } from 'uuid';
 import './table.scss';
+import { Result } from 'server/utils/http';
 
 export interface Item extends Record<string, any> {
   id?: string;
@@ -241,13 +242,18 @@ export default defineComponent({
           if (error.value) {
             useToast().error(`${this.title}保存失败！`);
           } else {
-            console.log(data.value)
-            this.$emit("change");
-            useToast().success(`${this.title}保存成功！`);
-            this.dialog.showDetail = false;
-            useFetch(this.api, { query: this.condition }).then(({ data }) => {
-              this.items = data.value as [];
-            });
+            const result = data.value as Result
+            if (result.success) {
+              console.log(result.data)
+              this.$emit("change");
+              useToast().success(`${this.title}保存成功！`);
+              this.dialog.showDetail = false;
+              useFetch(this.api, { query: this.condition }).then(({ data }) => {
+                this.items = data.value as [];
+              });
+            } else {
+              useToast().error(`${this.title}保存失败！\n${result.errorMessage}`);
+            }
           }
         })
         .catch((err: any) => {

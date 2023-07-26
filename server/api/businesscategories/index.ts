@@ -1,8 +1,9 @@
 import { BusinessCategory, Prisma } from "@prisma/client"
 import { EditMode } from "@/composables/dialog";
-import { HTTPMethod } from "index"
-import { isArray, isEmpty, pick } from "lodash-es";
+import { isArray, isEmpty, keyBy, pick } from "lodash-es";
 import { v4 as uuid } from "uuid";
+import { Result } from "server/utils/http";
+import { HTTPMethod } from "index";
 
 type BusinessCategoryWithOp = BusinessCategory & { mode: EditMode }
 
@@ -36,6 +37,16 @@ export default defineEventHandler(async event => {
             ordinal: "asc"
           }
         })
+      } else if (query.count === 'true') {
+        const whereClause: Prisma.BusinessCategoryWhereInput = {}
+        const conditions = pick(query, ['id', 'pid', 'name', 'icon'])
+        Object.keys(conditions).forEach((val) => {
+          const val2 = val as keyof BusinessCategory
+          whereClause[val2] = query[val2] as string
+        })
+        return await event.context.prisma.businessCategory.count({
+          where: whereClause
+        })
       } else {
         // get list
         // where
@@ -59,6 +70,7 @@ export default defineEventHandler(async event => {
       }
     },
     async POST() {
+      const result: Result = { success: false }
       const data = await readBody(event)
       if (isArray(data)) {
         // 排序
@@ -104,34 +116,45 @@ export default defineEventHandler(async event => {
       } else {
         // 单条数据新增
         const whereClause: Prisma.BusinessCategoryWhereInput = {}
+        const singleData: BusinessCategoryWithOp = data
         if (isEmpty(data.pid)) {
           whereClause.parent = {
             is: null
           }
         } else {
-          whereClause.pid = data.pid as string
+          whereClause.pid = singleData.pid as string
         }
-        const created = await event.context.prisma.$transaction(async prisma => {
-          // ordinal start with 0, so new ordinal equals the COUNT
-          const newOrdinal = await prisma.businessCategory.count({
-            where: whereClause
+        try {
+          const created = await event.context.prisma.$transaction(async prisma => {
+            // ordinal start with 0, so new ordinal equals the COUNT
+            const newOrdinal = await prisma.businessCategory.count({
+              where: whereClause
+            })
+            const dataForCreate = pick(singleData, [ 'pid', 'name', 'icon' ])
+            return await prisma.businessCategory.create({
+              data: {
+                id: uuid(),
+                ...dataForCreate,
+                ordinal: newOrdinal,
+                createdAt: new Date(),
+                version: 0
+              }
+            }).catch(e => {
+              console.log(e)
+              throw e
+            })
           })
-          const dataForCreate = pick(data, [ 'pid', 'name', 'icon' ])
-          return await prisma.businessCategory.create({
-            data: {
-              id: uuid(),
-              ...dataForCreate,
-              ordinal: newOrdinal,
-              createdAt: new Date(),
-              version: 0
-            }
-          }).catch(reason => {
-            console.log(reason)
-            return null
-          })
-        })
-        console.log('insert:', created)
-        return created
+          result.data = created
+          result.success = true
+        } catch(e) {
+          if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+            result.success = false
+            result.errorMessage = `存在唯一约束冲突，无法使用名称<${singleData.name}>`
+          } else {
+            throw e
+          }
+        }
+        return result
       }
     },
     async PUT() {

@@ -15,6 +15,7 @@
             <v-col>
                 <v-text-field
                   v-model="name.value.value"
+                  aria-autocomplete="none"
                   name="name"
                   label="名称"
                   :placeholder="`请输入${title}名称`"
@@ -59,6 +60,7 @@
 import VIconPicker from '../VIconPicker.vue'
 import { Item } from '@/components/common/table'
 import * as yup from 'yup';
+import { debounce, isEmpty } from 'lodash-es';
 
 // const props = withDefaults(defineProps<Pick<BusinessCategory, 'id' | 'pid' | 'name' | 'icon' | 'ordinal' | 'version'> & { id: string, pid: string | null, name: string, icon: string | null, ordinal: number, version: number, title: string | null, mode: EditMode }>(), {
 //   mode: EditMode.Create
@@ -76,19 +78,37 @@ const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: strin
 //   version: Number,
 //   mode: Number
 // })
-const { defineComponentBinds, handleSubmit } = useForm({
-  validationSchema: yup.object({
-    name: yup.string().required(),
-    icon: yup.string().required()
-  })
-})
+const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
+  // if (!isEmpty(name)) {
+    const { data } = await useFetch("/api/businesscategories", { query: { count: true, name } })
+    const isValid = data.value == 0
+    console.log('duplication', name, isValid)
+  // }
+  resolve(isValid)
+  // return isValid
+}, 500, { leading: false })
 const formData = ref({
   name: props.name || '',
   icon: props.icon ? props.icon.substring(4) : '',
   version: props.version
 })
-const name = useField('name', undefined, { initialValue: formData.value.name })
-const icon = useField('icon', undefined, { initialValue: formData.value.icon })
+const { defineComponentBinds, handleSubmit } = useForm({
+  validationSchema: yup.object().shape({
+    name: yup.string().required().test('duplication',
+      '此${label}已存在', function(value) {
+        if (isEmpty(value)) return true
+        return new Promise(resolve => nameDuplicationCheck(value, resolve))
+      }).label('名称'),
+    icon: yup.string().required().label('图标')
+  }),
+  initialValues: {
+    name: formData.value.name,
+    icon: formData.value.icon
+  },
+  validateOnMount: false
+})
+const name = useField('name')
+const icon = useField('icon')
 const processing = ref({
   submit: false
 })
