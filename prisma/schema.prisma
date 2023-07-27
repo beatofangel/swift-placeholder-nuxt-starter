@@ -195,7 +195,7 @@ model BusinessCategory {
   version   Int
 
   templates BcTplRel[]
-  parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id])
+  parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id], onDelete: Cascade )
   children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
 }
 

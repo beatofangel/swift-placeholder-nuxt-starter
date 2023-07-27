@@ -1268,11 +1268,6 @@
     hookable "^5.5.3"
     unhead "1.1.30"
 
-"@vee-validate/i18n@^4.10.8":
-  version "4.10.8"
-  resolved "https://registry.npmmirror.com/@vee-validate/i18n/-/i18n-4.10.8.tgz#26ba9c494173bad6ddab7b9bdde415652fb20929"
-  integrity sha512-ZnmKFUyvHqSyqtvK1TitXj3su7Dy8VlTD1WaEfaI4scqmKaoKJCKCDyUkfT/RiuF8Kkf5JpWFTU9z/EWKuoPUw==
-
 "@vee-validate/nuxt@^4.10.8":
   version "4.10.8"
   resolved "https://registry.npmmirror.com/@vee-validate/nuxt/-/nuxt-4.10.8.tgz#5732bd537bc6c99dadadda65ef55370b23afe5c4"
@@ -6834,6 +6829,11 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.npmmirror.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+yup-locales@^1.2.15:
+  version "1.2.15"
+  resolved "https://registry.npmmirror.com/yup-locales/-/yup-locales-1.2.15.tgz#833483662268fa49ce47525eda27b1981e0f9807"
+  integrity sha512-+Ch2dJuNWsNZYZB29u359rGYNQMjDIrLXkRMuSGPEvmM/Em3QeoOOBcKEnmMxxsbdEtm5saE7p5VHk4n0C5BTA==
 
 yup@^1.2.0:
   version "1.2.0"

@@ -27,15 +27,8 @@
           </v-row>
           <v-row>
             <v-col>
-              <v-icon-picker
-                v-model="(icon.value.value as string)"
-                name="icon"
-                prefix="mdi-"
-                label="图标"
-                placeholder="请输入图标名称"
-                persistent-placeholder
-                  :error-messages="icon.errorMessage.value"
-              ></v-icon-picker>
+              <v-text-field name="path" v-model="path.value.value" :error-messages="file.errorMessage.value"></v-text-field>
+              <v-file-input label="文档" name="file" accept=".docx" placeholder="请选择文件" persistent-placeholder></v-file-input>
             </v-col>
           </v-row>
         </v-card-text>
@@ -56,18 +49,16 @@
 </template>
 
 <script setup lang="ts">
-// import type { BusinessCategory } from '@prisma/client';
-import VIconPicker from '../VIconPicker.vue'
 import { Item } from '@/components/common/table'
 import * as yup from 'yup';
 import { debounce, isEmpty } from 'lodash-es';
 
-const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: string, icon?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
+const props = withDefaults(defineProps<{ id?: string, name?: string, path?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
   mode: EditMode.Create
 })
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
-    const { data } = await useFetch("/api/businesscategories", { query: { count: true, name } })
+    const { data } = await useFetch("/api/templates", { query: { count: true, name } })
     const isValid = data.value == 0
     console.log('duplication', name, isValid)
   // }
@@ -76,7 +67,8 @@ const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
 }, 500, { leading: false })
 const formData = ref({
   name: props.name || '',
-  icon: props.icon ? props.icon.substring(4) : '',
+  path: props.path || '',
+  file: [] as File[],
   version: props.version
 })
 const { defineComponentBinds, handleSubmit } = useForm({
@@ -86,16 +78,18 @@ const { defineComponentBinds, handleSubmit } = useForm({
         if (isEmpty(value)) return true
         return new Promise(resolve => nameDuplicationCheck(value, resolve))
       }),
-    icon: yup.string().label('图标').required()
+    file: yup.mixed().label('文档').required().test('fileSize', "File Size is too large", (value: any) => value[0].size <= 4096)
   }),
   initialValues: {
     name: formData.value.name,
-    icon: formData.value.icon
+    path: formData.value.path,
+    file: formData.value.file
   },
   validateOnMount: false
 })
 const name = useField('name')
-const icon = useField('icon')
+const path = useField('path')
+const file = useField('file')
 const processing = ref({
   submit: false
 })
@@ -123,10 +117,9 @@ const onSave = handleSubmit((values, ctx) => {
   emits('save', {
     // id: this.formData.id,
     // pid: this.formData.pid,
-    pid: props.pid,
     id: props.id,
     name: values.name,
-    icon: `mdi-${values.icon}`,
+    path: values.path,
     ordinal: props.ordinal ?? 0,
     version: props.version,
     mode: props.mode

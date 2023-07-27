@@ -1,5 +1,5 @@
 <template>
-  <VCascadeSelect ref="cascadeSelect" v-model="businessCategory" :items="businessCategoryOptions" label="业务类型" placeholder="请选择业务类型"
+  <VCascadeSelect ref="cascadeSelect" v-model="businessCategory" :items="businessCategoryOptions" label="业务分类" placeholder="请选择业务分类"
     persistent-placeholder item-title="name" item-value="id" chips clearable open-on-clear :scroll-offset="0">
   </VCascadeSelect>
 </template>

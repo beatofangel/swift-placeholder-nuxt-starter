@@ -818,7 +818,7 @@ async function main() {
         pid: "975eee0c-3294-479e-89ae-8f631d0ef23a",
         name: "小分类22A",
         icon: "mdi-food-croissant",
-        ordinal: 0,
+        ordinal: 9,
         createdAt: createAt,
         updatedAt: updateAt,
         version: 0,

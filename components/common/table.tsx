@@ -53,7 +53,7 @@ export default defineComponent({
     },
     // itemNames: Array,
     visible: Boolean,
-    selectedId: String,
+    // selectedId: String,
     hideCreate: Boolean,
     showSelect: Boolean,
     cascade: Boolean,
@@ -77,7 +77,7 @@ export default defineComponent({
             $fetch(this.api, { query: this.condition })
               .then((data) => {
                 this.items = data as [];
-                this.selected = this.selectedId
+                // this.selected = this.selectedId
               })
               .catch((err) => {
                 console.log(err);
@@ -94,7 +94,7 @@ export default defineComponent({
         // =====================
         // if (!this.cascade) return
         console.log("condition", newVal, oldVal);
-        this.selected = null;
+        // this.selected = null;
         if (newVal) {
           useFetch(this.api, { query: this.condition })
             .then(({ data }) => {
@@ -123,12 +123,12 @@ export default defineComponent({
       return "576px";
       // return window.innerHeight > 1000 ? '650px' : 'calc(70vh)'
     },
-    selectedLength() {
-      return this.selections.length
-    },
-    selections() {
-      return this.items.filter(item => item.select)
-    }
+    // selectedLength() {
+    //   return this.selections.length
+    // },
+    // selections() {
+    //   return this.items.filter(item => item.select)
+    // },
   },
   methods: {
     createNewItem() {
@@ -167,12 +167,14 @@ export default defineComponent({
                 useFetch(this.api, { query: this.condition })
                   .then(({ data }) => {
                     this.items = data.value as [];
+                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                    prevSelected && (prevSelected.select = true)
                   })
                   .catch((err) => {
                     console.log(err);
                   });
                 this.$emit("change");
-                useToast().success(`${this.title}更新成功！`);
+                // useToast().success(`${this.title}更新成功！`); // do not prompt
               }
             })
             .catch((err) => {
@@ -191,9 +193,10 @@ export default defineComponent({
     handleDelete(item: Item) {
       console.log('handleDelete', item)
       this.item = JSON.parse(JSON.stringify(item))
+      const text = [h('span', `确定要删除${this.title}${item.name ? `：${item.name}` : ""}？`)]
+      this.cascade && text.push(h('br'), h('span', { class: ['text-red'] }, `注意：此操作将会删除${item.name}下所有子项`))
       useDialog().$warning({
-        text: `确定要删除${this.title}${item.name ? `：${item.name}` : ""
-          }？`,
+        text: () => h('div', null, text),
         onOk: () => {
           const ordinal = item.ordinal;
           this.item.mode = EditMode.Delete
@@ -221,6 +224,12 @@ export default defineComponent({
                 useFetch(this.api, { query: this.condition }).then(
                   ({ data }) => {
                     this.items = data.value as [];
+                    // first item selected if exists
+                    // if (this.items.length > 0) {
+                    //   this.items[0].select = true
+                    this.selected = null
+                    this.$emit('selectionChange')
+                    // }
                   }
                 );
                 this.$emit("change");
@@ -269,7 +278,11 @@ export default defineComponent({
       // item.select = !item.select
       if (!item.select) {
         this.items.forEach(itm=>itm.select = itm==item)
+        this.selected = item.id
         this.$emit('selectionChange', item.id)
+      } else {
+        this.selected = null
+        this.$emit('selectionChange')
       }
       // this.selected.length != 0 && this.$emit("select", this.selected[0].id);
     },

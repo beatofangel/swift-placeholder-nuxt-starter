@@ -2,11 +2,11 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1 mt-1">业务类型列表</span>
-      <v-spacer></v-spacer>
+      <span class="text-h5 ml-1 mt-1">业务分类</span>
+      <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>
-      </v-btn>
+      </v-btn> -->
     </v-toolbar>
     <v-row class="ma-0">
       <v-col v-for="level in 3" cols="4" :key="level" class="pa-0">
@@ -29,7 +29,6 @@
               draggable
               show-index
               fixed-header
-              :selected-id="formData.businessCategories[level - 1]"
               :hide-create="level > 1 && !formData.businessCategories[level - 2]"
               @selectionChange="(val) => selectionChangeHandler(val, level)"
               @change="changeHandler"
@@ -120,9 +119,10 @@ export default {
       this.$emit("close", false);
     },
     getCategoryName(level) {
-      return `${["一", "二", "三"][level - 1]}级业务类型`;
+      return `${["一", "二", "三"][level - 1]}级业务分类`;
     },
     changeHandler() {
+      console.log('changeHandler')
       this.$emit('change');
     },
     selectionChangeHandler(itemId, level) {
