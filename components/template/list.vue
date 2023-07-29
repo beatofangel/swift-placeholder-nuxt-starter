@@ -3,7 +3,7 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1 mt-1">业务分类</span>
+      <span class="text-h5 ml-1 mt-1">模板</span>
       <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>
@@ -16,26 +16,30 @@
             <CommonTable
               style="width: 100%;"
               height="576"
-              hide-tool-bar
+              hide-title
               hide-select-btn
               flat
-              :condition="condition"
+              :condition="{ bcId }"
               api="/api/templates"
-              title="模板"
               :headers="templateHeaders"
-              :item-names="['name', 'path', 'ordinal', 'pid']"
+              title="模板"
               visible
               show-select
+              cascade
+              cascaded-id="bcId"
               draggable
               show-index
               fixed-header
+              :hide-create="!bcId"
               @selectionChange="(val) => selectionChangeHandler(val)"
               @change="changeHandler"
             >
-              <template v-slot:[`item.icon`]="{ item }">
-                <v-icon color="accent">{{
-                  item ? item.icon : "item 未定义"
-                }}</v-icon>
+              <template v-slot:[`item.path`]="{ item }">
+                <v-tooltip :text="`下载 ${item.name}.docx`">
+                  <template v-slot:activator="{ props }">
+                    <a v-bind="props" class="text-decoration-none text-grey" :href="item.path" :download="`${item.name}.docx`"><v-icon icon="mdi-download"></v-icon></a>
+                  </template>
+                </v-tooltip>
               </template>
               <template
                 v-slot:editor="props"
@@ -53,7 +57,15 @@
 </template>
 
 <script setup lang="ts">
-const condition = ref({})
+import { Item } from 'components/common/table';
+
+const props = defineProps({
+  bcId: String
+})
+const selected = ref<Item | undefined>()
+const emits = defineEmits({
+  'change': () => true,
+})
 const templateHeaders = [{
     title: "名称",
     key: "name",
@@ -66,12 +78,25 @@ const templateHeaders = [{
     class: "text-center",
     cellClass: "text-center text-truncate ",
     style: "min-width: 64px;"
-  }
+  },
+  {
+    title: "所属业务",
+    key: "bcName",
+    class: "text-center",
+    cellClass: "nameClass text-center text-truncate ",
+  },
 ]
-const selectionChangeHandler = (templateId?: string) => {
 
+defineExpose({
+  selected: selected
+})
+
+const selectionChangeHandler = (item: Item | undefined) => {
+  // tplId.value = item ? item.id : undefined
+  selected.value = item
 }
 const changeHandler = () => {
-
+  console.log('changeHandler')
+  emits('change');
 }
 </script>

@@ -250,8 +250,8 @@ model BcTplRel {
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   version          Int
-  businessCategory BusinessCategory @relation(fields: [bcId], references: [id])
-  template         Template         @relation(fields: [tplId], references: [id])
+  businessCategory BusinessCategory @relation(fields: [bcId], references: [id], onDelete: Cascade)
+  template         Template         @relation(fields: [tplId], references: [id], onDelete: Cascade)
 
   @@id([bcId, tplId])
 }
@@ -291,8 +291,8 @@ model TplPhItmRel {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   version         Int
-  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id])
-  template        Template        @relation(fields: [tplId], references: [id])
+  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id], onDelete: Cascade)
+  template        Template        @relation(fields: [tplId], references: [id], onDelete: Cascade)
 
   @@id([tplId, phItmId])
 }
@@ -304,8 +304,8 @@ model PhItmTagRel {
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   version         Int
-  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id])
-  placeholderTag  PlaceholderTag  @relation(fields: [phTagId], references: [id])
+  placeholderItem PlaceholderItem @relation(fields: [phItmId], references: [id], onDelete: Cascade)
+  placeholderTag  PlaceholderTag  @relation(fields: [phTagId], references: [id], onDelete: Cascade)
 
   @@id([phItmId, phTagId])
 }

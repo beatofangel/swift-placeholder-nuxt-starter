@@ -44,6 +44,7 @@ export default defineComponent({
       required: true,
     },
     flat: Boolean,
+    hideTitle: Boolean,
     hideToolBar: Boolean,
     hideSelectBtn: Boolean,
     title: String,
@@ -57,6 +58,10 @@ export default defineComponent({
     hideCreate: Boolean,
     showSelect: Boolean,
     cascade: Boolean,
+    cascadedId: {
+      type: String,
+      default: 'pid'
+    },
     draggable: Boolean,
     showIndex: Boolean,
     fixedHeader: Boolean,
@@ -66,26 +71,38 @@ export default defineComponent({
       default: "暂无数据",
     },
   },
+  mounted() {
+    this.condition &&
+      $fetch(this.api, { query: this.condition })
+        .then((data) => {
+          this.items = data as [];
+          // this.selected = this.selectedId
+        })
+        .catch((err) => {
+          console.log(err);
+          useToast().error(`${this.title}读取失败！`);
+        });
+  },
   watch: {
-    visible: {
-      immediate: true,
-      handler(val) {
-        if (val) {
-          // this.visible && this.condition && window.commonService.find(this.api, this.condition).then(data => {
-          this.visible &&
-            this.condition &&
-            $fetch(this.api, { query: this.condition })
-              .then((data) => {
-                this.items = data as [];
-                // this.selected = this.selectedId
-              })
-              .catch((err) => {
-                console.log(err);
-                useToast().error(`${this.title}读取失败！`);
-              });
-        }
-      },
-    },
+    // visible: {
+    //   immediate: true,
+    //   handler(val) {
+    //     if (val) {
+    //       // this.visible && this.condition && window.commonService.find(this.api, this.condition).then(data => {
+    //       this.visible &&
+    //         this.condition &&
+    //         $fetch(this.api, { query: this.condition })
+    //           .then((data) => {
+    //             this.items = data as [];
+    //             // this.selected = this.selectedId
+    //           })
+    //           .catch((err) => {
+    //             console.log(err);
+    //             useToast().error(`${this.title}读取失败！`);
+    //           });
+    //     }
+    //   },
+    // },
     condition: {
       deep: true,
       handler(newVal, oldVal) {
@@ -93,7 +110,7 @@ export default defineComponent({
         if (newVal === oldVal) return;
         // =====================
         // if (!this.cascade) return
-        console.log("condition", newVal, oldVal);
+        // console.log("condition", newVal, oldVal);
         // this.selected = null;
         if (newVal) {
           useFetch(this.api, { query: this.condition })
@@ -114,7 +131,7 @@ export default defineComponent({
     // },
   },
   emits: {
-    selectionChange: (selection?: string) => true,
+    selectionChange: (selection?: Item) => true,
     close: (val: boolean) => true,
     change: () => true,
   },
@@ -133,7 +150,7 @@ export default defineComponent({
   methods: {
     createNewItem() {
       this.item = { mode: EditMode.Create };
-      this.cascade && (this.item.pid = this.condition.pid);
+      this.cascade && (this.item[this.cascadedId] = this.condition[this.cascadedId]);
       // this.itemNames.forEach(e=>{
       //   rst[e] = e == 'ordinal' ? (this.items.length > 0 ? this.items.map(i=>i.ordinal).sort((a,b)=>b-a)[0] + 1 : 1) : null
       // })
@@ -168,12 +185,16 @@ export default defineComponent({
                   .then(({ data }) => {
                     this.items = data.value as [];
                     const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                    prevSelected && (prevSelected.select = true)
+                    if (prevSelected) {
+                      prevSelected.select = true
+                    } else {
+                      this.selected = null
+                      this.$emit('selectionChange')
+                    }
                   })
                   .catch((err) => {
                     console.log(err);
                   });
-                this.$emit("change");
                 // useToast().success(`${this.title}更新成功！`); // do not prompt
               }
             })
@@ -227,8 +248,13 @@ export default defineComponent({
                     // first item selected if exists
                     // if (this.items.length > 0) {
                     //   this.items[0].select = true
-                    this.selected = null
-                    this.$emit('selectionChange')
+                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                    if (prevSelected) {
+                      prevSelected.select = true
+                    } else {
+                      this.selected = null
+                      this.$emit('selectionChange')
+                    }
                     // }
                   }
                 );
@@ -259,6 +285,13 @@ export default defineComponent({
               this.dialog.showDetail = false;
               useFetch(this.api, { query: this.condition }).then(({ data }) => {
                 this.items = data.value as [];
+                const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                if (prevSelected) {
+                  prevSelected.select = true
+                } else {
+                  this.selected = null
+                  this.$emit('selectionChange')
+                }
               });
             } else {
               useToast().error(`${this.title}保存失败！\n${result.errorMessage}`);
@@ -277,9 +310,9 @@ export default defineComponent({
     handleSelect(item: Item) {
       // item.select = !item.select
       if (!item.select) {
-        this.items.forEach(itm=>itm.select = itm==item)
+        this.items.forEach(itm => itm.select = itm == item)
         this.selected = item.id
-        this.$emit('selectionChange', item.id)
+        this.$emit('selectionChange', item)
       } else {
         this.selected = null
         this.$emit('selectionChange')
@@ -310,7 +343,7 @@ export default defineComponent({
     props.showSelect && (prependCols.value.push(selectableCol))
     props.showIndex && (prependCols.value.push(indexCol))
     if (props.draggable) {
-      if (prependCols.value.length> 1) {
+      if (prependCols.value.length > 1) {
         prependCols.value[1].class += " pl-0"
         prependCols.value[1].cellClass += " pl-0"
         prependCols.value[1].style = "min-width: 48px;"
@@ -331,29 +364,12 @@ export default defineComponent({
     return (
       <VCard flat={this.flat}>
         {
-          !!this.title &&
-          this.hideToolBar ? (
-            <VCardTitle class="d-flex justify-center">
-              <span class="text-h5 ml-1 mt-1">{this.title}</span>
-            </VCardTitle>
-          ) : (
-            <VToolbar color="primary" theme="dark">
-              <VIcon>mdi-format-list-bulleted</VIcon>
-              <span class="text-h5 ml-1 mt-1">{this.title}</span>
-              <VSpacer></VSpacer>
-              <VBtn
-                size="small"
-                variant="plain"
-                position="absolute"
-                // @ts-ignore
-                onClick={this.onClose}
-              >
-                <VIcon>mdi-close</VIcon>
-              </VBtn>
-            </VToolbar>
-          )
+          !this.hideTitle &&
+          (<VCardTitle class="d-flex justify-center">
+            <span class="text-h5 ml-1 mt-1">{this.title}</span>
+          </VCardTitle>)
         }
-        { /* @ts-ignore */ }
+        { /* @ts-ignore */}
         <VTable theme='primary' fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
           <thead>
             <tr>
@@ -432,13 +448,13 @@ export default defineComponent({
                                         color='primary'
                                         class='mx-1'
                                         // @ts-ignore
-                                        onClick={()=>this.showEdit({ ...item, isEdit: true })}
+                                        onClick={() => this.showEdit({ ...item, isEdit: true })}
                                       >mdi-pencil</VIcon>
                                       <VIcon
-                                        color='error'
+                                        color='red-lighten-2'
                                         class='mx-1'
                                         // @ts-ignore
-                                        onClick={()=>this.handleDelete({ ...item, delete: true })}
+                                        onClick={() => this.handleDelete({ ...item, delete: true })}
                                       >mdi-delete</VIcon>
                                     </VRow>
                                   </td>
@@ -481,7 +497,7 @@ export default defineComponent({
         {
           this.$slots['editor'] && <VDialog width="500" modelValue={this.dialog.showDetail} persistent>
             {
-              this.$slots['editor']({ ...this.item, mode: this.item.mode, onCancel: this.handleCancel, onSave: this.handleSave })
+              this.$slots['editor']({ ...this.item, mode: this.item.mode, title: this.title, onCancel: this.handleCancel, onSave: this.handleSave })
             }
           </VDialog>
         }

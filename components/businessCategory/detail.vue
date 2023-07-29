@@ -1,12 +1,13 @@
 <template>
   <v-card>
-    <v-toolbar class="pl-4" color="primary">
-      <v-icon>{{ editIcon }}</v-icon>
+    <v-toolbar class="pl-4 pr-1" color="primary">
+      <v-icon start>{{ editIcon }}</v-icon>
       <span class="text-h5 ml-1 mt-1">{{ editTitle }}</span>
       <v-spacer></v-spacer>
-      <v-btn @click="onCancel" icon size="small">
-        <v-icon color="error">mdi-close</v-icon>
-      </v-btn>
+      <v-hover v-slot:default="{ isHovering, props }">
+        <v-btn v-bind="props" @click="onCancel" icon="mdi-close" density="comfortable" :color="isHovering ? 'red-lighten-2' : 'accent'">
+        </v-btn>
+      </v-hover>
     </v-toolbar>
     <v-form @submit.prevent="onSave">
       <v-card flat tile>
@@ -34,7 +35,7 @@
                 label="图标"
                 placeholder="请输入图标名称"
                 persistent-placeholder
-                  :error-messages="icon.errorMessage.value"
+                :error-messages="icon.errorMessage.value"
               ></v-icon-picker>
             </v-col>
           </v-row>
@@ -65,6 +66,7 @@ import { debounce, isEmpty } from 'lodash-es';
 const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: string, icon?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
   mode: EditMode.Create
 })
+const originName = props.name
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
     const { data } = await useFetch("/api/businesscategories", { query: { count: true, name } })
@@ -80,10 +82,10 @@ const formData = ref({
   version: props.version
 })
 const { defineComponentBinds, handleSubmit } = useForm({
-  validationSchema: yup.object().shape({
+  validationSchema: yup.object({
     name: yup.string().label('名称').required().test('duplication',
       '${label} 已存在', function(value) {
-        if (isEmpty(value)) return true
+        if (isEmpty(value) || originName === value) return true
         return new Promise(resolve => nameDuplicationCheck(value, resolve))
       }),
     icon: yup.string().label('图标').required()
@@ -92,7 +94,8 @@ const { defineComponentBinds, handleSubmit } = useForm({
     name: formData.value.name,
     icon: formData.value.icon
   },
-  validateOnMount: false
+  validateOnMount: false,
+  keepValuesOnUnmount: true
 })
 const name = useField('name')
 const icon = useField('icon')

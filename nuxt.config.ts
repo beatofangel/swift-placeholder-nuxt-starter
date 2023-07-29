@@ -50,6 +50,9 @@ export default defineNuxtConfig({
         },
         VCascadeSelect: {
           variant: 'outlined'
+        },
+        VFileInput: {
+          variant: 'outlined'
         }
       },
       blueprint: md2,

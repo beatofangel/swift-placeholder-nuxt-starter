@@ -1,6 +1,6 @@
 export type Result = {
   success: boolean,
-  data?: Record<string, any> | null,
+  data?: Record<string, any> | any[] | null,
   errorMessage?: string
 }
 export const MSG_SYSTEM_ERROR = "系统异常"

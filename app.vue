@@ -6,9 +6,9 @@
 </template>
 
 <style lang="css">
-html {
+/* html {
   overflow-y: auto !important;
-}
+} */
 .no-click {
   pointer-events: none;
 }
@@ -25,5 +25,9 @@ html {
 }
 *::-webkit-scrollbar-thumb:hover {
   background: rgb(var(--v-scrollbarThumbHover));
+}
+.v-file-input>.v-input__details {
+  padding-left: 16px;
+  padding-right: 16px;
 }
 </style>

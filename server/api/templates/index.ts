@@ -1,91 +1,79 @@
-import { BusinessCategory, Prisma } from "@prisma/client"
+import { Template, Prisma } from "@prisma/client"
 import { EditMode } from "@/composables/dialog";
 import { isArray, isEmpty, pick } from "lodash-es";
 import { v4 as uuid } from "uuid";
 import { Result } from "server/utils/http";
 import { HTTPMethod } from "index";
 
-type BusinessCategoryWithOp = BusinessCategory & { mode: EditMode }
+type TemplateWithOp = Template & { bcId?: string, mode: EditMode }
 
 export default defineEventHandler(async event => {
   const result: Result = { success: false }
   const methods: Record<HTTPMethod, Function> = {
     async GET() {
       const query = getQuery(event)
-      if (query.cascaded === 'true') {
-        // get select options
-        return await event.context.prisma.businessCategory.findMany({
-          include: {
-            children: {
-              include: {
-                children: {
-                  orderBy: {
-                    ordinal: "asc"
-                  }
-                },
-              },
-              orderBy: {
-                ordinal: "asc"
-              }
-            }
-          },
-          where: {
-            parent: {
-              is: null
-            }
-          },
-          orderBy: {
-            ordinal: "asc"
-          }
-        })
-      } else if (query.count === 'true') {
-        const whereClause: Prisma.BusinessCategoryWhereInput = {}
-        const conditions = pick(query, ['id', 'pid', 'name', 'icon'])
+      if (query.count === 'true') {
+        const whereClause: Prisma.TemplateWhereInput = {}
+        const conditions = pick(query, ['id', 'name', 'path'])
         Object.keys(conditions).forEach((val) => {
-          const val2 = val as keyof BusinessCategory
+          const val2 = val as keyof Template
           whereClause[val2] = query[val2] as string
         })
-        console.log(whereClause)
-        return await event.context.prisma.businessCategory.count({
+        return await event.context.prisma.template.count({
           where: whereClause
         })
       } else {
         // get list
         // where
         const whereClause: Prisma.BusinessCategoryWhereInput = {}
-        if (isEmpty(query.pid)) {
-          whereClause.parent = {
-            is: null
-          }
-        } else {
-          whereClause.pid = query.pid as string
-        }
+        if (isEmpty(query.bcId)) return []
+        // if (!isEmpty(query.bcId)) {
+          whereClause.id = query.bcId as string
+        // }
         // orderby
-        const orderByClause: Prisma.Enumerable<Prisma.BusinessCategoryOrderByWithRelationInput> = { ordinal: 'asc' }
+        const orderByClause: Prisma.Enumerable<Prisma.BcTplRelOrderByWithRelationInput> = { ordinal: 'asc' }
         if (query.order) {
           orderByClause.ordinal = ['asc', 'desc'].includes(query.order as Prisma.SortOrder) ? query.order as Prisma.SortOrder : 'asc'
         }
-        return await event.context.prisma.businessCategory.findMany({
-          where: whereClause,
-          orderBy: orderByClause
+        const data = await event.context.prisma.businessCategory.findMany({
+          select: {
+            id: true,
+            name: true,
+            templates: {
+              select: {
+                ordinal: true,
+                template: true
+              },
+              orderBy: orderByClause
+            }
+          },
+          where: whereClause
         })
+        console.log(data)
+        return data.flatMap(({id: bcId, name: bcName, templates})=>templates.map(({ordinal, template})=>({bcId, bcName, ordinal, ...template})))
       }
     },
     async POST() {
       const data = await readBody(event)
       if (isArray(data)) {
         // 排序
-        const arrayData: BusinessCategoryWithOp[] = data
+        const arrayData: TemplateWithOp[] = data
         if (arrayData.length == 0) return result
+        const delHandlers: Function[] = []
         const executed = await event.context.prisma.$transaction(async prisma => {
           const resultArray = []
           for (const o of arrayData) {
             switch (o.mode) {
               case EditMode.Update:
-                const upd = await event.context.prisma.businessCategory.update({
+                const upd = await event.context.prisma.bcTplRel.update({
                   where: {
-                    id: o.id,
-                    version: o.version
+                    bcId_tplId: {
+                      bcId: o.bcId!,
+                      tplId: o.id
+                    },
+                    template: {
+                      version: o.version
+                    }
                   },
                   data: {
                     ...pick(o, [ 'ordinal' ]),
@@ -98,11 +86,14 @@ export default defineEventHandler(async event => {
                 resultArray.push(upd)
                 break
               case EditMode.Delete:
-                const del = await event.context.prisma.businessCategory.delete({
+                const del = await event.context.prisma.template.delete({
                   where: {
                     id: o.id,
                     version: o.version
                   }
+                })
+                delHandlers.push(async () => {
+                  return await useFetch(del.path, { method: 'DELETE' })
                 })
                 resultArray.push(del)
                 break
@@ -113,34 +104,52 @@ export default defineEventHandler(async event => {
           return resultArray
         })
         console.log('execute:', executed)
+        delHandlers.forEach(async handler => {
+          const res = await handler()
+          console.log(res)
+        })
         result.success = true
         result.data = executed
         return result
       } else {
         // 单条数据新增
-        const whereClause: Prisma.BusinessCategoryWhereInput = {}
-        const singleData: BusinessCategoryWithOp = data
-        if (isEmpty(data.pid)) {
-          whereClause.parent = {
-            is: null
+        const whereClause: Prisma.TemplateWhereInput = {}
+        const singleData: TemplateWithOp = data
+        if (isEmpty(data.bcId)) {
+          result.errorMessage = '未指定业务分类id'
+          return result
+        }
+        whereClause.businessCategories = {
+          every: {
+            bcId: data.bcId
           }
-        } else {
-          whereClause.pid = singleData.pid as string
         }
         try {
           const created = await event.context.prisma.$transaction(async prisma => {
             // ordinal start with 0, so new ordinal equals the COUNT
-            const newOrdinal = await prisma.businessCategory.count({
+            const newOrdinal = await prisma.template.count({
               where: whereClause
             })
-            const dataForCreate = pick(singleData, [ 'pid', 'name', 'icon' ])
-            return await prisma.businessCategory.create({
+            const dataForCreate = pick(singleData, [ 'name', 'path' ])
+            const id = uuid()
+            return await prisma.template.create({
               data: {
-                id: uuid(),
+                id: id,
                 ...dataForCreate,
-                ordinal: newOrdinal,
                 createdAt: new Date(),
-                version: 0
+                version: 0,
+                businessCategories: {
+                  create: {
+                    ordinal: newOrdinal,
+                    createdAt: new Date(),
+                    version: 0,
+                    businessCategory: {
+                      connect: {
+                        id: data.bcId
+                      }
+                    }
+                  }
+                }
               }
             }).catch(e => {
               console.log(e)
@@ -164,7 +173,7 @@ export default defineEventHandler(async event => {
       const data = await readBody(event)
       // if (isArray(data)) {
         // 暂无此场景
-        // const arrayData: BusinessCategory[] = data
+        // const arrayData:  Template[] = data
         // if (arrayData.length == 0) return []
         // const updates = []
         // for (const o of arrayData) {
@@ -188,14 +197,14 @@ export default defineEventHandler(async event => {
       // } else {
         // 单条数据更新
         if (isEmpty(data)) return result
-        const singleData: BusinessCategory = data
-        const modified = event.context.prisma.businessCategory.update({
+        const singleData: Template = data
+        const modified = await event.context.prisma.template.update({
           where: {
             id: singleData.id,
             version: singleData.version
           },
           data: {
-            ...pick(singleData, [ 'name', 'icon' ]),
+            ...pick(singleData, isEmpty(singleData.path) ? [ 'name' ] : [ 'name', 'path' ]),
             updatedAt: new Date(),
             version: {
               increment: 1
@@ -203,21 +212,39 @@ export default defineEventHandler(async event => {
           }
         })
         console.log('update:', modified)
-        result.success = true
         result.data = modified
+        result.success = true
         return result
       // }
     },
     async DELETE() {
       // 单条数据删除
-      const data = await readBody<BusinessCategoryWithOp>(event)
-      const deleted = await event.context.prisma.businessCategory.delete({
+      const data = await readBody<TemplateWithOp>(event)
+      const deleted = await event.context.prisma.template.delete({
         where: {
           id: data.id,
           version: data.version
         }
       })
       console.log('delete:', deleted)
+
+      /**
+       * Deleting a template in a web page should also delete the related document.
+       *
+       * == TODO ==
+       * Documents that are no longer relevant to the template should be deleted daily by the crontab task.
+       *
+       */
+      const headers = {
+        'Tus-Resumable': '1.0.0',
+        // TODO after deploying to server with ssl, it should be deleted.
+        'X-Forwarded-Proto': 'http'
+      }
+      fetch(deleted.path, { method: 'DELETE', headers: headers }).then(({ status }) => {
+        console.log(status)
+      }).catch(error => {
+        console.log(error)
+      })
       result.success = true
       result.data = deleted
       return result

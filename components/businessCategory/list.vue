@@ -22,14 +22,13 @@
               api="/api/businesscategories"
               :title="getCategoryName(level)"
               :headers="categoryHeaders"
-              :item-names="['name', 'icon', 'ordinal', 'pid']"
               :visible="visible"
               show-select
               cascade
               draggable
               show-index
               fixed-header
-              :hide-create="level > 1 && !formData.businessCategories[level - 2]"
+              :hide-create="level > 1 && !businessCategories[level - 2]"
               @selectionChange="(val) => selectionChangeHandler(val, level)"
               @change="changeHandler"
             >
@@ -41,10 +40,9 @@
               <template
                 v-slot:editor="props"
               >
-                <business-category-detail
+                <BusinessCategoryDetail
                   v-bind="props"
-                  :title="getCategoryName(level)"
-                ></business-category-detail>
+                ></BusinessCategoryDetail>
               </template>
             </CommonTable>
           </v-card-text>
@@ -54,134 +52,74 @@
   </v-card>
 </template>
 
-<script>
-// import CommonList from "../common/list.vue";
-import BusinessCategoryDetail from "./detail.vue";
-export default {
-  name: "business-category-list",
-  props: {
-    visible: Boolean,
+<script setup lang="ts">
+import { Item } from 'components/common/table';
+
+interface condition extends Record<string, any> { pid: string }
+
+const props = defineProps({
+  visible: Boolean
+})
+const emits = defineEmits({
+  'close': (val: boolean) => true,
+  'change': () => true,
+})
+const businessCategories = ref([ undefined, undefined, undefined ] as (Item | undefined)[])
+const selected: Ref<Item | undefined> = ref()
+const conditions = ref([{ pid: null }, undefined, undefined] as (condition | undefined)[])
+const categoryHeaders = ref([
+  {
+    title: "名称",
+    key: "name",
+    class: "text-center",
+    cellClass: "nameClass text-center text-truncate ",
   },
-  mounted() {
-    // window.replaceService.findBusinessCategoryRoot().then(root => {
-    //   this.$set(this.conditions, 0, {
-    //     pid: root.id,
-    //   });
-    // })
+  {
+    title: "图标",
+    key: "icon",
+    class: "text-center",
+    cellClass: "text-center",
+    style: "min-width: 64px;"
   },
-  components: {
-    // CommonList,
-    BusinessCategoryDetail,
-  },
-  watch: {
-    // businessCategories: {
-    //   deep: true,
-    //   handler(newVal) {
-    //     this.formData.businessCategories = newVal;
-    //     console.log("businessCategories", newVal);
-    //     for (let index in this.conditions) {
-    //       if (newVal.length > index) {
-    //         this.conditions[index].pid = newVal[index];
-    //       } else {
-    //         this.conditions[index] = null;
-    //       }
-    //     }
-    //   },
-    // },
-    "formData.businessCategories": {
-      deep: true,
-      immediate: true,
-      handler(newVal, oldVal) {
-        console.log(newVal, oldVal);
-      },
-    },
-  },
-  computed: {
-    // getConditions() {
-    //   const conditions = [];
-    //   for (let level = 1; level <= 3; level++) {
-    //     conditions.push(
-    //       level > 1 && !this.formData.businessCategories[level - 2]
-    //         ? null
-    //         : {
-    //             pid:
-    //               level == 1
-    //                 ? null
-    //                 : this.formData.businessCategories[level - 2],
-    //           }
-    //     );
-    //   }
-    //   return conditions;
-    // },
-  },
-  methods: {
-    onClose() {
-      this.$emit("close", false);
-    },
-    getCategoryName(level) {
-      return `${["一", "二", "三"][level - 1]}级业务分类`;
-    },
-    changeHandler() {
-      console.log('changeHandler')
-      this.$emit('change');
-    },
-    selectionChangeHandler(itemId, level) {
-      if (itemId) {
-        console.log("selectionChangeHandler", level, itemId);
-        this.formData.businessCategories[level - 1] = itemId;
-        this.conditions[level] = {
-          pid: itemId,
-        }
-        // this.$set(this.conditions, level, {
-        //   pid: val[0].id,
-        // });
-        for (let i = level + 1; i < 3; i++) {
-          this.conditions[i] = null
-          // this.$set(this.conditions, i, null);
-        }
-      } else {
-        this.formData.businessCategories[level - 1] = null
-        for (let i = level; i < 3; i++) {
-          this.conditions[i] = null
-          // this.$set(this.conditions, i, null);
-        }
-      }
-    },
-  },
-  data() {
-    return {
-      formData: {
-        businessCategories: [],
-      },
-      categoryHeaders: [
-        // {
-        //   title: "No.",
-        //   key: "index",
-        // },
-        {
-          title: "名称",
-          key: "name",
-          class: "text-center",
-          cellClass: "nameClass text-center text-truncate ",
-        },
-        {
-          title: "图标",
-          key: "icon",
-          class: "text-center",
-          cellClass: "text-center",
-          style: "min-width: 64px;"
-        },
-        // {
-        //   title: "操作",
-        //   key: "actions",
-        //   class: "actionsClass",
-        //   align: "center",
-        // },
-      ],
-      conditions: [{ pid: null }, null, null],
-    };
-  },
-};
+])
+
+defineExpose({
+  selected: selected
+})
+
+// const onClose = () => {
+//   emits("close", false);
+// }
+const getCategoryName = (level: number) => {
+  return `${["一", "二", "三"][level - 1]}级业务分类`;
+}
+const changeHandler = () => {
+  console.log('changeHandler')
+  emits('change');
+}
+const selectionChangeHandler = (item: Item | undefined, level: number) => {
+  if (item) {
+    console.log("selectionChangeHandler", level, item.id);
+    businessCategories.value[level - 1] = item;
+    conditions.value[level] = {
+      pid: item.id!,
+    }
+    for (let i = level + 1; i < 3; i++) {
+      conditions.value[i] = undefined
+    }
+    for (let i = level; i < 3; i++) {
+      businessCategories.value[i] = item;
+    }
+  } else {
+    for (let i = level; i < 3; i++) {
+      conditions.value[i] = undefined
+    }
+    for (let i = level - 1; i < 3; i++) {
+      businessCategories.value[i] = undefined;
+    }
+  }
+  selected.value = businessCategories.value.findLast(item=>!!item)
+}
 </script>
 
 <style>
