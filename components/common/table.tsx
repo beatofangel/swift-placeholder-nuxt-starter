@@ -330,7 +330,7 @@ export default defineComponent({
                     console.error(err);
                     useToast().error(`${this.title}删除失败！`);
                   });
-                this.$emit("change");
+                this.$emit("change", this.item);
                 useToast().success(`${this.title}删除成功！`);
               }
             })

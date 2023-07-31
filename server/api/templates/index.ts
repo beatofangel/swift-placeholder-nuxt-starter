@@ -245,16 +245,16 @@ export default defineEventHandler(async event => {
        * Documents that are no longer relevant to the template should be deleted daily by the crontab task.
        *
        */
-      const headers = {
-        'Tus-Resumable': '1.0.0',
-        // TODO after deploying to server with ssl, it should be deleted.
-        'X-Forwarded-Proto': 'http'
-      }
-      fetch(deleted.path, { method: 'DELETE', headers: headers }).then(({ status }) => {
-        console.log(status)
-      }).catch(error => {
-        console.log(error)
-      })
+      // const headers = {
+      //   'Tus-Resumable': '1.0.0',
+      //   // TODO after deploying to server with ssl, it should be deleted.
+      //   'X-Forwarded-Proto': 'http'
+      // }
+      // fetch(deleted.path, { method: 'DELETE', headers: headers }).then(({ status }) => {
+      //   console.log(status)
+      // }).catch(error => {
+      //   console.log(error)
+      // })
       result.success = true
       result.data = deleted
       return result

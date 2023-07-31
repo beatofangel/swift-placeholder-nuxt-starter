@@ -36,6 +36,7 @@
                       :hide-create="!tpl?.id"
                       :append-items="placeholdersInDoc"
                       @append-item-create="appendItemCreateHandler"
+                      @change="changeHandler"
                     >
                       <template v-slot:[`item.type`]="{ item }">
                         <v-select name="type" v-model="item.type" :items="itemTypes" density="compact" hide-details>
@@ -204,7 +205,13 @@ function appendItemCreateHandler(item: Item) {
   // sync placeholder to document
   useDocumentHelper().value.bindContentControl(item as unknown as Placeholder)
 }
-
+function changeHandler(item: Item | undefined) {
+  if (item) {
+    if (item.mode === EditMode.Delete) {
+      useDocumentHelper().value.unbindContentControl(item as unknown as Placeholder)
+    }
+  }
+}
 
 const placeholderHeaders = [{
     title: "名称",

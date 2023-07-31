@@ -255,38 +255,53 @@ export default defineEventHandler(async event => {
     //     return result
     //   // }
     // },
-    // async DELETE() {
-    //   // 单条数据删除
-    //   const data = await readBody<TemplateWithOp>(event)
-    //   const deleted = await event.context.prisma.template.delete({
-    //     where: {
-    //       id: data.id,
-    //       version: data.version
-    //     }
-    //   })
-    //   console.log('delete:', deleted)
+    async DELETE() {
+      // 单条数据删除
+      const data = await readBody<PlaceholderItemWithOp>(event)
 
-    //   /**
-    //    * Deleting a template in a web page should also delete the related document.
-    //    *
-    //    * == TODO ==
-    //    * Documents that are no longer relevant to the template should be deleted daily by the crontab task.
-    //    *
-    //    */
-    //   const headers = {
-    //     'Tus-Resumable': '1.0.0',
-    //     // TODO after deploying to server with ssl, it should be deleted.
-    //     'X-Forwarded-Proto': 'http'
-    //   }
-    //   fetch(deleted.path, { method: 'DELETE', headers: headers }).then(({ status }) => {
-    //     console.log(status)
-    //   }).catch(error => {
-    //     console.log(error)
-    //   })
-    //   result.success = true
-    //   result.data = deleted
-    //   return result
-    // }
+      try {
+        const deleted = await event.context.prisma.$transaction(async prisma => {
+          const count = await prisma.tplPhItmRel.count({
+            where: {
+              phItmId: data.id
+            }
+          })
+
+          if (count > 1) {
+            // 已被其他模板引用
+            await event.context.prisma.tplPhItmRel.delete({
+              where: {
+                tplId_phItmId: {
+                  tplId: data.tplId as string,
+                  phItmId: data.id
+                }
+              }
+            })
+            return await prisma.placeholderItem.findUnique({
+              where: {
+                id: data.id
+              }
+            }).catch(e => {
+              console.log(e)
+              throw e
+            })
+          } else {
+            return await event.context.prisma.placeholderItem.delete({
+              where: {
+                id: data.id,
+                version: data.version
+              }
+            })
+          }
+        })
+        console.log('delete:', deleted)
+        result.success = true
+        result.data = deleted
+      } catch(e) {
+        throw e
+      }
+      return result
+    }
   }
   const method = methods[getMethod(event)]
   return method && (method())

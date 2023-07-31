@@ -19,6 +19,21 @@ export const useDocumentHelper = () => {
       }
     });
   }
+  const unbindContentControl = (placeholder: Placeholder) => {
+    var doc = placeholder.contentControls.map((cc: any) => {
+      return {
+        "Props": {
+          InternalId: cc.InternalId,
+          Tag: placeholder.name,
+          // Id: cc.Id,
+          // Lock: 3, // full access
+        },
+      }
+    })
+    // console.log(doc)
+    window.docQueue.value.push({ doc });
+    // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
+  }
   const bindContentControl = (placeholder: Placeholder) => {
     var doc = placeholder.contentControls.map((cc: any) => {
       return {
@@ -82,6 +97,7 @@ export const useDocumentHelper = () => {
   }
   return ref({
     validatePlaceholders,
+    unbindContentControl,
     bindContentControl,
     writeContentControl,
     moveCursorToStart
