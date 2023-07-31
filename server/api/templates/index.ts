@@ -4,6 +4,7 @@ import { isArray, isEmpty, pick } from "lodash-es";
 import { v4 as uuid } from "uuid";
 import { Result } from "server/utils/http";
 import { HTTPMethod } from "index";
+import fs from 'fs'
 
 type TemplateWithOp = Template & { bcId?: string, mode: EditMode }
 const { copyUploadTo } = useTusServer()
@@ -96,9 +97,10 @@ export default defineEventHandler(async event => {
                     version: o.version
                   }
                 })
-                delHandlers.push(async () => {
-                  return await useFetch(del.path, { method: 'DELETE' })
-                })
+                // TODO 删除文件
+                // delHandlers.push(async () => {
+                //   return await useFetch(del.path, { method: 'DELETE' })
+                // })
                 resultArray.push(del)
                 break
               default:
