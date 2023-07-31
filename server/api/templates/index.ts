@@ -19,17 +19,18 @@ export default defineEventHandler(async event => {
           const val2 = val as keyof Template
           whereClause[val2] = query[val2] as string
         })
-        return await event.context.prisma.template.count({
+        result.data = await event.context.prisma.template.count({
           where: whereClause
         })
+        result.success = true
+        return result
       } else {
         // get list
         // where
         const whereClause: Prisma.BusinessCategoryWhereInput = {}
-        if (isEmpty(query.bcId)) return []
-        // if (!isEmpty(query.bcId)) {
+        if (!isEmpty(query.bcId)) {
           whereClause.id = query.bcId as string
-        // }
+        }
         // orderby
         const orderByClause: Prisma.Enumerable<Prisma.BcTplRelOrderByWithRelationInput> = { ordinal: 'asc' }
         if (query.order) {
@@ -50,7 +51,9 @@ export default defineEventHandler(async event => {
           where: whereClause
         })
         console.log(data)
-        return data.flatMap(({id: bcId, name: bcName, templates})=>templates.map(({ordinal, template})=>({bcId, bcName, ordinal, ...template})))
+        result.data = data.flatMap(({id: bcId, name: bcName, templates})=>templates.map(({ordinal, template})=>({bcId, bcName, ordinal, ...template})))
+        result.success = true
+        return result
       }
     },
     async POST() {

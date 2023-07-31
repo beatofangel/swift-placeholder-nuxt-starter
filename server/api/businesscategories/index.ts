@@ -14,7 +14,7 @@ export default defineEventHandler(async event => {
       const query = getQuery(event)
       if (query.cascaded === 'true') {
         // get select options
-        return await event.context.prisma.businessCategory.findMany({
+        result.data =  await event.context.prisma.businessCategory.findMany({
           include: {
             children: {
               include: {
@@ -38,6 +38,8 @@ export default defineEventHandler(async event => {
             ordinal: "asc"
           }
         })
+        result.success = true
+        return result
       } else if (query.count === 'true') {
         const whereClause: Prisma.BusinessCategoryWhereInput = {}
         const conditions = pick(query, ['id', 'pid', 'name', 'icon'])
@@ -46,9 +48,11 @@ export default defineEventHandler(async event => {
           whereClause[val2] = query[val2] as string
         })
         console.log(whereClause)
-        return await event.context.prisma.businessCategory.count({
+        result.data = await event.context.prisma.businessCategory.count({
           where: whereClause
         })
+        result.success = true
+        return result
       } else {
         // get list
         // where
@@ -65,10 +69,12 @@ export default defineEventHandler(async event => {
         if (query.order) {
           orderByClause.ordinal = ['asc', 'desc'].includes(query.order as Prisma.SortOrder) ? query.order as Prisma.SortOrder : 'asc'
         }
-        return await event.context.prisma.businessCategory.findMany({
+        result.data = await event.context.prisma.businessCategory.findMany({
           where: whereClause,
           orderBy: orderByClause
         })
+        result.success = true
+        return result
       }
     },
     async POST() {
@@ -189,7 +195,7 @@ export default defineEventHandler(async event => {
         // 单条数据更新
         if (isEmpty(data)) return result
         const singleData: BusinessCategory = data
-        const modified = event.context.prisma.businessCategory.update({
+        const modified = await event.context.prisma.businessCategory.update({
           where: {
             id: singleData.id,
             version: singleData.version

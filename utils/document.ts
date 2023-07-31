@@ -1,3 +1,4 @@
+import { pick } from 'lodash-es';
 import type { Placeholder, ValidatePlaceholdersResult, PlaceholderStatistic } from '~/index'
 
 export const useDocumentHelper = () => {
@@ -17,6 +18,22 @@ export const useDocumentHelper = () => {
         }
       }
     });
+  }
+  const bindContentControl = (placeholder: Placeholder) => {
+    var doc = placeholder.contentControls.map((cc: any) => {
+      return {
+        "Props": {
+          InternalId: cc.InternalId,
+          Tag: placeholder.id,
+          // Id: cc.Id,
+          // Lock: 3, // full access
+        },
+        "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("\$\{${placeholder.name || ''}\}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
+      }
+    })
+    // console.log(doc)
+    window.docQueue.value.push({ doc });
+    // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
   }
   const moveCursorToStart = () => {
     window.connector.value.executeMethod("MoveCursorToStart", [true]);
@@ -50,9 +67,12 @@ export const useDocumentHelper = () => {
           result.warning = true
           result.invalid || (result.invalid = {})
           result.invalid.contentControls || (result.invalid.contentControls = [])
+          // console.log(ctrl)
           result.invalid.contentControls.push({
-            InternalId: ctrl.InternalId,
-            Tag: ctrl.Tag
+            ...pick(ctrl, ['InternalId', 'Tag', 'Id'])
+            // InternalId: ctrl.InternalId,
+            // Tag: ctrl.Tag,
+            // Lock: ctrl.Lock
           })
         }
       }
@@ -61,6 +81,7 @@ export const useDocumentHelper = () => {
   }
   return ref({
     validatePlaceholders,
+    bindContentControl,
     writeContentControl,
     moveCursorToStart
   })

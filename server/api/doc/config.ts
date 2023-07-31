@@ -8,6 +8,20 @@ export default defineEventHandler(async event => {
     xForwardedProto: true
   })
   const { zoom, title, url, mode } = getQuery(event)
+
+  // local upload link
+  // /api/XXXXX/upload/XXXXX
+  let validUrlString = url as string
+  try {
+    const validUrl = new URL(url as string)
+    if (validUrl.host == new URL(process.env.AUTH_ORIGIN!).host) {
+      const regex = /\/api(\/.*)\/upload(\/.*)/
+      validUrlString = validUrl.pathname.replace(regex, '$1$2')
+    }
+  } catch (e) {
+    console.log('not a valid url')
+  }
+
   const session = await getServerSession(event)
   const docManager = useDocManager()
   const docService = useDocService()
@@ -92,10 +106,10 @@ export default defineEventHandler(async event => {
           // width: '100%',
           document: {
             fileType: "docx",
-            key: docManager.getKey(url as string),
+            key: docManager.getKey(validUrlString),
             // key: key || "",
             title: title,
-            url: docManager.getDownloadUrl(url as string),
+            url: docManager.getDownloadUrl(validUrlString),
             info: {
               favorite: docConfig.docFavourite,
               folder: "",
@@ -126,7 +140,7 @@ export default defineEventHandler(async event => {
           },
           editorConfig: {
             actionLink: '',
-            callbackUrl: docManager.getCallback(url as string),
+            callbackUrl: docManager.getCallback(validUrlString),
             coEditing: {
               mode: 'fast',
               change: true
@@ -144,12 +158,19 @@ export default defineEventHandler(async event => {
               name: result.name
             },
             customization: {
-              zoom: zoom ?? 100
+              zoom: zoom ?? 100,
+              hideRightMenu: true,
+              compactToolbar: true,
+              hideRulers: true,
+              compactHeader: true,
+              toolbarNoTabs: true,
+              toolbarHideFileName: true
             }
           }
         }
         const token = docService.getToken(configuration)
         configuration.token = token
+        console.log('doc config:', configuration)
         return configuration
       })
     },

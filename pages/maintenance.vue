@@ -18,7 +18,7 @@
       <v-row key="placeholder">
         <v-col>
           <!-- <v-card id="businessCategory" class="mb-2"> -->
-            <PlaceholderList id="placeholder" class="mb-2" :tplId="template.selected?.id" :visible="true"></PlaceholderList>
+            <PlaceholderList id="placeholder" class="mb-2" :tpl="template.selected" :visible="true"></PlaceholderList>
           <!-- </v-card> -->
         </v-col>
       </v-row>
@@ -53,8 +53,8 @@
 
 <script setup lang="ts">
 import { Item } from 'components/common/table';
-import { throttle } from 'lodash-es'
-export interface CommonTableSelectedItem { selected: Item | undefined }
+import { pick, throttle } from 'lodash-es'
+export interface CommonTableSelectedItem { selected: (Item & { path: string, placeholders: [] }) | undefined }
 // import { useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
@@ -78,7 +78,7 @@ const items = ref([
   { title: '占位符', id: 'placeholder', prependIcon: 'mdi-bookmark-multiple-outline' },
   // ...itemsDummy.value
 ])
-const menuSuffix: Ref<Record<string, string>> = computed(() => {
+const menuSuffix: ComputedRef<Record<string, string | undefined>> = computed(() => {
   return {
     businessCategory: `${businessCategory.value.selected ? ` - ${businessCategory.value.selected.name}` : ''}`,
     template: `${template.value.selected ? ` - ${template.value.selected.name}` : ''}`

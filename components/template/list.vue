@@ -14,12 +14,13 @@
         <v-card elevation="0" tile>
           <v-card-text class="d-flex flex-nowrap pa-2">
             <CommonTable
+              ref="innerTemplateCommonTable"
               style="width: 100%;"
               height="576"
               hide-title
               hide-select-btn
               flat
-              :condition="{ bcId }"
+              :condition="bcId ? { bcId } : undefined"
               api="/api/templates"
               :headers="templateHeaders"
               title="模板"
@@ -58,10 +59,15 @@
 
 <script setup lang="ts">
 import { Item } from 'components/common/table';
+import { Template } from 'index';
 
 const props = defineProps({
   bcId: String
 })
+watch(() => props.bcId, (val) => {
+  selected.value = undefined
+})
+const innerTemplateCommonTable = ref<{items: Template[]}>()
 const selected = ref<Item | undefined>()
 const emits = defineEmits({
   'change': () => true,
@@ -97,6 +103,7 @@ const selectionChangeHandler = (item: Item | undefined) => {
 }
 const changeHandler = () => {
   console.log('changeHandler')
+  selected.value = innerTemplateCommonTable.value?.items.find(item => item.select)
   emits('change');
 }
 </script>

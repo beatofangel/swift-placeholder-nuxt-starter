@@ -24,9 +24,9 @@ export interface Replacement extends Record<string, any> {
 }
 
 export interface Template extends Record<string, any> {
-  id: string
-  name: string
-  path: string
+  id: string | undefined
+  name: string | undefined
+  path: string | undefined
   placeholders: Placeholder[]
 }
 
@@ -93,7 +93,10 @@ export type ValidatePlaceholdersResult = {
     placeholders?: Placeholder[],
     contentControls?: {
       InternalId: number,
-      Tag: string
+      Tag: string,
+      Id: number,
+      Lock?: number,
+      PlaceHolderText?: string,
     }[]
   }
 }

@@ -129,7 +129,11 @@ onMounted(() => {
       cascaded: true
     }
   }).then((data) => {
-    businessCategoryOptions.value = data
+    if (data.success) {
+      businessCategoryOptions.value = data
+    } else {
+      console.log(data.errorMessage)
+    }
   })
 })
 watch(() => props.id, (val) => {

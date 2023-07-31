@@ -62,6 +62,7 @@ import VIconPicker from '../VIconPicker.vue'
 import { Item } from '@/components/common/table'
 import * as yup from 'yup';
 import { debounce, isEmpty } from 'lodash-es';
+import { Result } from 'server/utils/http';
 
 const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: string, icon?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
   mode: EditMode.Create
@@ -70,7 +71,8 @@ const originName = props.name
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
     const { data } = await useFetch("/api/businesscategories", { query: { count: true, name } })
-    const isValid = data.value == 0
+    const result = data.value as Result
+    const isValid = result.success && result.data == 0
     console.log('duplication', name, isValid)
   // }
   resolve(isValid)

@@ -28,7 +28,11 @@ onMounted(() => {
       cascaded: true
     }
   }).then((data) => {
-    businessCategoryOptions.value = data
+    if (data.success) {
+      businessCategoryOptions.value = data.data
+    } else {
+      console.log(data.errorMessage)
+    }
   })
 })
 

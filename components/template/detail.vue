@@ -78,6 +78,7 @@ import { Item } from '@/components/common/table'
 import * as yup from 'yup';
 import { debounce, isEmpty } from 'lodash-es';
 import * as tus from 'tus-js-client'
+import { Result } from 'server/utils/http';
 
 const props = withDefaults(defineProps<{ bcId?: string, id?: string, name?: string, path?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
   mode: EditMode.Create
@@ -86,7 +87,8 @@ const originName = props.name
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
     const { data } = await useFetch("/api/templates", { query: { count: true, name } })
-    const isValid = data.value == 0
+    const result = data.value as Result
+    const isValid = result.success && result.data == 0
     console.log('duplication', name, isValid)
   // }
   resolve(isValid)
@@ -105,7 +107,7 @@ const { defineComponentBinds, handleSubmit, handleReset } = useForm({
         if (isEmpty(value) || originName === value) return true
         return new Promise(resolve => nameDuplicationCheck(value, resolve))
       }),
-    file: yup.mixed().label('文档').test('documentRequired', yup.defaultLocale.mixed?.required!, (value: any) => value.length > 0).test('fileSize', '文件大小不能超过5M', (value: any) => value.length == 0 || value[0].size <= 5242880) // 5M
+    file: yup.mixed().label('文档').test('documentRequired', yup.defaultLocale.mixed?.required!, (value: any) => !!props.id || value.length > 0).test('fileSize', '文件大小不能超过5M', (value: any) => value.length == 0 || value[0].size <= 5242880) // 5M
   }),
   initialValues: {
     name: formData.value.name,

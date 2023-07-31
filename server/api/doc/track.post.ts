@@ -142,7 +142,8 @@ export default defineEventHandler(async (event) => {
       let newFilename = filename;
 
       // convert downloaded file to the file with the current extension if these extensions aren't equal
-      if (downloadExt !== curExt) {
+      // exclude filename without ext
+      if (curExt !== '' && downloadExt !== curExt) {
         const key = docService.generateRevisionId(body.url);
         newFilename = docManager.getCorrectName(
           fileUtility.getFilename(filename, true) + downloadExt

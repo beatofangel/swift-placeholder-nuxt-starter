@@ -5,6 +5,7 @@ import {
   VCard,
   VCardTitle,
   VToolbar,
+  VTooltip,
   VIcon,
   VSpacer,
   VTable,
@@ -16,16 +17,14 @@ import {
   VDialog
 } from "vuetify/components";
 import Draggable from "vuedraggable";
-import { v4 as uuid } from 'uuid';
+import { v4 as uuid, validate } from 'uuid';
 import './table.scss';
 import { Result } from 'server/utils/http';
 
 export interface Item extends Record<string, any> {
-  id?: string;
-  name?: string;
-  icon?: string;
+  id: string | undefined;
+  name: string | undefined;
   ordinal?: number;
-  select?: boolean;
 }
 
 export interface Header extends Record<string, any> {
@@ -70,12 +69,21 @@ export default defineComponent({
       type: String,
       default: "暂无数据",
     },
+    appendItems: {
+      type: Array<Item>,
+      default: () => null,
+    }
   },
   mounted() {
     this.condition &&
       $fetch(this.api, { query: this.condition })
         .then((data) => {
-          this.items = data as [];
+          const result = data as Result
+          if (result.success) {
+            this.items = result.data as [];
+          } else {
+            useToast().error(`${this.title}读取失败！\n${result.errorMessage}`);
+          }
           // this.selected = this.selectedId
         })
         .catch((err) => {
@@ -115,7 +123,12 @@ export default defineComponent({
         if (newVal) {
           useFetch(this.api, { query: this.condition })
             .then(({ data }) => {
-              this.items = data.value as [];
+              const result = data.value as Result
+              if (result.success) {
+                this.items = result.data as [];
+              } else {
+                useToast().error(`${this.title}读取失败！\n${result.errorMessage}`);
+              }
             })
             .catch((err) => {
               console.log(err);
@@ -133,13 +146,20 @@ export default defineComponent({
   emits: {
     selectionChange: (selection?: Item) => true,
     close: (val: boolean) => true,
-    change: () => true,
+    change: (item?: Item) => true,
+    appendItemCreate: (item: any) => true,
   },
   computed: {
     tableHeight() {
       return "576px";
       // return window.innerHeight > 1000 ? '650px' : 'calc(70vh)'
     },
+    footerItems() {
+      if (this.appendItems && this.appendItems.length > 0) {
+        return this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
+      }
+      return []
+    }
     // selectedLength() {
     //   return this.selections.length
     // },
@@ -149,7 +169,7 @@ export default defineComponent({
   },
   methods: {
     createNewItem() {
-      this.item = { mode: EditMode.Create };
+      this.item = { id: undefined, name: undefined, ordinal: undefined, mode: EditMode.Create };
       this.cascade && (this.item[this.cascadedId] = this.condition[this.cascadedId]);
       // this.itemNames.forEach(e=>{
       //   rst[e] = e == 'ordinal' ? (this.items.length > 0 ? this.items.map(i=>i.ordinal).sort((a,b)=>b-a)[0] + 1 : 1) : null
@@ -183,17 +203,22 @@ export default defineComponent({
               } else {
                 useFetch(this.api, { query: this.condition })
                   .then(({ data }) => {
-                    this.items = data.value as [];
-                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                    if (prevSelected) {
-                      prevSelected.select = true
+                    const result = data.value as Result
+                    if (result.success) {
+                      this.items = result.data as [];
+                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                      if (prevSelected) {
+                        prevSelected.select = true
+                      } else {
+                        this.selected = null
+                        this.$emit('selectionChange')
+                      }
                     } else {
-                      this.selected = null
-                      this.$emit('selectionChange')
+                      console.error(result.errorMessage)
                     }
                   })
                   .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                   });
                 // useToast().success(`${this.title}更新成功！`); // do not prompt
               }
@@ -210,6 +235,45 @@ export default defineComponent({
     showEdit(item?: Item) {
       this.item = item ? Object.assign({ mode: EditMode.Update }, item) : this.createNewItem();
       this.dialog.showDetail = true;
+    },
+    handleAppendCreate(item: Item) {
+      console.log('handleAppendCreate', item)
+      this.item = JSON.parse(JSON.stringify(item))
+      this.cascade && (this.item[this.cascadedId] = this.condition[this.cascadedId]);
+      useFetch(this.api, { method: 'POST', body: this.item }).then(({ data, error }) => {
+        if (error.value) {
+          useToast().error(`${this.title}保存失败！`);
+        } else {
+          const result = data.value as Result
+          if (result.success) {
+            this.$emit('appendItemCreate', { ...(result.data as Record<string, any>), contentControls: this.item.contentControls })
+            useFetch(this.api, { query: this.condition }).then(
+              ({ data }) => {
+                const result = data.value as Result
+                if (result.success) {
+                  this.items = result.data as [];
+                  const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                  if (prevSelected) {
+                    prevSelected.select = true
+                  } else {
+                    this.selected = null
+                    this.$emit('selectionChange')
+                  }
+                } else {
+                  console.error(result.errorMessage)
+                }
+              })
+              .catch((err) => {
+                console.error(err);
+                useToast().error(`${this.title}更新失败！`);
+              });;
+            this.$emit("change");
+            useToast().success(`${this.title}保存成功！`);
+          } else {
+            useToast().error(`${this.title}保存失败！\n${result.errorMessage}`);
+          }
+        }
+      })
     },
     handleDelete(item: Item) {
       console.log('handleDelete', item)
@@ -244,20 +308,28 @@ export default defineComponent({
               } else {
                 useFetch(this.api, { query: this.condition }).then(
                   ({ data }) => {
-                    this.items = data.value as [];
-                    // first item selected if exists
-                    // if (this.items.length > 0) {
-                    //   this.items[0].select = true
-                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                    if (prevSelected) {
-                      prevSelected.select = true
+                    const result2 = data.value as Result
+                    if (result2.success) {
+                      this.items = result2.data as [];
+                      // first item selected if exists
+                      // if (this.items.length > 0) {
+                      //   this.items[0].select = true
+                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                      if (prevSelected) {
+                        prevSelected.select = true
+                      } else {
+                        this.selected = null
+                        this.$emit('selectionChange')
+                      }
+                      // }
                     } else {
-                      this.selected = null
-                      this.$emit('selectionChange')
+                      console.error(result2.errorMessage)
                     }
-                    // }
-                  }
-                );
+                  })
+                  .catch((err) => {
+                    console.error(err);
+                    useToast().error(`${this.title}删除失败！`);
+                  });
                 this.$emit("change");
                 useToast().success(`${this.title}删除成功！`);
               }
@@ -280,17 +352,22 @@ export default defineComponent({
             const result = data.value as Result
             if (result.success) {
               console.log(result.data)
-              this.$emit("change");
               useToast().success(`${this.title}保存成功！`);
               this.dialog.showDetail = false;
               useFetch(this.api, { query: this.condition }).then(({ data }) => {
-                this.items = data.value as [];
-                const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                if (prevSelected) {
-                  prevSelected.select = true
+                const result2 = data.value as Result
+                if (result2.success) {
+                  this.items = result2.data as [];
+                  const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                  if (prevSelected) {
+                    prevSelected.select = true
+                  } else {
+                    this.selected = null
+                    this.$emit('selectionChange')
+                  }
+                  this.$emit("change", result.data as Item);
                 } else {
-                  this.selected = null
-                  this.$emit('selectionChange')
+                  console.error(result2.errorMessage)
                 }
               });
             } else {
@@ -330,6 +407,7 @@ export default defineComponent({
     const indexCol = { title: "No.", key: "index", style: "min-width: 64px", class: "text-center", cellClass: "text-center" } as Header
     const actionCol = { title: "操作", key: "actions", class: "text-center", style: "min-width: 72px;" } as Header
     const item = ref({
+      id: undefined, name: undefined, ordinal: undefined,
       isEdit: true,
     } as Item);
     const items = ref([] as Item[]);
@@ -392,92 +470,164 @@ export default defineComponent({
             </tr>
           </thead>
           {
-            this.items.length > 0 ? (
-              // @ts-ignore
-              <Draggable
-                modelValue={this.items}
-                group={group}
-                animation="200"
-                ghost-class="ghost"
-                handle=".data-table-draggable"
-                itemKey="name"
-                tag="tbody"
-                onStart={this.onDragRow}
-                onEnd={this.onDropRow}
-                onUpdate:modelValue={(v: any) => { this.items = v }}
-              >
-                {{
-                  item: ({ element: item, index }: { element: Item, index: number }) => {
-                    const testtag = (
-                      // @ts-ignore
-                      <Transition
-                        name={!this.drag ? 'flip-list' : undefined}
-                        type="transition"
-                      >
-                        {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
-                        <tr>
-                          {
-                            this.innerHeaders.map(({ key, cellClass }) => {
-                              return (
-                                key == "data-table-draggable" && (
-                                  <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
-                                ) ||
-                                key == "data-table-select" && (
-                                  <td class={cellClass} key={key}><VIcon
-                                    color={item.select ? 'primary' : ''}
-                                    icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+            // @ts-ignore
+            <Draggable
+              modelValue={this.items}
+              group={group}
+              animation="200"
+              ghost-class="ghost"
+              handle=".data-table-draggable"
+              itemKey="name"
+              tag="tbody"
+              onStart={this.onDragRow}
+              onEnd={this.onDropRow}
+              onUpdate:modelValue={(v: any) => { this.items = v }}
+            >
+              {{
+                item: ({ element: item, index }: { element: Item, index: number }) => {
+                  const testtag = (
+                    // @ts-ignore
+                    <Transition
+                      name={!this.drag ? 'flip-list' : undefined}
+                      type="transition"
+                    >
+                      {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
+                      <tr>
+                        {
+                          this.innerHeaders.map(({ key, cellClass }) => {
+                            return (
+                              key == "data-table-draggable" && (
+                                <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
+                              ) ||
+                              key == "data-table-select" && (
+                                <td class={cellClass} key={key}><VIcon
+                                  color={item.select ? 'primary' : ''}
+                                  icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                                  // @ts-ignore
+                                  onClick={() => this.handleSelect(item)}
+                                ></VIcon></td>
+                              ) ||
+                              key == 'index' && (
+                                <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
+                              ) ||
+                              !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
+                                <td class={cellClass} key={`item.${key}`}>
+                                  {
                                     // @ts-ignore
-                                    onClick={() => this.handleSelect(item)}
-                                  ></VIcon></td>
-                                ) ||
-                                key == 'index' && (
-                                  <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
-                                ) ||
-                                !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                  <td class={cellClass} key={`item.${key}`}>
-                                    {
-                                      // @ts-ignore
-                                      this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
-                                    }
-                                  </td>
-                                ) ||
-                                key == 'actions' && (
-                                  <td class={cellClass} key={`item.${key}`}>
-                                    <VRow class="actions justify-center">
-                                      <VIcon
-                                        color='primary'
-                                        class='mx-1'
-                                        // @ts-ignore
-                                        onClick={() => this.showEdit({ ...item, isEdit: true })}
-                                      >mdi-pencil</VIcon>
-                                      <VIcon
-                                        color='red-lighten-2'
-                                        class='mx-1'
-                                        // @ts-ignore
-                                        onClick={() => this.handleDelete({ ...item, delete: true })}
-                                      >mdi-delete</VIcon>
-                                    </VRow>
-                                  </td>
-                                )
+                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
+                                  }
+                                </td>
+                              ) ||
+                              key == 'actions' && (
+                                <td class={cellClass} key={`item.${key}`}>
+                                  <VRow class="actions justify-center">
+                                    <VTooltip text='编辑'>
+                                      {{
+                                        activator: ({ props }) => {
+                                          return (
+                                            <VIcon
+                                              {...props}
+                                              color='primary'
+                                              class='mx-1'
+                                              // @ts-ignore
+                                              onClick={() => this.showEdit({ ...item, isEdit: true })}
+                                            >mdi-pencil</VIcon>
+                                          )
+                                        },
+                                      }}
+                                    </VTooltip>
+                                    <VTooltip text='删除'>
+                                      {{
+                                        activator: ({ props }) => {
+                                          return (
+                                            <VIcon
+                                              {...props}
+                                              color='red-lighten-2'
+                                              class='mx-1'
+                                              // @ts-ignore
+                                              onClick={() => this.handleDelete({ ...item, delete: true })}
+                                            >mdi-delete</VIcon>
+                                          )
+                                        }
+                                      }}
+                                    </VTooltip>
+                                  </VRow>
+                                </td>
                               )
-                            })
-                          }
-                        </tr>
-                      </Transition>
+                            )
+                          })
+                        }
+                      </tr>
+                    </Transition>
+                  )
+                  return testtag
+                },
+                footer: () => {
+                  return this.items.length == 0 && this.footerItems.length == 0 ? (
+                    <tr class="v-data-table__empty-wrapper">
+                      <td class="text-center" colspan={this.innerHeaders.length}>
+                        <span class="text-grey">{this.noData}</span>
+                      </td>
+                    </tr>
+                  ) : this.footerItems.map((item, index) => {
+                    return (
+                      <tr class={['bg-orange-lighten-5']}>
+                        {
+                          this.innerHeaders.map(({ key, cellClass }) => {
+                            return (
+                              key == "data-table-draggable" && (
+                                <td class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-blank'></VIcon></td>
+                              ) ||
+                              key == "data-table-select" && (
+                                <td class={cellClass} key={key}><VIcon
+                                  color={item.select ? 'primary' : ''}
+                                  icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                                  // @ts-ignore
+                                  onClick={() => this.handleSelect(item)}
+                                ></VIcon></td>
+                              ) ||
+                              key == 'index' && (
+                                <td class={cellClass} key={`item.${key}`} >{index + this.items.length + 1}</td>
+                              ) ||
+                              !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
+                                <td class={cellClass} key={`item.${key}`}>
+                                  {
+                                    // @ts-ignore
+                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
+                                  }
+                                </td>
+                              ) ||
+                              key == 'actions' && (
+                                <td class={cellClass} key={`item.${key}`}>
+                                  <VRow class="actions justify-center">
+                                  <VTooltip text={item.id ? '绑定' : '添加'}>
+                                    {{
+                                      activator: ({ props }) => {
+                                        return (
+                                          <VIcon
+                                            {...props}
+                                            color={item.id ? 'primary' : 'success'}
+                                            class='mx-1'
+                                            icon={item.id ? 'mdi-link-variant-plus' : 'mdi-plus'}
+                                            // @ts-ignore
+                                            onClick={() => this.handleAppendCreate({ ...item, mode: EditMode.Create })}
+                                          ></VIcon>
+                                        )
+                                      },
+                                    }}
+                                  </VTooltip>
+                                  </VRow>
+                                </td>
+                              )
+                            )
+                          })
+                        }
+                      </tr>
                     )
-                    return testtag
-                  }
-                }}
-              </Draggable>
-            ) : (
-              <tbody>
-                <tr class="v-data-table__empty-wrapper">
-                  <td class="text-center" colspan={this.innerHeaders.length}>
-                    <span class="text-grey">{this.noData}</span>
-                  </td>
-                </tr>
-              </tbody>
-            )
+                  })
+                }
+              }}
+            </Draggable>
           }
         </VTable>
         <VDivider></VDivider>
