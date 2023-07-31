@@ -6,6 +6,7 @@ import { Result } from "server/utils/http";
 import { HTTPMethod } from "index";
 
 type TemplateWithOp = Template & { bcId?: string, mode: EditMode }
+const { copyUploadTo } = useTusServer()
 
 export default defineEventHandler(async event => {
   const result: Result = { success: false }
@@ -51,7 +52,7 @@ export default defineEventHandler(async event => {
           where: whereClause
         })
         console.log(data)
-        result.data = data.flatMap(({id: bcId, name: bcName, templates})=>templates.map(({ordinal, template})=>({bcId, bcName, ordinal, ...template})))
+        result.data = data.flatMap(({ id: bcId, name: bcName, templates }) => templates.map(({ ordinal, template }) => ({ bcId, bcName, ordinal, ...template })))
         result.success = true
         return result
       }
@@ -79,7 +80,7 @@ export default defineEventHandler(async event => {
                     }
                   },
                   data: {
-                    ...pick(o, [ 'ordinal' ]),
+                    ...pick(o, ['ordinal']),
                     updatedAt: new Date(),
                     version: {
                       increment: 1
@@ -101,7 +102,7 @@ export default defineEventHandler(async event => {
                 resultArray.push(del)
                 break
               default:
-                // illegal case, nothing to do
+              // illegal case, nothing to do
             }
           }
           return resultArray
@@ -133,7 +134,13 @@ export default defineEventHandler(async event => {
             const newOrdinal = await prisma.template.count({
               where: whereClause
             })
-            const dataForCreate = pick(singleData, [ 'name', 'path' ])
+            const dataForCreate = pick(singleData, ['name', 'path'])
+            const path = copyUploadTo(dataForCreate.path, process.env.TEMPLATE_PATH ?? 'templates')
+            if (!path) {
+              result.errorMessage = '文档保存失败'
+              return result
+            }
+            dataForCreate.path = path
             const id = uuid()
             return await prisma.template.create({
               data: {
@@ -161,7 +168,7 @@ export default defineEventHandler(async event => {
           })
           result.data = created
           result.success = true
-        } catch(e) {
+        } catch (e) {
           if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
             result.success = false
             result.errorMessage = `存在唯一约束冲突，无法使用名称<${singleData.name}>`
@@ -175,49 +182,49 @@ export default defineEventHandler(async event => {
     async PUT() {
       const data = await readBody(event)
       // if (isArray(data)) {
-        // 暂无此场景
-        // const arrayData:  Template[] = data
-        // if (arrayData.length == 0) return []
-        // const updates = []
-        // for (const o of arrayData) {
-        //   const upd = event.context.prisma.businessCategory.update({
-        //     where: {
-        //       id: o.id,
-        //       version: o.version
-        //     },
-        //     data: {
-        //       ...pick(o, [ 'name', 'icon', 'ordinal' ]),
-        //       updatedAt: new Date(),
-        //       version: {
-        //         increment: 1
-        //       }
-        //     }
-        //   })
-        //   updates.push(upd)
-        // }
-        // const modified = await event.context.prisma.$transaction(updates)
-        // return modified
+      // 暂无此场景
+      // const arrayData:  Template[] = data
+      // if (arrayData.length == 0) return []
+      // const updates = []
+      // for (const o of arrayData) {
+      //   const upd = event.context.prisma.businessCategory.update({
+      //     where: {
+      //       id: o.id,
+      //       version: o.version
+      //     },
+      //     data: {
+      //       ...pick(o, [ 'name', 'icon', 'ordinal' ]),
+      //       updatedAt: new Date(),
+      //       version: {
+      //         increment: 1
+      //       }
+      //     }
+      //   })
+      //   updates.push(upd)
+      // }
+      // const modified = await event.context.prisma.$transaction(updates)
+      // return modified
       // } else {
-        // 单条数据更新
-        if (isEmpty(data)) return result
-        const singleData: Template = data
-        const modified = await event.context.prisma.template.update({
-          where: {
-            id: singleData.id,
-            version: singleData.version
-          },
-          data: {
-            ...pick(singleData, isEmpty(singleData.path) ? [ 'name' ] : [ 'name', 'path' ]),
-            updatedAt: new Date(),
-            version: {
-              increment: 1
-            }
+      // 单条数据更新
+      if (isEmpty(data)) return result
+      const singleData: Template = data
+      const modified = await event.context.prisma.template.update({
+        where: {
+          id: singleData.id,
+          version: singleData.version
+        },
+        data: {
+          ...pick(singleData, isEmpty(singleData.path) ? ['name'] : ['name', 'path']),
+          updatedAt: new Date(),
+          version: {
+            increment: 1
           }
-        })
-        console.log('update:', modified)
-        result.data = modified
-        result.success = true
-        return result
+        }
+      })
+      console.log('update:', modified)
+      result.data = modified
+      result.success = true
+      return result
       // }
     },
     async DELETE() {

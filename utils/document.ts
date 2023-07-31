@@ -28,7 +28,8 @@ export const useDocumentHelper = () => {
           // Id: cc.Id,
           // Lock: 3, // full access
         },
-        "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("\$\{${placeholder.name || ''}\}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
+        // TODO 如何保持格式？
+        // "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("\$\{${placeholder.name || ''}\}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
       }
     })
     // console.log(doc)

@@ -7,10 +7,20 @@
             <div :class="`text-xl-h1 text-lg-h2 text-md-h3 text-h4 d-flex justify-center text-white`">Welcome to Lawyer Pioneer!</div>
           </v-col>
         </v-row>
+        <v-row style="height: 50px;">
+          <v-col>
+            <v-spacer></v-spacer>
+          </v-col>
+        </v-row>
         <v-row v-if="status === 'unauthenticated'">
           <v-col class="d-flex justify-center">
             <v-btn class="mx-4" size="large">注册</v-btn>
             <v-btn class="mx-4" size="large" color="success" @click="navigateTo('/login')">登录</v-btn>
+          </v-col>
+        </v-row>
+        <v-row style="height: 50px;">
+          <v-col>
+            <v-spacer></v-spacer>
           </v-col>
         </v-row>
       </v-card-text>

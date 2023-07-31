@@ -11,16 +11,16 @@ export default defineEventHandler(async event => {
 
   // local upload link
   // /api/XXXXX/upload/XXXXX
-  let validUrlString = url as string
-  try {
-    const validUrl = new URL(url as string)
-    if (validUrl.host == new URL(process.env.AUTH_ORIGIN!).host) {
-      const regex = /\/api(\/.*)\/upload(\/.*)/
-      validUrlString = validUrl.pathname.replace(regex, '$1$2')
-    }
-  } catch (e) {
-    console.log('not a valid url')
-  }
+  let validUrlString = url as string // /templates/xxxxxxx
+  // try {
+  //   const validUrl = new URL(url as string)
+  //   if (validUrl.host == new URL(process.env.AUTH_ORIGIN!).host) {
+  //     const regex = /\/api(\/.*)\/upload(\/.*)/
+  //     validUrlString = validUrl.pathname.replace(regex, '$1$2')
+  //   }
+  // } catch (e) {
+  //   console.log('not a valid url')
+  // }
 
   const session = await getServerSession(event)
   const docManager = useDocManager()
@@ -170,7 +170,7 @@ export default defineEventHandler(async event => {
         }
         const token = docService.getToken(configuration)
         configuration.token = token
-        console.log('doc config:', configuration)
+        // console.log('doc config:', configuration)
         return configuration
       })
     },

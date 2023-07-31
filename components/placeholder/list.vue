@@ -70,7 +70,7 @@
                 </v-card>
               </v-col>
               <v-col>
-                <v-card style="height: calc(100dvh - 180px);" flat>
+                <v-card height="calc(100dvh - 180px)" flat>
                   <DocumentEditor v-if="tpl && config.document" id="producer-editor" :document-server-url="documentServerApiUrl"
                     :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
                     :on-load-component-error="onLoadComponentError" />

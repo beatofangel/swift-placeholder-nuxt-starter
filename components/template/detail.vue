@@ -152,7 +152,7 @@ const uploadHandler = (files?: File[]) => {
     // headers: useRequestHeaders(['Authorization']),
     headers: headers,
     // Endpoint is the upload creation URL from your tus server
-    endpoint: "/api/templates/upload",
+    endpoint: "/api/upload",
     // Retry delays will enable tus-js-client to automatically retry on errors
     retryDelays: [],
     // retryDelays: [0, 3000, 5000, 10000, 20000],

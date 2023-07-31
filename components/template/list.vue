@@ -35,13 +35,13 @@
               @selectionChange="(val) => selectionChangeHandler(val)"
               @change="changeHandler"
             >
-              <template v-slot:[`item.path`]="{ item }">
+              <!-- <template v-slot:[`item.path`]="{ item }">
                 <v-tooltip :text="`下载 ${item.name}.docx`">
                   <template v-slot:activator="{ props }">
-                    <a v-bind="props" class="text-decoration-none text-grey" :href="item.path" :download="`${item.name}.docx`"><v-icon icon="mdi-download"></v-icon></a>
+                    <a v-bind="props" class="text-decoration-none text-grey" :href="getDownloadUrl(item.path as string)" :download="`${item.name}.docx`"><v-icon icon="mdi-download"></v-icon></a>
                   </template>
                 </v-tooltip>
-              </template>
+              </template> -->
               <template
                 v-slot:editor="props"
               >
@@ -78,13 +78,13 @@ const templateHeaders = [{
     class: "text-center",
     cellClass: "nameClass text-center text-truncate ",
   },
-  {
-    title: "文档",
-    key: "path",
-    class: "text-center",
-    cellClass: "text-center text-truncate ",
-    style: "min-width: 64px;"
-  },
+  // {
+  //   title: "文档",
+  //   key: "path",
+  //   class: "text-center",
+  //   cellClass: "text-center text-truncate ",
+  //   style: "min-width: 64px;"
+  // },
   {
     title: "所属业务",
     key: "bcName",
@@ -106,4 +106,12 @@ const changeHandler = () => {
   selected.value = innerTemplateCommonTable.value?.items.find(item => item.select)
   emits('change');
 }
+// const getDownloadUrl = (path: string) => {
+//   const regex = /\/(templates)\/(.*)/
+//   if (path) {
+//     return path.replace(regex, '/api/$1/download/$2')
+//   }
+
+//   return ''
+// }
 </script>
