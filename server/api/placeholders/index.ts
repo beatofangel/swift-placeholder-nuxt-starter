@@ -72,60 +72,75 @@ export default defineEventHandler(async event => {
       const data = await readBody(event)
       if (isArray(data)) {
         // 排序
-        // const arrayData: TemplateWithOp[] = data
-        // if (arrayData.length == 0) return result
-        // const delHandlers: Function[] = []
-        // const executed = await event.context.prisma.$transaction(async prisma => {
-        //   const resultArray = []
-        //   for (const o of arrayData) {
-        //     switch (o.mode) {
-        //       case EditMode.Update:
-        //         const upd = await event.context.prisma.bcTplRel.update({
-        //           where: {
-        //             bcId_tplId: {
-        //               bcId: o.bcId!,
-        //               tplId: o.id
-        //             },
-        //             template: {
-        //               version: o.version
-        //             }
-        //           },
-        //           data: {
-        //             ...pick(o, [ 'ordinal' ]),
-        //             updatedAt: new Date(),
-        //             version: {
-        //               increment: 1
-        //             }
-        //           }
-        //         })
-        //         resultArray.push(upd)
-        //         break
-        //       case EditMode.Delete:
-        //         const del = await event.context.prisma.template.delete({
-        //           where: {
-        //             id: o.id,
-        //             version: o.version
-        //           }
-        //         })
-        //         delHandlers.push(async () => {
-        //           return await useFetch(del.path, { method: 'DELETE' })
-        //         })
-        //         resultArray.push(del)
-        //         break
-        //       default:
-        //         // illegal case, nothing to do
-        //     }
-        //   }
-        //   return resultArray
-        // })
-        // console.log('execute:', executed)
-        // delHandlers.forEach(async handler => {
-        //   const res = await handler()
-        //   console.log(res)
-        // })
-        // result.success = true
-        // result.data = executed
-        // return result
+        const arrayData: PlaceholderItemWithOp[] = data
+        if (arrayData.length == 0) return result
+        const executed = await event.context.prisma.$transaction(async prisma => {
+          // const resultArray = []
+          for (const o of arrayData) {
+            switch (o.mode) {
+              case EditMode.Update:
+                const upd = await event.context.prisma.tplPhItmRel.update({
+                  where: {
+                    tplId_phItmId: {
+                      tplId: o.tplId!,
+                      phItmId: o.id
+                    },
+                    placeholderItem: {
+                      version: o.version
+                    }
+                  },
+                  data: {
+                    ...pick(o, [ 'ordinal' ]),
+                    updatedAt: new Date(),
+                    version: {
+                      increment: 1
+                    }
+                  }
+                })
+                // resultArray.push(upd)
+                break
+              case EditMode.Delete:
+                const count = await prisma.tplPhItmRel.count({
+                  where: {
+                    tplId: o.id
+                  }
+                })
+
+                if (count > 1) {
+                  await prisma.tplPhItmRel.delete({
+                    where: {
+                      tplId_phItmId: {
+                        tplId: o.tplId as string,
+                        phItmId: o.id
+                      }
+                    }
+                  })
+                  // const del = await prisma.placeholderItem.findUnique({
+                  //   where: {
+                  //     id: o.id
+                  //   }
+                  // })
+                  // resultArray.push(del)
+                } else {
+                  const del = await event.context.prisma.placeholderItem.delete({
+                    where: {
+                      id: o.id,
+                      version: o.version
+                    }
+                  })
+                  // resultArray.push(del)
+                }
+                break
+              default:
+                // illegal case, nothing to do
+            }
+          }
+          return true
+        })
+        console.log('execute:', executed)
+        result.success = true
+        result.data = executed
+        return result
       } else {
         // 单条数据新增
         const singleData: PlaceholderItemWithOp = data
@@ -133,7 +148,7 @@ export default defineEventHandler(async event => {
           result.errorMessage = '未指定模板id'
           return result
         }
-        console.log('whereClause.templates', data.tplId)
+        console.log('whereClause.placeholderItems', data.tplId)
         try {
           const created = await event.context.prisma.$transaction(async prisma => {
             // ordinal start with 0, so new ordinal equals the COUNT
@@ -207,8 +222,8 @@ export default defineEventHandler(async event => {
         return result
       }
     },
-    // async PUT() {
-    //   const data = await readBody(event)
+    async PUT() {
+      const data = await readBody(event)
     //   // if (isArray(data)) {
     //     // 暂无此场景
     //     // const arrayData:  Template[] = data
@@ -233,28 +248,28 @@ export default defineEventHandler(async event => {
     //     // const modified = await event.context.prisma.$transaction(updates)
     //     // return modified
     //   // } else {
-    //     // 单条数据更新
-    //     if (isEmpty(data)) return result
-    //     const singleData: Template = data
-    //     const modified = await event.context.prisma.template.update({
-    //       where: {
-    //         id: singleData.id,
-    //         version: singleData.version
-    //       },
-    //       data: {
-    //         ...pick(singleData, isEmpty(singleData.path) ? [ 'name' ] : [ 'name', 'path' ]),
-    //         updatedAt: new Date(),
-    //         version: {
-    //           increment: 1
-    //         }
-    //       }
-    //     })
-    //     console.log('update:', modified)
-    //     result.data = modified
-    //     result.success = true
-    //     return result
-    //   // }
-    // },
+        // 单条数据更新
+        if (isEmpty(data)) return result
+        const singleData: PlaceholderItem = data
+        const modified = await event.context.prisma.placeholderItem.update({
+          where: {
+            id: singleData.id,
+            version: singleData.version
+          },
+          data: {
+            ...pick(singleData, [ /* 'name', */ 'type', 'format' ]), // 名称不可修改
+            updatedAt: new Date(),
+            version: {
+              increment: 1
+            }
+          }
+        })
+        console.log('update:', modified)
+        result.data = modified
+        result.success = true
+        return result
+      // }
+    },
     async DELETE() {
       // 单条数据删除
       const data = await readBody<PlaceholderItemWithOp>(event)
@@ -269,7 +284,7 @@ export default defineEventHandler(async event => {
 
           if (count > 1) {
             // 已被其他模板引用
-            await event.context.prisma.tplPhItmRel.delete({
+            await prisma.tplPhItmRel.delete({
               where: {
                 tplId_phItmId: {
                   tplId: data.tplId as string,
@@ -281,12 +296,9 @@ export default defineEventHandler(async event => {
               where: {
                 id: data.id
               }
-            }).catch(e => {
-              console.log(e)
-              throw e
             })
           } else {
-            return await event.context.prisma.placeholderItem.delete({
+            return await prisma.placeholderItem.delete({
               where: {
                 id: data.id,
                 version: data.version

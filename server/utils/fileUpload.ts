@@ -4,7 +4,8 @@ import path from 'path'
 import fs from 'fs'
 
 const { storageConfigFolder } = useDocConfig()
-const tempFolder = path.join(storageConfigFolder, 'temp')
+export const tempFolder = path.join(storageConfigFolder, 'temp')
+export const templatesFolder = path.join(storageConfigFolder, 'templates')
 if (!fs.existsSync(tempFolder)) {
   fs.mkdirSync(tempFolder, { recursive: true })
 }

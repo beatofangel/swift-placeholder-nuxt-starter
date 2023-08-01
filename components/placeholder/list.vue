@@ -35,11 +35,12 @@
                       fixed-header
                       :hide-create="!tpl?.id"
                       :append-items="placeholdersInDoc"
+                      inline-edit
                       @append-item-create="appendItemCreateHandler"
                       @change="changeHandler"
                     >
-                      <template v-slot:[`item.type`]="{ item }">
-                        <v-select name="type" v-model="item.type" :items="itemTypes" density="compact" hide-details>
+                      <template v-slot:[`item.type`]="{ item, disabled }">
+                        <v-select name="type" v-model="item.type" :items="itemTypes" :disabled="disabled" density="compact" hide-details>
                           <template v-slot:selection="{ item: selection, index }">
                             <span v-if="xlAndUp">{{ selection.title }}</span>
                             <v-icon v-else :icon="selection.raw.icon" start></v-icon>
@@ -53,8 +54,8 @@
                           </template>
                         </v-select>
                       </template>
-                      <template v-slot:[`item.format`]="{ item }">
-                        <v-text-field name="format" v-model="item.format" :disabled="item.type !== 'date'" density="compact" hide-details clearable></v-text-field>
+                      <template v-slot:[`item.format`]="{ item, disabled }">
+                        <v-text-field name="format" v-model="item.format" :disabled="disabled || item.type !== 'date'" density="compact" hide-details clearable></v-text-field>
                       </template>
                       <template v-slot:append>
                         {{ "test" }}
@@ -177,6 +178,8 @@ function onDocumentReady() {
           const matchedPh = existedPhs.find(ePh => ePh.name == ph.name)
           if (matchedPh) {
             ph.id = matchedPh.id
+            ph.type = matchedPh.type
+            ph.format = matchedPh.format
           }
         })
       })

@@ -72,7 +72,8 @@ export default defineComponent({
     appendItems: {
       type: Array<Item>,
       default: () => null,
-    }
+    },
+    inlineEdit: Boolean
   },
   mounted() {
     this.condition &&
@@ -521,21 +522,38 @@ export default defineComponent({
                               key == 'actions' && (
                                 <td class={cellClass} key={`item.${key}`}>
                                   <VRow class="actions justify-center">
-                                    <VTooltip text='编辑'>
-                                      {{
-                                        activator: ({ props }) => {
-                                          return (
-                                            <VIcon
-                                              {...props}
-                                              color='primary'
-                                              class='mx-1'
-                                              // @ts-ignore
-                                              onClick={() => this.showEdit({ ...item, isEdit: true })}
-                                            >mdi-pencil</VIcon>
-                                          )
-                                        },
-                                      }}
-                                    </VTooltip>
+                                    { this.inlineEdit ?
+                                      <VTooltip text='保存'>
+                                        {{
+                                          activator: ({ props }) => {
+                                            return (
+                                              <VIcon
+                                                {...props}
+                                                color='primary'
+                                                class='mx-1'
+                                                // @ts-ignore
+                                                onClick={() => this.handleSave({ ...item, mode: EditMode.Update })}
+                                              >mdi-content-save-edit</VIcon>
+                                            )
+                                          },
+                                        }}
+                                      </VTooltip> :
+                                      <VTooltip text='编辑'>
+                                        {{
+                                          activator: ({ props }) => {
+                                            return (
+                                              <VIcon
+                                                {...props}
+                                                color='primary'
+                                                class='mx-1'
+                                                // @ts-ignore
+                                                onClick={() => this.showEdit({ ...item, isEdit: true })}
+                                              >mdi-pencil</VIcon>
+                                            )
+                                          },
+                                        }}
+                                      </VTooltip>
+                                    }
                                     <VTooltip text='删除'>
                                       {{
                                         activator: ({ props }) => {
@@ -593,7 +611,7 @@ export default defineComponent({
                                 <td class={cellClass} key={`item.${key}`}>
                                   {
                                     // @ts-ignore
-                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
+                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, disabled: !!item.id }) : item[key]
                                   }
                                 </td>
                               ) ||

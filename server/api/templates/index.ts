@@ -5,9 +5,11 @@ import { v4 as uuid } from "uuid";
 import { Result } from "server/utils/http";
 import { HTTPMethod } from "index";
 import fs from 'fs'
+import path from 'path'
 
 type TemplateWithOp = Template & { bcId?: string, mode: EditMode }
 const { copyUploadTo } = useTusServer()
+const { storageConfigFolder } = useDocConfig()
 
 export default defineEventHandler(async event => {
   const result: Result = { success: false }
@@ -64,9 +66,8 @@ export default defineEventHandler(async event => {
         // 排序
         const arrayData: TemplateWithOp[] = data
         if (arrayData.length == 0) return result
-        const delHandlers: Function[] = []
+        // const delHandlers: Function[] = []
         const executed = await event.context.prisma.$transaction(async prisma => {
-          const resultArray = []
           for (const o of arrayData) {
             switch (o.mode) {
               case EditMode.Update:
@@ -88,32 +89,67 @@ export default defineEventHandler(async event => {
                     }
                   }
                 })
-                resultArray.push(upd)
+                // resultArray.push(upd)
                 break
               case EditMode.Delete:
-                const del = await event.context.prisma.template.delete({
+                const count = await prisma.bcTplRel.count({
                   where: {
-                    id: o.id,
-                    version: o.version
+                    tplId: o.id
                   }
                 })
-                // TODO 删除文件
-                // delHandlers.push(async () => {
-                //   return await useFetch(del.path, { method: 'DELETE' })
-                // })
-                resultArray.push(del)
+
+                if (count > 1) {
+                  await prisma.bcTplRel.delete({
+                    where: {
+                      bcId_tplId: {
+                        bcId: o.bcId as string,
+                        tplId: o.id
+                      }
+                    }
+                  })
+                  // const del = await prisma.template.findUnique({
+                  //   where: {
+                  //     id: o.id
+                  //   }
+                  // })
+                  // resultArray.push(del)
+                } else {
+                  const del = await prisma.template.delete({
+                    where: {
+                      id: o.id,
+                      version: o.version
+                    }
+                  })
+                  // TODO 删除文件 文件不是实时写入（onlyoffice），是否有必要将删除操作添加到计划任务中？或者直接不删除，
+                  // 由专门的任务来定期清理？
+                  // try {
+                  //   const delFile = path.join(storageConfigFolder, del.path)
+                  //   fs.rmSync(delFile, { force: true })
+                  //   console.log('delete file', delFile)
+                  //   const delFileHistory = path.join(storageConfigFolder, `${del.path}-history`)
+                  //   fs.rmSync(delFileHistory, { recursive: true, force: true })
+                  //   console.log('delete file history', delFileHistory)
+                  // } catch(e) {
+                  //   console.warn('delete template file/history failed')
+                  // }
+
+                  // delHandlers.push(async () => {
+                  //   return await useFetch(del.path, { method: 'DELETE' })
+                  // })
+                  // resultArray.push(del)
+                }
                 break
               default:
               // illegal case, nothing to do
             }
           }
-          return resultArray
+          return true
         })
         console.log('execute:', executed)
-        delHandlers.forEach(async handler => {
-          const res = await handler()
-          console.log(res)
-        })
+        // delHandlers.forEach(async handler => {
+        //   const res = await handler()
+        //   console.log(res)
+        // })
         result.success = true
         result.data = executed
         return result
@@ -232,33 +268,56 @@ export default defineEventHandler(async event => {
     async DELETE() {
       // 单条数据删除
       const data = await readBody<TemplateWithOp>(event)
-      const deleted = await event.context.prisma.template.delete({
-        where: {
-          id: data.id,
-          version: data.version
-        }
-      })
-      console.log('delete:', deleted)
+      try {
+        const deleted = await event.context.prisma.$transaction(async prisma => {
+          const count = await prisma.bcTplRel.count({
+            where: {
+              tplId: data.id
+            }
+          })
 
-      /**
-       * Deleting a template in a web page should also delete the related document.
-       *
-       * == TODO ==
-       * Documents that are no longer relevant to the template should be deleted daily by the crontab task.
-       *
-       */
-      // const headers = {
-      //   'Tus-Resumable': '1.0.0',
-      //   // TODO after deploying to server with ssl, it should be deleted.
-      //   'X-Forwarded-Proto': 'http'
-      // }
-      // fetch(deleted.path, { method: 'DELETE', headers: headers }).then(({ status }) => {
-      //   console.log(status)
-      // }).catch(error => {
-      //   console.log(error)
-      // })
-      result.success = true
-      result.data = deleted
+          if (count > 1) {
+            await prisma.bcTplRel.delete({
+              where: {
+                bcId_tplId: {
+                  bcId: data.bcId as string,
+                  tplId: data.id
+                }
+              }
+            })
+            return await prisma.template.findUnique({
+              where: {
+                id: data.id
+              }
+            })
+          } else {
+            return await prisma.template.delete({
+              where: {
+                id: data.id,
+                version: data.version
+              }
+            })
+            // TODO 删除文件 文件不是实时写入（onlyoffice），是否有必要将删除操作添加到计划任务中？或者直接不删除，
+            // 由专门的任务来定期清理？
+            // try {
+            //   const delFile = path.join(storageConfigFolder, del.path)
+            //   fs.rmSync(delFile, { force: true })
+            //   console.log('delete file', delFile)
+            //   const delFileHistory = path.join(storageConfigFolder, `${del.path}-history`)
+            //   fs.rmSync(delFileHistory, { recursive: true, force: true })
+            //   console.log('delete file history', delFileHistory)
+            // } catch(e) {
+            //   console.warn('delete template file/history failed')
+            // }
+            // return del
+          }
+        })
+        console.log('delete:', deleted)
+        result.success = true
+        result.data = deleted
+      } catch(e) {
+        throw e
+      }
       return result
     }
   }
