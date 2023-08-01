@@ -43,7 +43,7 @@ export default defineEventHandler(async event => {
           result.success = true
         } else {
           // orderby
-          const orderByClause: Prisma.Enumerable<Prisma.TplPhItmRelOrderByWithRelationInput> = { ordinal: 'asc' }
+          const orderByClause: Prisma.Enumerable<Prisma.TplPhItmRelOrderByWithRelationAndSearchRelevanceInput> = { ordinal: 'asc' }
           if (query.order) {
             orderByClause.ordinal = ['asc', 'desc'].includes(query.order as Prisma.SortOrder) ? query.order as Prisma.SortOrder : 'asc'
           }

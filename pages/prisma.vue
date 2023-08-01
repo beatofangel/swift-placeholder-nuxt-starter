@@ -2,7 +2,8 @@
 definePageMeta({
   middleware: ['casbin'],
 });
-const { data: examples } = useFetch('/api/examples')
+const { data: examples } = useFetch('/api/v1/placeholders', {
+})
 </script>
 
 <template>

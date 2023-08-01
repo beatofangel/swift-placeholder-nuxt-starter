@@ -36,7 +36,7 @@ export default defineEventHandler(async event => {
           whereClause.id = query.bcId as string
         }
         // orderby
-        const orderByClause: Prisma.Enumerable<Prisma.BcTplRelOrderByWithRelationInput> = { ordinal: 'asc' }
+        const orderByClause: Prisma.Enumerable<Prisma.BcTplRelOrderByWithRelationAndSearchRelevanceInput> = { ordinal: 'asc' }
         if (query.order) {
           orderByClause.ordinal = ['asc', 'desc'].includes(query.order as Prisma.SortOrder) ? query.order as Prisma.SortOrder : 'asc'
         }

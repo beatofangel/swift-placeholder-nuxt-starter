@@ -1,7 +1,7 @@
 // yarn prisma migrate dev --name [init]
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["views"]
+  previewFeatures = ["views", "fullTextSearch"]
 }
 
 datasource db {

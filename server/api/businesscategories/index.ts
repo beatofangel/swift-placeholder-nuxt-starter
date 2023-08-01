@@ -65,7 +65,7 @@ export default defineEventHandler(async event => {
           whereClause.pid = query.pid as string
         }
         // orderby
-        const orderByClause: Prisma.Enumerable<Prisma.BusinessCategoryOrderByWithRelationInput> = { ordinal: 'asc' }
+        const orderByClause: Prisma.Enumerable<Prisma.BusinessCategoryOrderByWithRelationAndSearchRelevanceInput> = { ordinal: 'asc' }
         if (query.order) {
           orderByClause.ordinal = ['asc', 'desc'].includes(query.order as Prisma.SortOrder) ? query.order as Prisma.SortOrder : 'asc'
         }
