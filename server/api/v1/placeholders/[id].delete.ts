@@ -16,7 +16,7 @@ export default defineEventHandler(async event => {
   }
   const version = query.version as number
   const deleted = await event.context.prisma.$transaction(async prisma => {
-    // 取得与待删除占位符关联的模板数量 ※若 未传入模板id，则 认为待删除占位符未与
+    // 获取与待删除占位符关联的模板数量 ※若 未传入模板id，则 认为待删除占位符未与
     const whereClause: Prisma.TplPhItmRelWhereInput = { phItmId: id }
     if (!isEmpty(query.tplId)) {
       whereClause.tplId = {
@@ -43,7 +43,7 @@ export default defineEventHandler(async event => {
             }
           }
         })
-        // 取得待删除占位符
+        // 获取待删除占位符
         del = await prisma.placeholderItem.findUnique({
           where: {
             id: id
@@ -51,7 +51,7 @@ export default defineEventHandler(async event => {
         })
       }
     } else {
-      // 取得待删除占位符关联
+      // 获取待删除占位符关联
       delRel = await prisma.tplPhItmRel.findUnique({
         where: {
           tplId_phItmId: {
