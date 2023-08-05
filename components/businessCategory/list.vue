@@ -12,19 +12,24 @@
       <v-col v-for="level in 3" cols="4" :key="level" class="pa-0">
         <v-card elevation="0" tile>
           <v-card-text class="d-flex flex-nowrap pa-2">
-            <CommonTable
+            <CommonList
               style="width: 100%;"
               height="576"
               hide-tool-bar
-              hide-select-btn
               flat
-              :condition="conditions[level - 1]"
-              api="/api/businesscategories"
+              :api="{
+                get: '/api/v1/businesscategories/{1}/businesscategories',
+                post: '/api/v1/businesscategories/{1}/businesscategories',
+                put: '/api/v1/businesscategories/{1}',
+                delete: '/api/v1/businesscategories/{1}/businesscategories/{2}',
+                sort: '/api/v1/businesscategories/{1}/businesscategories/sort',
+              }"
               :title="getCategoryName(level)"
               :headers="categoryHeaders"
               :visible="visible"
               show-select
               cascade
+              :cascaded-id="conditions[level - 1]?.pid"
               draggable
               show-index
               fixed-header
@@ -44,7 +49,7 @@
                   v-bind="props"
                 ></BusinessCategoryDetail>
               </template>
-            </CommonTable>
+            </CommonList>
           </v-card-text>
         </v-card>
       </v-col>
@@ -53,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from 'components/common/table';
+import { Item } from 'components/common/list';
 
 interface condition extends Record<string, any> { pid: string }
 
@@ -66,7 +71,8 @@ const emits = defineEmits({
 })
 const businessCategories = ref([ undefined, undefined, undefined ] as (Item | undefined)[])
 const selected: Ref<Item | undefined> = ref()
-const conditions = ref([{ pid: null }, undefined, undefined] as (condition | undefined)[])
+const { dummyRootId } = useRuntimeConfig().public
+const conditions = ref([{ pid: dummyRootId }, undefined, undefined] as (condition | undefined)[])
 const categoryHeaders = ref([
   {
     title: "名称",
@@ -123,7 +129,7 @@ const selectionChangeHandler = (item: Item | undefined, level: number) => {
 </script>
 
 <style>
-.nameClass {
+/* .nameClass {
   max-width: 142px;
 }
 .iconClass {
@@ -131,5 +137,5 @@ const selectionChangeHandler = (item: Item | undefined, level: number) => {
 }
 .actionsClass {
   min-width: 64px;
-}
+} */
 </style>

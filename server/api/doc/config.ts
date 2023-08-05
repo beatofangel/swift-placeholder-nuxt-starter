@@ -170,7 +170,7 @@ export default defineEventHandler(async event => {
         }
         const token = docService.getToken(configuration)
         configuration.token = token
-        // console.log('doc config:', configuration)
+        console.log('doc config:', configuration)
         return configuration
       })
     },

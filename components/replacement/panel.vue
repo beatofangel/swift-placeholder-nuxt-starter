@@ -112,7 +112,7 @@ import { debounce } from 'lodash-es'
 const selectedTemplateIndex = ref([0])
 const templateListRailed = ref(true)
 const props = defineProps<{ id: string, templates: Template[] | null }>()
-const businessCategoryOptions = ref([])
+// const businessCategoryOptions = ref([])
 const docWarnings = ref([] as DocWarning[])
 const emit = defineEmits([
   // 'update:businessCategory',
@@ -124,17 +124,17 @@ onMounted(() => {
   selectedTemplateIndex.value = [useSelectedTemplate(props.id).value]
   templateListRailed.value = useTemplateRailed().value
   // $fetch('/api/businessCategories', {
-  $fetch('/api/businesscategories', {
-    query: {
-      cascaded: true
-    }
-  }).then((data) => {
-    if (data.success) {
-      businessCategoryOptions.value = data
-    } else {
-      console.log(data.errorMessage)
-    }
-  })
+  // $fetch('/api/businesscategories', {
+  //   query: {
+  //     cascaded: true
+  //   }
+  // }).then((data) => {
+  //   if (data.success) {
+  //     businessCategoryOptions.value = data
+  //   } else {
+  //     console.log(data.errorMessage)
+  //   }
+  // })
 })
 watch(() => props.id, (val) => {
   console.log('当替换标签页切换时', val)

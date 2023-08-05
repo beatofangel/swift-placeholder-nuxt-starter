@@ -70,9 +70,8 @@ const props = withDefaults(defineProps<{ id?: string, pid?: string, name?: strin
 const originName = props.name
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
-    const { data } = await useFetch("/api/businesscategories", { query: { count: true, name } })
-    const result = data.value as Result
-    const isValid = result.success && result.data == 0
+    const { data } = await useFetch("/api/v1/businesscategories/count", { query: { name: { equals: name } } })
+    const isValid = data.value == 0
     console.log('duplication', name, isValid)
   // }
   resolve(isValid)

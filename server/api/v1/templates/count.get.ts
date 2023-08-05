@@ -1,4 +1,5 @@
 import { PlaceholderItem, Prisma } from "@prisma/client"
+import { pick } from "lodash-es"
 
 /**
  *
@@ -8,7 +9,8 @@ import { PlaceholderItem, Prisma } from "@prisma/client"
  * @apiVersion  1.0.0
  *
  *
- * @apiQuery  {Json} [id] 模板id条件
+ * @apiQuery  {Json} [name] 模板名称条件
+ * @apiQuery  {Json} [businessCategories] 关联业务分类条件
  * @apiQuery  {Json} [placeholderItems] 关联占位符条件
  *
  * @apiSuccess (200) {Number} count 模板件数
@@ -19,13 +21,12 @@ import { PlaceholderItem, Prisma } from "@prisma/client"
  *
  */
 export default defineEventHandler(async event => {
-  const query = getQuery(event)
-  const id = query.id ? JSON.parse(query.id as string) : null
-  const placeholderItems = query.placeholderItems ? JSON.parse(query.placeholderItems as string) : null
-
+  const query = pick(getQuery(event), ['name', 'businessCategories', 'placeholderItems'])
   const whereClause: Prisma.TemplateWhereInput = {}
-  id && (whereClause.id = id)
-  placeholderItems && (whereClause.placeholderItems = placeholderItems)
+  Object.entries(query).forEach(([key, value]) => {
+    const column = key as 'name' | 'businessCategories' | 'placeholderItems'
+    whereClause[column] = JSON.parse(value as string) as Prisma.StringFilter<"Template"> | string
+  })
   return await event.context.prisma.template.count({
     where: whereClause
   })

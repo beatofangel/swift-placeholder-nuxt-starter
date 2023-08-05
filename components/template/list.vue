@@ -13,25 +13,30 @@
       <v-col class="pa-0">
         <v-card elevation="0" tile>
           <v-card-text class="d-flex flex-nowrap pa-2">
-            <CommonTable
-              ref="innerTemplateCommonTable"
+            <CommonList
+              ref="innerTemplateCommonList"
               style="width: 100%;"
               height="576"
               hide-title
-              hide-select-btn
               flat
-              :condition="bcId ? { bcId } : undefined"
-              api="/api/templates"
+              :api="{
+                get: '/api/v1/businesscategories/{1}/templates',
+                post: '/api/v1/businesscategories/{1}/templates',
+                put: '/api/v1/templates/{1}',
+                delete: '/api/v1/businesscategories/{1}/templates/{2}',
+                sort: '/api/v1/businesscategories/{1}/templates/sort',
+              }"
               :headers="templateHeaders"
               title="模板"
               visible
               show-select
               cascade
-              cascaded-id="bcId"
+              :cascaded-id="businessCategory?.id"
+              cascaded-key="bcId"
               draggable
               show-index
               fixed-header
-              :hide-create="!bcId"
+              :hide-create="!businessCategory?.id"
               @selectionChange="(val) => selectionChangeHandler(val)"
               @change="changeHandler"
             >
@@ -49,7 +54,7 @@
                   v-bind="props"
                 ></TemplateDetail>
               </template>
-            </CommonTable>
+            </CommonList>
           </v-card-text>
         </v-card>
       </v-col>
@@ -58,16 +63,17 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from 'components/common/table';
+import { PropType } from 'vue';
+import { Item } from 'components/common/list';
 import { Template } from 'index';
 
 const props = defineProps({
-  bcId: String
+  businessCategory: Object as PropType<Item>
 })
-watch(() => props.bcId, (val) => {
+watch(() => props.businessCategory?.id, (val) => {
   selected.value = undefined
 })
-const innerTemplateCommonTable = ref<{items: Template[]}>()
+const innerTemplateCommonList = ref<{items: Template[]}>()
 const selected = ref<Item | undefined>()
 const emits = defineEmits({
   'change': () => true,
@@ -103,7 +109,7 @@ const selectionChangeHandler = (item: Item | undefined) => {
 }
 const changeHandler = () => {
   console.log('changeHandler')
-  selected.value = innerTemplateCommonTable.value?.items.find(item => item.select)
+  selected.value = innerTemplateCommonList.value?.items.find(item => item.select)
   emits('change');
 }
 // const getDownloadUrl = (path: string) => {

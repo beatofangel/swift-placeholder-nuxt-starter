@@ -84,20 +84,25 @@ export interface PlaceholderStatistic {
   count: number
 }
 
+type ContentControl = {
+  InternalId: number,
+  Tag: string,
+  Id: number,
+  Lock?: number,
+  PlaceHolderText?: string,
+}
 export type ValidatePlaceholdersResult = {
   warning: boolean,
+  distinctContentControls: {
+    Tag: string,
+    contentControls: ContentControl[]
+  }[],
   valid?: {
     placeholders?: placeholders[],
   },
   invalid?: {
     placeholders?: Placeholder[],
-    contentControls?: {
-      InternalId: number,
-      Tag: string,
-      Id: number,
-      Lock?: number,
-      PlaceHolderText?: string,
-    }[]
+    contentControls?: ContentControl[]
   }
 }
 

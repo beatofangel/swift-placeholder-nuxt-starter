@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid"
 import { pick } from "lodash-es";
 import { IncomingMessage, ServerResponse } from "http";
 
-const REGEX_PLACEHOLDERS_IN_TEMPLATES = /^([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\/placeholders$/
+const REGEX_PLACEHOLDERS_IN_TEMPLATES_POST = /^([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\/placeholders$/
 const REGEX_PLACEHOLDERS_IN_TEMPLATES_SORT = /^([0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12})\/placeholders\/sort$/
 
 /**
@@ -166,14 +166,16 @@ const postPlaceholdersInTemplatesSort = async (event: { node: { res: ServerRespo
     }
     return true
   })
+
+  return executed
 }
 type PlaceholderItemSort = Pick<PlaceholderItem, 'id' | 'version'> & { ordinal: number }
 export default defineEventHandler(async event => {
   const params = event.context.params?.id
   if (params) {
-    if (REGEX_PLACEHOLDERS_IN_TEMPLATES.test(params)) {
+    if (REGEX_PLACEHOLDERS_IN_TEMPLATES_POST.test(params)) {
       // POST /api/templates/:id/placeholders
-      const tplId = params.replace(REGEX_PLACEHOLDERS_IN_TEMPLATES, "$1")
+      const tplId = params.replace(REGEX_PLACEHOLDERS_IN_TEMPLATES_POST, "$1")
       const item = await readBody<PlaceholderItem>(event)
       return await postPlaceholdersInTemplates(event, tplId, item)
     } else if (REGEX_PLACEHOLDERS_IN_TEMPLATES_SORT.test(params)) {

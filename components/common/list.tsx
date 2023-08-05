@@ -18,8 +18,8 @@ import {
 } from "vuetify/components";
 import Draggable from "vuedraggable";
 import { v4 as uuid, validate } from 'uuid';
-import './table.scss';
-import { Result } from 'server/utils/http';
+import { useTheme } from 'vuetify'
+import './list.scss';
 
 export interface Item extends Record<string, any> {
   id: string | undefined;
@@ -33,19 +33,22 @@ export interface Header extends Record<string, any> {
 }
 
 export default defineComponent({
+  // props: props,
   props: {
-    condition: {
-      type: Object,
-      default: () => { },
-    },
     api: {
-      type: String,
+      type: Object as PropType<{ get: string, post?: string, put?: string, delete?: string, sort?: string }>,
       required: true,
+      default: () => ({
+        get: '',
+        post: '',
+        put: '',
+        delete: '',
+        sort: ''
+      })
     },
     flat: Boolean,
     hideTitle: Boolean,
     hideToolBar: Boolean,
-    hideSelectBtn: Boolean,
     title: String,
     headers: {
       type: Array<Header>,
@@ -57,7 +60,8 @@ export default defineComponent({
     hideCreate: Boolean,
     showSelect: Boolean,
     cascade: Boolean,
-    cascadedId: {
+    cascadedId: String,
+    cascadedKey: {
       type: String,
       default: 'pid'
     },
@@ -76,16 +80,10 @@ export default defineComponent({
     inlineEdit: Boolean
   },
   mounted() {
-    this.condition &&
-      $fetch(this.api, { query: this.condition })
+    this.cascadedId &&
+      $fetch(this.getApi)
         .then((data) => {
-          const result = data as Result
-          if (result.success) {
-            this.items = result.data as [];
-          } else {
-            useToast().error(`${this.title}读取失败！\n${result.errorMessage}`);
-          }
-          // this.selected = this.selectedId
+          this.items = data as [];
         })
         .catch((err) => {
           console.log(err);
@@ -93,48 +91,22 @@ export default defineComponent({
         });
   },
   watch: {
-    // visible: {
-    //   immediate: true,
-    //   handler(val) {
-    //     if (val) {
-    //       // this.visible && this.condition && window.commonService.find(this.api, this.condition).then(data => {
-    //       this.visible &&
-    //         this.condition &&
-    //         $fetch(this.api, { query: this.condition })
-    //           .then((data) => {
-    //             this.items = data as [];
-    //             // this.selected = this.selectedId
-    //           })
-    //           .catch((err) => {
-    //             console.log(err);
-    //             useToast().error(`${this.title}读取失败！`);
-    //           });
-    //     }
-    //   },
-    // },
-    condition: {
+    cascadedId: {
       deep: true,
       handler(newVal, oldVal) {
-        // =====TODO 待测试=====
         if (newVal === oldVal) return;
-        // =====================
-        // if (!this.cascade) return
-        // console.log("condition", newVal, oldVal);
-        // this.selected = null;
         if (newVal) {
-          useFetch(this.api, { query: this.condition })
-            .then(({ data }) => {
-              const result = data.value as Result
-              if (result.success) {
-                this.items = result.data as [];
+          // clear selection
+          this.selected = null
+          useFetch(this.getApi)
+            .then(({ data, error }) => {
+              if (error.value) {
+                useToast().error(`${this.title}读取失败！\n${error.value.message}`);
               } else {
-                useToast().error(`${this.title}读取失败！\n${result.errorMessage}`);
+                this.items = data.value as [];
               }
+              this.$emit('updateItems', this.items)
             })
-            .catch((err) => {
-              console.log(err);
-              useToast().error(`${this.title}读取失败！`);
-            });
         } else {
           this.items.splice(0);
         }
@@ -149,6 +121,7 @@ export default defineComponent({
     close: (val: boolean) => true,
     change: (item?: Item) => true,
     appendItemCreate: (item: any) => true,
+    updateItems: (items: Item[]) => true,
   },
   computed: {
     tableHeight() {
@@ -160,18 +133,27 @@ export default defineComponent({
         return this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
       }
       return []
+    },
+    getApi() {
+      return this.api.get.replace('{1}', this.cascadedId!)
+    },
+    postApi() {
+      return this.api.post!.replace('{1}', this.cascadedId!)
+    },
+    putApi() {
+      return this.api.put!
+    },
+    deleteApi() {
+      return this.api.delete!.replace('{1}', this.cascadedId!)
+    },
+    sortApi() {
+      return this.api.sort!.replace('{1}', this.cascadedId!)
     }
-    // selectedLength() {
-    //   return this.selections.length
-    // },
-    // selections() {
-    //   return this.items.filter(item => item.select)
-    // },
   },
   methods: {
     createNewItem() {
       this.item = { id: undefined, name: undefined, ordinal: undefined, mode: EditMode.Create };
-      this.cascade && (this.item[this.cascadedId] = this.condition[this.cascadedId]);
+      this.cascade && (this.item[this.cascadedKey] = this.cascadedId);
       // this.itemNames.forEach(e=>{
       //   rst[e] = e == 'ordinal' ? (this.items.length > 0 ? this.items.map(i=>i.ordinal).sort((a,b)=>b-a)[0] + 1 : 1) : null
       // })
@@ -197,36 +179,28 @@ export default defineComponent({
         console.log("update range:", targetItems);
         // 排序
         targetItems.length > 0 &&
-          useFetch(this.api, { method: "POST", body: targetItems })
-            .then(({ data, error }) => {
+          useFetch(this.sortApi, { method: "POST", body: targetItems })
+            .then(({ error }) => {
               if (error.value) {
-                useToast().error(`${this.title}更新失败！`);
+                useToast().error(`${this.title}排序失败！\n${error.value.message}`);
               } else {
-                useFetch(this.api, { query: this.condition })
+                useFetch(this.getApi)
                   .then(({ data }) => {
-                    const result = data.value as Result
-                    if (result.success) {
-                      this.items = result.data as [];
-                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                      if (prevSelected) {
-                        prevSelected.select = true
-                      } else {
-                        this.selected = null
-                        this.$emit('selectionChange')
-                      }
+                    this.items = data.value as [];
+                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                    if (prevSelected) {
+                      prevSelected.select = true
                     } else {
-                      console.error(result.errorMessage)
+                      this.selected = null
+                      this.$emit('selectionChange')
                     }
+                    this.$emit('updateItems', this.items)
                   })
-                  .catch((err) => {
-                    console.error(err);
-                  });
-                // useToast().success(`${this.title}更新成功！`); // do not prompt
               }
             })
             .catch((err) => {
               console.error(err);
-              useToast().error(`${this.title}更新失败！`);
+              useToast().error(`${this.title}排序失败！`);
             });
       }
     },
@@ -240,39 +214,26 @@ export default defineComponent({
     handleAppendCreate(item: Item) {
       console.log('handleAppendCreate', item)
       this.item = JSON.parse(JSON.stringify(item))
-      this.cascade && (this.item[this.cascadedId] = this.condition[this.cascadedId]);
-      useFetch(this.api, { method: 'POST', body: this.item }).then(({ data, error }) => {
+      this.cascade && (this.item[this.cascadedKey] = this.cascadedId);
+      useFetch(this.postApi, { method: 'POST', body: this.item }).then(({ data, error }) => {
         if (error.value) {
-          useToast().error(`${this.title}保存失败！`);
+          useToast().error(`${this.title}保存失败！\n${error.value.message}`);
         } else {
-          const result = data.value as Result
-          if (result.success) {
-            this.$emit('appendItemCreate', { ...(result.data as Record<string, any>), contentControls: this.item.contentControls })
-            useFetch(this.api, { query: this.condition }).then(
-              ({ data }) => {
-                const result = data.value as Result
-                if (result.success) {
-                  this.items = result.data as [];
-                  const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                  if (prevSelected) {
-                    prevSelected.select = true
-                  } else {
-                    this.selected = null
-                    this.$emit('selectionChange')
-                  }
-                } else {
-                  console.error(result.errorMessage)
-                }
-              })
-              .catch((err) => {
-                console.error(err);
-                useToast().error(`${this.title}更新失败！`);
-              });;
-            this.$emit("change");
-            useToast().success(`${this.title}保存成功！`);
-          } else {
-            useToast().error(`${this.title}保存失败！\n${result.errorMessage}`);
-          }
+          this.$emit('appendItemCreate', { ...(data.value as Record<string, any>), contentControls: this.item.contentControls })
+          useToast().success(`${this.title}保存成功！`);
+          useFetch(this.getApi).then(
+            ({ data }) => {
+              this.items = data.value as [];
+              const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+              if (prevSelected) {
+                prevSelected.select = true
+              } else {
+                this.selected = null
+                this.$emit('selectionChange')
+              }
+              this.$emit('updateItems', this.items)
+            })
+          this.$emit("change");
         }
       })
     },
@@ -284,55 +245,27 @@ export default defineComponent({
       useDialog().$warning({
         text: () => h('div', null, text),
         onOk: () => {
-          const ordinal = item.ordinal;
-          this.item.mode = EditMode.Delete
-          let targetArr = [];
-          for (const e of this.items) {
-            if (e.ordinal! > ordinal!) {
-              const moveUpItem = {} as Item;
-              for (const key in e) {
-                moveUpItem[key] = key == "ordinal" ? e.ordinal! - 1 : e[key];
-              }
-              moveUpItem.mode = EditMode.Update
-              // moveUpItem.sort = true;
-              targetArr.push(moveUpItem);
-            }
-          }
-
           // 删除+ (排序)
-          const method = targetArr.length == 0 ? 'DELETE' : 'POST'
-          const params = targetArr.length == 0 ? this.item : targetArr.concat(this.item)
-          useFetch(this.api, { method: method, body: params })
+          useFetch(this.deleteApi.replace('{2}', this.item.id!), { method: 'DELETE', body: this.item })
             .then(({ data, error }) => {
               if (error.value) {
-                useToast().error(`${this.title}删除失败！`);
+                useToast().error(`${this.title}删除失败！\n${error.value.message}`);
               } else {
-                useFetch(this.api, { query: this.condition }).then(
-                  ({ data }) => {
-                    const result2 = data.value as Result
-                    if (result2.success) {
-                      this.items = result2.data as [];
-                      // first item selected if exists
-                      // if (this.items.length > 0) {
-                      //   this.items[0].select = true
-                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                      if (prevSelected) {
-                        prevSelected.select = true
-                      } else {
-                        this.selected = null
-                        this.$emit('selectionChange')
-                      }
-                      // }
-                    } else {
-                      console.error(result2.errorMessage)
-                    }
-                  })
-                  .catch((err) => {
-                    console.error(err);
-                    useToast().error(`${this.title}删除失败！`);
-                  });
-                this.$emit("change", this.item);
+                console.log('deleted', data.value)
                 useToast().success(`${this.title}删除成功！`);
+                this.$emit("change", { ...(data.value as Item), contentControls: this.item.contentControls, mode: EditMode.Delete });
+                useFetch(this.getApi).then(
+                  ({ data }) => {
+                    this.items = data.value as [];
+                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                    if (prevSelected) {
+                      prevSelected.select = true
+                    } else {
+                      this.selected = null
+                      this.$emit('selectionChange')
+                    }
+                    this.$emit('updateItems', this.items)
+                  })
               }
             })
             .catch((err) => {
@@ -342,60 +275,53 @@ export default defineComponent({
         },
       });
     },
-    handleSave(item: Item) {
+    async handleSave(item: Item) {
       console.log('handleSave', item)
-      const method = item.mode == EditMode.Create ? 'POST' : item.mode == EditMode.Update ? 'PUT' : null
-      method && useFetch(this.api, { method: method, body: item })
-        .then(({ data, error }) => {
-          if (error.value) {
-            useToast().error(`${this.title}保存失败！`);
-          } else {
-            const result = data.value as Result
-            if (result.success) {
-              console.log(result.data)
-              useToast().success(`${this.title}保存成功！`);
-              this.dialog.showDetail = false;
-              useFetch(this.api, { query: this.condition }).then(({ data }) => {
-                const result2 = data.value as Result
-                if (result2.success) {
-                  this.items = result2.data as [];
-                  const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                  if (prevSelected) {
-                    prevSelected.select = true
-                  } else {
-                    this.selected = null
-                    this.$emit('selectionChange')
-                  }
-                  this.$emit("change", result.data as Item);
-                } else {
-                  console.error(result2.errorMessage)
-                }
-              });
-            } else {
-              useToast().error(`${this.title}保存失败！\n${result.errorMessage}`);
-            }
-          }
-        })
-        .catch((err: any) => {
-          console.error(err);
+      let saved: unknown, error
+      switch (item.mode) {
+        case EditMode.Create:
+          const { data: created, error: createdError } = await useFetch(this.postApi, { method: 'POST', body: item })
+          error = createdError.value
+          saved = created.value
+          break
+        case EditMode.Update:
+          const { data: updated, error: updatedError } = await useFetch(this.putApi.replace('{1}', item.id!), { method: 'PUT', body: item })
+          error = updatedError.value
+          saved = updated.value
+          break
+        default:
+          // dead code
           useToast().error(`${this.title}保存失败！`);
-        })
+          return
+      }
+      if (error) {
+        useToast().error(`${this.title}保存失败！\n${error.message}`);
+      } else {
+        useToast().success(`${this.title}保存成功！`);
+        this.dialog.showDetail = false;
+        this.$emit("change", saved as Item);
+        useFetch(this.getApi).then(({ data }) => {
+          this.items = data.value as [];
+          const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+          if (prevSelected) {
+            prevSelected.select = true
+          } else {
+            this.selected = null
+            this.$emit('selectionChange')
+          }
+          this.$emit('updateItems', this.items)
+        });
+      }
     },
-    // handleSelectAll() {
-    //   const toggleSelect = this.items.length != this.selectedLength
-    //   this.items.forEach(item => item.select = toggleSelect)
-    // },
     handleSelect(item: Item) {
-      // item.select = !item.select
       if (!item.select) {
         this.items.forEach(itm => itm.select = itm == item)
         this.selected = item.id
         this.$emit('selectionChange', item)
-      } else {
+      }/*  else {
         this.selected = null
         this.$emit('selectionChange')
-      }
-      // this.selected.length != 0 && this.$emit("select", this.selected[0].id);
+      } */
     },
     handleCancel() {
       console.log('handleCancel')
@@ -403,10 +329,10 @@ export default defineComponent({
     },
   },
   setup(props, ctx) {
-    const draggableCol = { title: '', key: 'data-table-draggable', style: "min-width: 21px;", class: "px-0", cellClass: "px-0" } as Header
-    const selectableCol = { title: '', key: 'data-table-select', style: "min-width: 64px;", class: "text-center", cellClass: "text-center" } as Header
-    const indexCol = { title: "No.", key: "index", style: "min-width: 64px", class: "text-center", cellClass: "text-center" } as Header
-    const actionCol = { title: "操作", key: "actions", class: "text-center", style: "min-width: 72px;" } as Header
+    const draggableCol = { title: '', key: 'data-table-draggable', style: "width: 21px;", class: "text-center px-0", cellClass: "px-0" } as Header
+    // const selectableCol = { title: '', key: 'data-table-select', style: "min-width: 64px;", class: "text-center", cellClass: "text-center" } as Header
+    const indexCol = { title: "No.", key: "index", style: "width: 64px;min-width: 64px;max-width: 64px;", class: "text-center", cellClass: "text-center" } as Header
+    const actionCol = { title: "操作", key: "actions", class: "text-center", style: "width: 72px;min-width: 72px;" } as Header
     const item = ref({
       id: undefined, name: undefined, ordinal: undefined,
       isEdit: true,
@@ -419,15 +345,15 @@ export default defineComponent({
     const drag = ref(false);
     const prependCols = ref([] as Header[])
     props.draggable && (prependCols.value.push(draggableCol))
-    props.showSelect && (prependCols.value.push(selectableCol))
+    // props.showSelect && (prependCols.value.push(selectableCol))
     props.showIndex && (prependCols.value.push(indexCol))
-    if (props.draggable) {
-      if (prependCols.value.length > 1) {
-        prependCols.value[1].class += " pl-0"
-        prependCols.value[1].cellClass += " pl-0"
-        prependCols.value[1].style = "min-width: 48px;"
-      }
-    }
+    // if (props.draggable) {
+    //   if (prependCols.value.length > 1) {
+    //     prependCols.value[1].class += " pl-0"
+    //     prependCols.value[1].cellClass += " pl-0"
+    //     prependCols.value[1].style = "min-width: 48px;"
+    //   }
+    // }
     const innerHeaders = prependCols.value.concat(props.headers).concat([actionCol])
     return {
       item,
@@ -455,16 +381,7 @@ export default defineComponent({
               {this.innerHeaders.map((header) => {
                 return (
                   <th key={header.key} class={header.class} style={header.style ?? ''}>
-                    {header.key == 'data-table-select' ? (
-                      // <VIcon
-                      //   color={this.selectedLength > 0 ? 'primary' : ''}
-                      //   icon={this.selectedLength == this.items.length ? 'mdi-radiobox-marked' : this.selectedLength == 0 ? 'mdi-radiobox-blank' : 'mdi-checkbox-intermediate'}
-                      //   // @ts-ignore
-                      //   onClick={this.handleSelectAll}
-                      // ></VIcon>
-                      '选择'
-                    ) : header.title}
-
+                    {header.key == 'data-table-select' ? '选择' : header.title}
                   </th>
                 )
               })}
@@ -476,7 +393,7 @@ export default defineComponent({
               modelValue={this.items}
               group={group}
               animation="200"
-              ghost-class="ghost"
+              ghost-class={useTheme().current.value.dark ? "ghost-dark" : "ghost"}
               handle=".data-table-draggable"
               itemKey="name"
               tag="tbody"
@@ -493,26 +410,26 @@ export default defineComponent({
                       type="transition"
                     >
                       {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
-                      <tr>
+                      <tr class={{ "bg-row-active": this.showSelect && this.selected === item.id }} onClick={() => this.showSelect && this.handleSelect(item)}>
                         {
                           this.innerHeaders.map(({ key, cellClass }) => {
                             return (
                               key == "data-table-draggable" && (
                                 <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
                               ) ||
-                              key == "data-table-select" && (
-                                <td class={cellClass} key={key}><VIcon
-                                  color={item.select ? 'primary' : ''}
-                                  icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
-                                  // @ts-ignore
-                                  onClick={() => this.handleSelect(item)}
-                                ></VIcon></td>
-                              ) ||
+                              // key == "data-table-select" && (
+                              //   <td class={cellClass} key={key}><VIcon
+                              //     color={item.select ? 'primary' : ''}
+                              //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                              //     // @ts-ignore
+                              //     onClick={() => this.handleSelect(item)}
+                              //   ></VIcon></td>
+                              // ) ||
                               key == 'index' && (
                                 <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
                               ) ||
                               !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                <td class={cellClass} key={`item.${key}`}>
+                                <td class={[cellClass, 'card-input']} key={`item.${key}`}>
                                   {
                                     // @ts-ignore
                                     this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
@@ -596,19 +513,19 @@ export default defineComponent({
                               key == "data-table-draggable" && (
                                 <td class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-blank'></VIcon></td>
                               ) ||
-                              key == "data-table-select" && (
-                                <td class={cellClass} key={key}><VIcon
-                                  color={item.select ? 'primary' : ''}
-                                  icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
-                                  // @ts-ignore
-                                  onClick={() => this.handleSelect(item)}
-                                ></VIcon></td>
-                              ) ||
+                              // key == "data-table-select" && (
+                              //   <td class={cellClass} key={key}><VIcon
+                              //     color={item.select ? 'primary' : ''}
+                              //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                              //     // @ts-ignore
+                              //     onClick={() => this.handleSelect(item)}
+                              //   ></VIcon></td>
+                              // ) ||
                               key == 'index' && (
                                 <td class={cellClass} key={`item.${key}`} >{index + this.items.length + 1}</td>
                               ) ||
                               !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                <td class={cellClass} key={`item.${key}`}>
+                                <td class={[cellClass, 'card-input']} key={`item.${key}`}>
                                   {
                                     // @ts-ignore
                                     this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, disabled: !!item.id }) : item[key]
@@ -651,7 +568,7 @@ export default defineComponent({
         <VDivider></VDivider>
         <VCardActions>
           <VSpacer></VSpacer>
-          {!this.hideCreate && !!this.condition && (
+          {!this.hideCreate && !!this.cascadedId && (
             <VBtn
               color="success"
               icon="mdi-plus"

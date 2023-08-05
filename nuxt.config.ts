@@ -19,6 +19,15 @@ export default defineNuxtConfig({
       'vue-toastification'
     ]
   },
+  // vite: {
+  //   css: {
+  //     modules: {
+  //       localsConvention: 'camelCase',
+  //       scopeBehaviour: 'local',
+  //       generateScopedName: '[local]_[hash:5]'
+  //     }
+  //   }
+  // },
   // components: {
   //   global: true,
   //   dirs: ['~/components']
@@ -27,7 +36,8 @@ export default defineNuxtConfig({
     public: {
       loginCallbackUrl: process.env.AUTH_ORIGIN,
       documentServerApiUrl: process.env.DOCUMENT_SERVER_API_URL,
-      appName: process.env.APP_NAME
+      appName: process.env.APP_NAME,
+      dummyRootId: process.env.DUMMY_ROOT_ID
     }
   },
   // sourcemap: {
@@ -66,6 +76,7 @@ export default defineNuxtConfig({
             dark: false,
             colors: {
               primary: colors.blue.lighten1,
+              "row-active": colors.blue.lighten5,
               // secondary: '#F3BDB0',
               // 'secondary-lighten-1': '#FFF0ED',
               // cascade1st: colors.blue.lighten1,
@@ -85,6 +96,7 @@ export default defineNuxtConfig({
             dark: true,
             colors: {
               primary: colors.blue.darken1,
+              "row-active": colors.teal.darken2,
               // secondary: '0F4C75',
               // cascade1st: colors.blue.lighten1,
               // cascade2nd: colors.lightGreen,

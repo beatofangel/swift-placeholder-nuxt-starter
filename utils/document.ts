@@ -57,14 +57,23 @@ export const useDocumentHelper = () => {
   const validatePlaceholders = (placeholders: Placeholder[], withWrite?: boolean, callback?: ((checkResult: ValidatePlaceholdersResult) => void)) => {
     window.connector.value.executeMethod("GetAllContentControls", null, function (ctrls: any[]) {
       console.log(ctrls);
-      const result: ValidatePlaceholdersResult = { warning: false }
-      // sync: existance
+      const result: ValidatePlaceholdersResult = { warning: false, distinctContentControls: [] }
+      // 将文档中的占位符同步到列表中
+      for (const placeholderInTab of placeholders) {
+        const matchedCtrls = ctrls.filter(ctrl => ctrl.Tag === placeholderInTab.id)
+        if (matchedCtrls.length > 0) {
+          placeholderInTab.sync = true
+          placeholderInTab.count = matchedCtrls.length
+          placeholderInTab.contentControls = matchedCtrls
+        }
+      }
       for (const placeholderInTab of placeholders) {
         const matchedCtrls = ctrls.filter(ctrl => ctrl.Tag === placeholderInTab.id)
         if (matchedCtrls.length > 0) {
           console.log(`Sync: placeholder<${placeholderInTab.name}x${matchedCtrls.length}> found.`)
-          placeholderInTab.sync = true
-          placeholderInTab.count = matchedCtrls.length
+          // placeholderInTab.sync = true
+          // placeholderInTab.count = matchedCtrls.length
+          // placeholderInTab.contentControls = matchedCtrls
           withWrite && writeContentControl(placeholderInTab)
           result.valid || (result.valid = {})
           result.valid.placeholders || (result.valid.placeholders = [])
@@ -78,6 +87,12 @@ export const useDocumentHelper = () => {
         }
       }
       for (const ctrl of ctrls) {
+        const dcc = result.distinctContentControls.find(dcc => dcc.Tag === ctrl.Tag)
+        if (dcc) {
+          dcc.contentControls.push({...pick(ctrl, ['InternalId', 'Tag', 'Id'])})
+        } else {
+          result.distinctContentControls.push({ Tag: ctrl.Tag, contentControls: [{...pick(ctrl, ['InternalId', 'Tag', 'Id'])}] })
+        }
         if (placeholders.findIndex(placeholder => placeholder.id === ctrl.Tag) === -1) {
           console.warn(`Sync: unexpected contentControl{'InternalId: '${ctrl.InternalId}', Tag: '${ctrl.Tag}'} detected.`)
           result.warning = true

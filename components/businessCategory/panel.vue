@@ -23,16 +23,8 @@ const level: Ref<number | undefined> = ref(undefined)
 const businessCategoryOptions = ref([])
 onMounted(() => {
   // $fetch('/api/businessCategories').then((data) => {
-  $fetch('/api/businesscategories', { query:
-    {
-      cascaded: true
-    }
-  }).then((data) => {
-    if (data.success) {
-      businessCategoryOptions.value = data.data
-    } else {
-      console.log(data.errorMessage)
-    }
+  $fetch('/api/v1/businesscategories/cascaded').then((data) => {
+    businessCategoryOptions.value = data as []
   })
 })
 

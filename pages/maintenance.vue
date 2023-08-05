@@ -11,14 +11,14 @@
       <v-row key="template">
         <v-col>
           <!-- <v-card id="businessCategory" class="mb-2"> -->
-            <TemplateList id="template" ref="template" class="mb-2" :bcId="businessCategory.selected?.id" :visible="true"></TemplateList>
+            <TemplateList id="template" ref="template" class="mb-2" :businessCategory="businessCategory.selected" :visible="true"></TemplateList>
           <!-- </v-card> -->
         </v-col>
       </v-row>
       <v-row key="placeholder">
         <v-col>
           <!-- <v-card id="businessCategory" class="mb-2"> -->
-            <PlaceholderList id="placeholder" class="mb-2" :tpl="template.selected" :visible="true"></PlaceholderList>
+            <PlaceholderList id="placeholder" class="mb-2" :template="template.selected" :visible="true"></PlaceholderList>
           <!-- </v-card> -->
         </v-col>
       </v-row>
@@ -35,11 +35,15 @@
         </v-col>
       </v-row> -->
     </v-layout>
-    <v-navigation-drawer permanent location="right">
+    <v-navigation-drawer permanent location="right" :rail="!xlAndUp" railWidth="48">
       <v-list>
         <v-tabs v-model="tab" color="primary" direction="vertical">
-          <v-tab v-for="item in items" :value="item.id" :key="item.id" @click="selectTab(item)">
+          <v-tab v-for="item in items" size="large" :value="item.id" :key="item.id" @click="selectTab(item)">
             <v-icon :icon="item.prependIcon" start></v-icon>{{ item.title }}{{ menuSuffix[item.id] }}
+            <v-tooltip
+              activator="parent"
+              location="start"
+            >{{ item.title }}{{ menuSuffix[item.id] }}</v-tooltip>
           </v-tab>
         </v-tabs>
       </v-list>
@@ -52,17 +56,19 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from 'components/common/table';
+import { Item } from 'components/common/list';
 import { pick, throttle } from 'lodash-es'
-export interface CommonTableSelectedItem { selected: (Item & { path: string, placeholders: [] }) | undefined }
+import { useDisplay } from 'vuetify'
+export interface CommonListSelectedItem { selected: (Item & { path: string, placeholders: [] }) | undefined }
 // import { useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
   icon: "mdi-text-box-edit",
   index: 2
 });
-const businessCategory = ref({} as CommonTableSelectedItem)
-const template = ref({} as CommonTableSelectedItem)
+const businessCategory = ref({} as CommonListSelectedItem)
+const template = ref({} as CommonListSelectedItem)
+const { xlAndUp } = useDisplay()
 
 let timer: NodeJS.Timer
 const itemsDummy = ref([
