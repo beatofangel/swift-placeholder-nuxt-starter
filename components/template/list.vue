@@ -107,9 +107,10 @@ const selectionChangeHandler = (item: Item | undefined) => {
   // tplId.value = item ? item.id : undefined
   selected.value = item
 }
-const changeHandler = () => {
+const changeHandler = (item: Item | undefined) => {
   console.log('changeHandler')
-  selected.value = innerTemplateCommonList.value?.items.find(item => item.select)
+  selected.value = item
+  // selected.value = innerTemplateCommonList.value?.items.find(item => item.select)
   emits('change');
 }
 // const getDownloadUrl = (path: string) => {

@@ -331,7 +331,7 @@ const placeholderHeaders = [{
     style: "min-width: 112px;"
   },
   {
-    title: "格式化",
+    title: "格式",
     key: "format",
     class: "text-center",
     cellClass: "text-center text-truncate ",

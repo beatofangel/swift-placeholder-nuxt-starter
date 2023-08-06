@@ -27,31 +27,31 @@ export default defineNuxtPlugin(nuxtApp => {
       }
       app.config.globalProperties['$dialog'] = (data: DialogParams) => baseDialog(data)
       app.config.globalProperties['$dialogConfirm'] = (data: DialogParams) => {
-        data.info = true
-        data.cancelable = true
-        data.closable = true
-        data.persistent = true
+        data.info = data.info ?? true
+        data.cancelable = data.cancelable ?? true
+        data.closable = data.closable ?? true
+        data.persistent = data.persistent ?? true
         baseDialog(data)
       }
       app.config.globalProperties['$dialogInfo'] = (data: DialogParams) => {
-        data.info = true
-        data.cancelable = false
-        data.closable = true
-        data.persistent = false
+        data.info = data.info ?? true
+        data.cancelable = data.cancelable ?? false
+        data.closable = data.closable ?? true
+        data.persistent = data.persistent ?? false
         baseDialog(data)
       }
       app.config.globalProperties['$dialogWarning'] = (data: DialogParams) => {
-        data.warning = true
-        data.cancelable = true
-        data.closable = true
-        data.persistent = true
+        data.warning = data.warning ?? true
+        data.cancelable = data.cancelable ?? true
+        data.closable = data.closable ?? true
+        data.persistent = data.persistent ?? true
         baseDialog(data)
       }
       app.config.globalProperties['$dialogError'] = (data: DialogParams) => {
-        data.error = true
-        data.cancelable = false
-        data.closable = true
-        data.persistent = true
+        data.error = data.error ?? true
+        data.cancelable = data.cancelable ?? false
+        data.closable = data.closable ?? true
+        data.persistent = data.persistent ?? true
         baseDialog(data)
       }
       installed.value = true

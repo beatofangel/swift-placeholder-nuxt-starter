@@ -70,7 +70,7 @@ const emits = defineEmits({
   'change': () => true,
 })
 const businessCategories = ref([ undefined, undefined, undefined ] as (Item | undefined)[])
-const selected: Ref<Item | undefined> = ref()
+const selected = ref<Item | {}>()
 const { dummyRootId } = useRuntimeConfig().public
 const conditions = ref([{ pid: dummyRootId }, undefined, undefined] as (condition | undefined)[])
 const categoryHeaders = ref([

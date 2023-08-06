@@ -220,7 +220,6 @@ const postTemplatesInBusinessCategorySort = async (event: { node: { res: ServerR
 const postBusinessCategoryInBusinessCategory = async (event: { node: { res: ServerResponse<IncomingMessage> }, context: { prisma: PrismaClient } }, pid: string, item: BusinessCategory) => {
   try {
     const whereClause: Prisma.BusinessCategoryWhereInput = {}
-    console.log('postBusinessCategoryInBusinessCategory:', pid, process.env.DUMMY_ROOT_ID)
     if (pid === process.env.DUMMY_ROOT_ID) {
       whereClause.parent = {
         is: null
@@ -234,7 +233,6 @@ const postBusinessCategoryInBusinessCategory = async (event: { node: { res: Serv
         where: whereClause
       })
       const dataForCreate = pick(item, pid === process.env.DUMMY_ROOT_ID ? [ 'name', 'icon' ] : [ 'pid', 'name', 'icon' ])
-      console.log('postBusinessCategoryInBusinessCategory:', dataForCreate)
       return await prisma.businessCategory.create({
         data: {
           id: uuid(),

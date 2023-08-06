@@ -1,4 +1,4 @@
-import { Template } from "@prisma/client"
+import { BcTplRel, Template } from "@prisma/client"
 import { isEmpty, pick } from "lodash-es"
 const { copyUploadTo } = useTusServer()
 
@@ -11,6 +11,12 @@ const { copyUploadTo } = useTusServer()
  *
  *
  * @apiParam  {String} id 模板id
+ *
+ * @apiBody {String} bcId 业务分类id
+ * @apiBody {String} id 模板id
+ * @apiBody {String} name 模板名称
+ * @apiBody {String} type 模板路径
+ * @apiBody {String} newId 新模板id ※仅当修改引用的模板时
  *
  * @apiSuccess (200) {Object} template 模板对象
  * @apiSuccess (200) {Number} template.id 模板id
@@ -38,28 +44,54 @@ export default defineEventHandler(async event => {
     event.node.res.statusCode = 400
     return
   }
-  const dataForUpdate = await readBody<Template>(event)
+  const dataForUpdate = await readBody<Template & Pick<BcTplRel, 'bcId'> & { newId?: string }>(event)
   if (isEmpty(dataForUpdate)) {
     event.node.res.statusCode = 400
     return
   }
-  if (dataForUpdate.path) {
-    const path = copyUploadTo(dataForUpdate.path, process.env.TEMPLATE_PATH ?? '/templates')
-    path && (dataForUpdate.path = path)
-  }
 
-  const modified = await event.context.prisma.template.update({
-    where: {
-      id: dataForUpdate.id,
-      version: dataForUpdate.version
-    },
-    data: {
-      ...pick(dataForUpdate, isEmpty(dataForUpdate.path) ? ['name'] : [ 'name', 'path' ]),
-      updatedAt: new Date(),
-      version: {
-        increment: 1
-      }
+  let modified
+
+  if (dataForUpdate.newId && dataForUpdate.newId != id) {
+    // 切换引用模板
+    modified = await event.context.prisma.$transaction(async prisma => {
+      await prisma.bcTplRel.update({
+        data: {
+          tplId: dataForUpdate.newId
+        },
+        where: {
+          bcId_tplId: {
+            bcId: dataForUpdate.bcId,
+            tplId: id
+          }
+        }
+      })
+      return await prisma.template.findUnique({
+        where: {
+          id: dataForUpdate.newId
+        }
+      })
+    })
+  } else {
+    // 更新名称或文档
+    if (dataForUpdate.path) {
+      const path = copyUploadTo(dataForUpdate.path, process.env.TEMPLATE_PATH ?? '/templates')
+      path && (dataForUpdate.path = path)
     }
-  })
+
+    modified = await event.context.prisma.template.update({
+      where: {
+        id: dataForUpdate.id,
+        version: dataForUpdate.version
+      },
+      data: {
+        ...pick(dataForUpdate, isEmpty(dataForUpdate.path) ? ['name'] : [ 'name', 'path' ]),
+        updatedAt: new Date(),
+        version: {
+          increment: 1
+        }
+      }
+    })
+  }
   return modified
 })

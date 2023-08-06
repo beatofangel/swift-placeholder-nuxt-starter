@@ -59,7 +59,7 @@
 <script setup lang="ts">
 // import type { BusinessCategory } from '@prisma/client';
 import VIconPicker from '../VIconPicker.vue'
-import { Item } from '@/components/common/table'
+import { Item } from '@/components/common/list'
 import * as yup from 'yup';
 import { debounce, isEmpty } from 'lodash-es';
 import { Result } from 'server/utils/http';

@@ -14,46 +14,92 @@
         <v-card-text>
           <v-row>
             <v-col>
-                <v-text-field
-                  v-model="name.value.value"
-                  aria-autocomplete="none"
-                  name="name"
-                  label="名称"
-                  :placeholder="`请输入${title}名称`"
-                  persistent-placeholder
-                  :error-messages="name.errorMessage.value"
-                >
-                </v-text-field>
+              <v-tabs v-model="isUploadNewDoc.value.value" height="32" grow>
+                <v-tab :value="true"><v-icon>mdi-file-upload</v-icon>上传模板</v-tab>
+                <v-tab :value="false"><v-icon>mdi-file-link</v-icon>引用模板</v-tab>
+              </v-tabs>
             </v-col>
           </v-row>
           <v-row>
             <v-col>
-              <v-file-input
-                v-model="file.value.value"
-                label="文档"
-                :error-messages="file.errorMessage.value"
-                name="file"
-                accept=".docx"
-                placeholder="请选择文件"
-                @update:model-value="uploadHandler"
-                persistent-placeholder
-                prepend-icon=""
-                :prepend-inner-icon="$vuetify.icons.aliases?.file"
-              >
-                <template v-slot:loader>
-                  <v-progress-linear v-if="0 < uploadProgress && uploadProgress < 100" v-model="uploadProgress" color="primary" height="10" striped>
-                    <template v-slot:default="{ value }">
-                      <strong>{{ Math.ceil(value) }}%</strong>
-                    </template>
-                  </v-progress-linear>
-                </template>
-                <template v-slot:append v-if="0 < uploadProgress && uploadProgress < 100">
-                  <v-btn variant="text" density="comfortable" @click="pauseOrResumeUpload" :icon="processing.uploadPause ? 'mdi-play' : 'mdi-pause'" :color="processing.uploadPause ? 'success' : 'warning'">
-                  </v-btn>
-                  <v-btn variant="text" density="comfortable" @click="stopUpload" color="error" icon="mdi-trash-can">
-                  </v-btn>
-                </template>
-              </v-file-input>
+              <v-window v-model="isUploadNewDoc.value.value">
+                <v-window-item :value="true" class="pt-3">
+                  <v-row>
+                    <v-col>
+                        <v-text-field
+                          v-model="name.value.value"
+                          aria-autocomplete="none"
+                          name="name"
+                          label="名称"
+                          :placeholder="`请输入${title}名称`"
+                          persistent-placeholder
+                          :error-messages="name.errorMessage.value"
+                        >
+                        </v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col>
+                      <v-file-input
+                        v-model="file.value.value"
+                        label="文档"
+                        :error-messages="file.errorMessage.value"
+                        name="file"
+                        accept=".docx"
+                        placeholder="请选择文件"
+                        @update:model-value="uploadHandler"
+                        persistent-placeholder
+                        prepend-icon=""
+                        :prepend-inner-icon="$vuetify.icons.aliases?.file"
+                      >
+                        <template v-slot:loader>
+                          <v-progress-linear v-if="0 < uploadProgress && uploadProgress < 100" v-model="uploadProgress" color="primary" height="10" striped>
+                            <template v-slot:default="{ value }">
+                              <strong>{{ Math.ceil(value) }}%</strong>
+                            </template>
+                          </v-progress-linear>
+                        </template>
+                        <template v-slot:append v-if="0 < uploadProgress && uploadProgress < 100">
+                          <v-btn variant="text" density="comfortable" @click="pauseOrResumeUpload" :icon="processing.uploadPause ? 'mdi-play' : 'mdi-pause'" :color="processing.uploadPause ? 'success' : 'warning'">
+                          </v-btn>
+                          <v-btn variant="text" density="comfortable" @click="stopUpload" color="error" icon="mdi-trash-can">
+                          </v-btn>
+                        </template>
+                      </v-file-input>
+                    </v-col>
+                  </v-row>
+                </v-window-item>
+                <v-window-item :value="false" class="pt-3">
+                  <v-row>
+                    <v-col>
+                      <v-select
+                        v-model="(refTplId.value.value as any)"
+                        aria-autocomplete="none"
+                        name="refTplId"
+                        label="引用模板"
+                        item-title="name"
+                        item-value="id"
+                        placeholder="请选择模板"
+                        persistent-placeholder
+                        :error-messages="refTplId.errorMessage.value"
+                        :items="tplInUseItems"
+                      >
+                        <template v-slot:item="{ item, index, props }">
+                          <v-list-item v-bind="props" :key="index">
+                            <v-list-item-subtitle>
+                              <span class="mr-1">已关联</span>
+                              <v-chip v-for="(bcTplRel, index) in item.raw.businessCategories.slice(0,3)" :key="index" size="small" class="mx-1" label color="orange">
+                                <v-icon start :icon="bcTplRel.businessCategory.icon"></v-icon>{{ bcTplRel.businessCategory.name }}
+                              </v-chip>
+                              <span class="ml-1" v-if="item.raw.businessCategories.length > 3">等 {{ item.raw.businessCategories.length }} 种业务</span>
+                            </v-list-item-subtitle>
+                          </v-list-item>
+                        </template>
+                      </v-select>
+                    </v-col>
+                  </v-row>
+                </v-window-item>
+              </v-window>
             </v-col>
           </v-row>
         </v-card-text>
@@ -65,6 +111,7 @@
             :loading="processing.submit"
             color="primary"
             variant="elevated"
+            :disabled="!isDirty"
             >确定</v-btn
           >
         </v-card-actions>
@@ -74,16 +121,50 @@
 </template>
 
 <script setup lang="ts">
-import { Item } from '@/components/common/table'
+import { Item } from '@/components/common/list'
 import * as yup from 'yup';
 import { debounce, isEmpty } from 'lodash-es';
 import * as tus from 'tus-js-client'
-import { Result } from 'server/utils/http';
+import { Template } from 'index';
 
 const props = withDefaults(defineProps<{ bcId?: string, id?: string, name?: string, path?: string, ordinal?: number, version?: number, title?: string, mode: number }>(), {
   mode: EditMode.Create
 })
 const originName = props.name
+const tplInUseItems = ref([] as Template[])
+const uploadNewDoc = ref(true)
+onMounted(() => {
+  $fetch("/api/v1/templates", { query:
+    {
+      select: {
+        id: true,
+        name: true,
+        path: true,
+        businessCategories: {
+          include: {
+            businessCategory: {
+              select: {
+                name: true,
+                icon: true
+              }
+            }
+          }
+        }
+      },
+      where: {
+        businessCategories: {
+          every: {
+            bcId: {
+              not: props.bcId
+            }
+          }
+        }
+      }
+    }
+  }).then((data) => {
+    tplInUseItems.value = data as []
+  })
+})
 const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   // if (!isEmpty(name)) {
     const { data } = await useFetch("/api/v1/templates/count", { query: { name: { equals: name } } })
@@ -93,30 +174,63 @@ const nameDuplicationCheck = debounce(async (name: string, resolve: any) => {
   resolve(isValid)
   // return isValid
 }, 500, { leading: false })
-const formData = ref({
-  name: props.name || '',
-  file: [] as File[],
-  version: props.version
-})
+const formTplName = ref(props.name)
+const formRefTplId = ref<string>()
+const formTplFile = ref<File[]>([])
 const { defineComponentBinds, handleSubmit, handleReset } = useForm({
   validationSchema: yup.object({
-    name: yup.string().label('名称').required().test('duplication',
-      '${label} 已存在', function(value) {
-        console.log(value)
-        if (isEmpty(value) || originName === value) return true
-        return new Promise(resolve => nameDuplicationCheck(value, resolve))
-      }),
-    file: yup.mixed().label('文档').test('documentRequired', yup.defaultLocale.mixed?.required!, (value: any) => !!props.id || value.length > 0).test('fileSize', '文件大小不能超过5M', (value: any) => value.length == 0 || value[0].size <= 5242880) // 5M
+    name: yup.string().label('名称').when('isUploadNewDoc', {
+      is: true,
+      then(schema) {
+        return schema.required().test('duplication',
+          '${label} 已存在', function(value) {
+            console.log(value)
+            if (isEmpty(value) || originName === value) return true
+            return new Promise(resolve => nameDuplicationCheck(value, resolve))
+          }
+        )
+      }
+    }),
+    isUploadNewDoc: yup.boolean(),
+    file: yup.mixed().label('文档').when('isUploadNewDoc', {
+      is: true,
+      then(schema) {
+        return schema.test('documentRequired', yup.defaultLocale.mixed?.required!, (value: any) => !!props.id || value.length > 0)
+          .test('fileSize', '文件大小不能超过5M', (value: any) => value.length == 0 || value[0].size <= 5242880)
+      }
+    }),
+    refTplId: yup.string().label('引用模板').when('isUploadNewDoc', {
+      is: false,
+      then(schema) {
+        return schema.required()
+      }
+    })
   }),
   initialValues: {
-    name: formData.value.name,
-    file: formData.value.file
+    name: formTplName.value,
+    refTplId: formRefTplId.value,
+    file: formTplFile.value,
+    isUploadNewDoc: uploadNewDoc.value
   },
   validateOnMount: false,
   keepValuesOnUnmount: true
 })
 const name = useField('name')
+const refTplId = useField('refTplId')
 const file = useField<File[]>('file')
+const isUploadNewDoc = useField('isUploadNewDoc')
+// 必须置于useForm之后
+// const isDirty = useIsFormDirty()
+const isTplNameDirty = useIsFieldDirty('name')
+const isRefTplIdDirty = useIsFieldDirty('refTplId')
+const isTplFileDirty = useIsFieldDirty('file')
+const isDirty = computed(() => {
+  return isUploadNewDoc.value.value ? isTplNameDirty.value || isTplFileDirty.value : isRefTplIdDirty.value
+})
+// watch(() => isUploadNewDoc.value.value, (val) => {
+//   // val ? resetField('file') : resetField('refTplId')
+//   resetForm()
+// })
 // copy filename if name is empty
 watch(() => file.value.value, (val) => {
   if (isEmpty(name.value.value) && val.length > 0) {
@@ -243,22 +357,22 @@ const askToResumeUpload = (previousUploads: tus.PreviousUpload[]) => {
   //   return previousUploads[index];
   // }
 }
-const onSubmit = handleSubmit((values, ctx) => {
-  console.log('ok', values)
-  processing.value.submit = true
+// const onSubmit = handleSubmit((values, ctx) => {
+//   console.log('ok', values)
+//   processing.value.submit = true
 
-  // this.axios.post(`api/upload/submit/${largeFileGuid}`).then(response=>{
-  //   this.$toast.success(`文件保存：成功！`)
-  //   console.log(response)
-  // }).catch(error=>{
-  //   this.$toast.error(error.response.data.message)
-  // }).finally(() => {
-  //   procState.value.submit = false
-  // })
+//   // this.axios.post(`api/upload/submit/${largeFileGuid}`).then(response=>{
+//   //   this.$toast.success(`文件保存：成功！`)
+//   //   console.log(response)
+//   // }).catch(error=>{
+//   //   this.$toast.error(error.response.data.message)
+//   // }).finally(() => {
+//   //   procState.value.submit = false
+//   // })
 
-}, ({ errors }) => {
-  console.log('error', errors)
-})
+// }, ({ errors }) => {
+//   console.log('error', errors)
+// })
 
 
 const editIcon = computed(() => {
@@ -283,10 +397,10 @@ const emits = defineEmits({
 const onSave = handleSubmit((values, ctx) => {
   console.log(values, ctx)
   emits('save', {
-    // id: this.formData.id,
-    // pid: this.formData.pid,
     bcId: props.bcId,
-    id: props.id,
+    // 更新时，保留旧id，通过newId判断是否是切换引用模板的情况
+    id: props.mode === EditMode.Update ? props.id : values.isUploadNewDoc ? props.id : values.refTplId,
+    newId: values.refTplId,
     name: values.name,
     path: values.file.length > 0 ? upload.value.url : null,
     ordinal: props.ordinal ?? 0,

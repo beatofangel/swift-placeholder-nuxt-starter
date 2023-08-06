@@ -251,8 +251,10 @@ export default defineComponent({
       console.log('handleDelete', item)
       this.item = JSON.parse(JSON.stringify(item))
       const text = [h('span', `确定要删除${this.title}${item.name ? `：${item.name}` : ""}？`)]
-      this.cascade && text.push(h('br'), h('span', { class: ['text-red'] }, `注意：此操作将会删除${item.name}下所有子项`))
-      useDialog().$warning({
+      // this.cascade && text.push(h('br'), h('span', { class: ['text-red'] }, `注意：此操作将会删除${item.name}下所有子项`))
+      useDialog().$confirm({
+        error: true,
+        persistent: false,
         text: () => h('div', null, text),
         onOk: () => {
           // 删除+ (排序)
@@ -322,6 +324,9 @@ export default defineComponent({
           this.$emit('updateItems', this.items)
         });
       }
+    },
+    async handleSaveAll() {
+      alert('功能：全部保存\n状态：施工中...')
     },
     handleSelect(item: Item) {
       if (!item.select) {
@@ -462,7 +467,7 @@ export default defineComponent({
                                                 class='mx-1'
                                                 // @ts-ignore
                                                 onClick={() => this.handleSave({ ...item, mode: EditMode.Update })}
-                                              >mdi-content-save-edit</VIcon>
+                                              >mdi-content-save</VIcon>
                                             )
                                           },
                                         }}
@@ -580,16 +585,30 @@ export default defineComponent({
         <VDivider></VDivider>
         <VCardActions>
           <VSpacer></VSpacer>
-          {!this.hideCreate && !!this.cascadedId && (
-            <VBtn
-              color="success"
-              icon="mdi-plus"
-              density="comfortable"
-              // @ts-ignore
-              onClick={() => this.showEdit()}
-            >
-            </VBtn>
-          )}
+          {
+            this.inlineEdit && this.items.length > 0 && (
+              <VBtn
+                color="primary"
+                icon="mdi-content-save-all"
+                density="comfortable"
+                // @ts-ignore
+                onClick={() => this.handleSaveAll()}
+              ></VBtn>
+            )
+          }
+          {
+            !this.inlineEdit &&
+              !this.hideCreate && !!this.cascadedId && (
+                <VBtn
+                  color="success"
+                  icon="mdi-plus"
+                  density="comfortable"
+                  // @ts-ignore
+                  onClick={() => this.showEdit()}
+                >
+                </VBtn>
+              )
+          }
         </VCardActions>
         {
           this.$slots['editor'] && <VDialog width="500" modelValue={this.dialog.showDetail} persistent>
