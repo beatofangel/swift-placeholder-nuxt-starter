@@ -232,7 +232,7 @@ const postBusinessCategoryInBusinessCategory = async (event: { node: { res: Serv
       const newOrdinal = await prisma.businessCategory.count({
         where: whereClause
       })
-      const dataForCreate = pick(item, [ 'pid', 'name', 'icon' ])
+      const dataForCreate = pick(item, pid === process.env.DUMMY_ROOT_ID ? [ 'name', 'icon' ] : [ 'pid', 'name', 'icon' ])
       return await prisma.businessCategory.create({
         data: {
           id: uuid(),

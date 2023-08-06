@@ -80,24 +80,30 @@ export default defineComponent({
     inlineEdit: Boolean
   },
   mounted() {
-    this.cascadedId &&
+    if (this.cascadedId) {
+      this.loading = true
       $fetch(this.getApi)
-        .then((data) => {
-          this.items = data as [];
-        })
-        .catch((err) => {
-          console.log(err);
-          useToast().error(`${this.title}读取失败！`);
-        });
+      .then((data) => {
+        this.items = data as [];
+      })
+      .catch((err) => {
+        console.log(err);
+        useToast().error(`${this.title}读取失败！`);
+      }).finally(()=>{
+        setTimeout(() => {
+          this.loading = false
+        }, 500);
+      })
+    }
   },
   watch: {
     cascadedId: {
-      deep: true,
       handler(newVal, oldVal) {
         if (newVal === oldVal) return;
         if (newVal) {
           // clear selection
           this.selected = null
+          this.loading = true
           useFetch(this.getApi)
             .then(({ data, error }) => {
               if (error.value) {
@@ -106,6 +112,10 @@ export default defineComponent({
                 this.items = data.value as [];
               }
               this.$emit('updateItems', this.items)
+            }).finally(()=>{
+              // setTimeout(() => {
+              //   this.loading = false
+              // }, 500);
             })
         } else {
           this.items.splice(0);
@@ -121,7 +131,7 @@ export default defineComponent({
     close: (val: boolean) => true,
     change: (item?: Item) => true,
     appendItemCreate: (item: any) => true,
-    updateItems: (items: Item[]) => true,
+    updateItems: (items: Item[]) => true, // 通知items更新
   },
   computed: {
     tableHeight() {
@@ -341,6 +351,7 @@ export default defineComponent({
     const dialog = ref({
       showDetail: false,
     });
+    const loading = ref(false)
     const selected = ref();
     const drag = ref(false);
     const prependCols = ref([] as Header[])
@@ -356,6 +367,7 @@ export default defineComponent({
     // }
     const innerHeaders = prependCols.value.concat(props.headers).concat([actionCol])
     return {
+      loading,
       item,
       items,
       dialog,
@@ -367,7 +379,7 @@ export default defineComponent({
   render() {
     const group = uuid()
     return (
-      <VCard flat={this.flat}>
+      <VCard flat={this.flat} width="100%">
         {
           !this.hideTitle &&
           (<VCardTitle class="d-flex justify-center">
@@ -375,7 +387,7 @@ export default defineComponent({
           </VCardTitle>)
         }
         { /* @ts-ignore */}
-        <VTable theme='primary' fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
+        <VTable theme='primary' style="width: 100%;" fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
           <thead>
             <tr>
               {this.innerHeaders.map((header) => {
@@ -464,7 +476,7 @@ export default defineComponent({
                                                 color='primary'
                                                 class='mx-1'
                                                 // @ts-ignore
-                                                onClick={() => this.showEdit({ ...item, isEdit: true })}
+                                                onClick={withModifiers(() => this.showEdit({ ...item, isEdit: true }), ['stop'])}
                                               >mdi-pencil</VIcon>
                                             )
                                           },
@@ -480,7 +492,7 @@ export default defineComponent({
                                               color='red-lighten-2'
                                               class='mx-1'
                                               // @ts-ignore
-                                              onClick={() => this.handleDelete({ ...item, delete: true })}
+                                              onClick={withModifiers(() => this.handleDelete({ ...item, delete: true }), ['stop'])}
                                             >mdi-delete</VIcon>
                                           )
                                         }
@@ -545,7 +557,7 @@ export default defineComponent({
                                             class='mx-1'
                                             icon={item.id ? 'mdi-link-variant-plus' : 'mdi-plus'}
                                             // @ts-ignore
-                                            onClick={() => this.handleAppendCreate({ ...item, mode: EditMode.Create })}
+                                            onClick={withModifiers(() => this.handleAppendCreate({ ...item, mode: EditMode.Create }), ['stop'])}
                                           ></VIcon>
                                         )
                                       },
