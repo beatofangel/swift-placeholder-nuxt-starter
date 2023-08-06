@@ -238,7 +238,6 @@ const postBusinessCategoryInBusinessCategory = async (event: { node: { res: Serv
           id: uuid(),
           ...dataForCreate,
           ordinal: newOrdinal,
-          createdAt: new Date(),
           version: 0
         }
       })
