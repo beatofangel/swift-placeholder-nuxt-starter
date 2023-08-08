@@ -4,7 +4,7 @@
       <v-card-text>
         <v-row>
           <v-col>
-            <div :class="`text-xl-h1 text-lg-h2 text-md-h3 text-h4 d-flex justify-center text-white`">Welcome to Lawyer Pioneer!</div>
+            <div class="text-xl-h1 text-lg-h2 text-md-h2 text-h3 d-flex justify-center text-grey-lighten-5">Welcome to Lawyer Pioneer!</div>
           </v-col>
         </v-row>
         <v-row style="height: 50px;">
@@ -14,8 +14,8 @@
         </v-row>
         <v-row v-if="status === 'unauthenticated'">
           <v-col class="d-flex justify-center">
-            <v-btn class="mx-4" size="large">注册</v-btn>
-            <v-btn class="mx-4" size="large" color="success" @click="navigateTo('/login')">登录</v-btn>
+            <v-btn class="mx-6" size="large" color="success">注&nbsp;册</v-btn>
+            <v-btn class="mx-6" size="large" @click="navigateTo('/login')">登&nbsp;录</v-btn>
           </v-col>
         </v-row>
         <v-row style="height: 50px;">
@@ -26,6 +26,7 @@
       </v-card-text>
     </v-card>
   </v-container>
+  <CommonFooter></CommonFooter>
 </template>
 
 <script setup lang="ts">
@@ -40,6 +41,10 @@ const { status } = useAuth()
 
 <style scoped>
 .v-container {
-  background: no-repeat center url("/background1.webp");
+  background-image: url("/background-2.jpg");
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 </style>

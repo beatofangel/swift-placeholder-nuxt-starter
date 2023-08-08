@@ -1,5 +1,5 @@
 <template>
-  <v-layout full-height>
+  <v-layout full-height class="flex-column">
     <v-app-bar>
       <template v-slot:prepend>
         <v-app-bar-nav-icon></v-app-bar-nav-icon>

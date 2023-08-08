@@ -41,7 +41,7 @@
                   </v-row>
                   <v-row>
                     <v-col>
-                      <v-btn type="submit" color="primary" :disabled="!formData.agree" block>登录</v-btn>
+                      <v-btn type="submit" color="primary" :disabled="!formData.agree" block>登&nbsp;录</v-btn>
                     </v-col>
                   </v-row>
                 </v-window-item>
@@ -73,7 +73,7 @@
                   </v-row>
                   <v-row>
                     <v-col>
-                      <v-btn type="submit" color="primary" :disabled="!formData.agree" block>登录</v-btn>
+                      <v-btn type="submit" color="primary" :disabled="!formData.agree" block>登&nbsp;录</v-btn>
                     </v-col>
                   </v-row>
                 </v-window-item>

@@ -7,6 +7,7 @@
       <v-btn @click="signIn('credentials', {username, password})">login</v-btn> -->
         <CommonLogin width="1000" height="650" class="d-flex justify-center"></CommonLogin>
       </v-container>
+      <CommonFooter></CommonFooter>
     </v-main>
   </v-layout>
 </template>
@@ -27,6 +28,10 @@ definePageMeta({
 
 <style scoped>
 .v-container {
-  background: no-repeat center url("/background2.webp");
+  background-image: url("/background-2.jpg");
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 </style>
