@@ -27,9 +27,15 @@ definePageMeta({
 </script>
 
 <style scoped>
-.v-container {
+.v-container::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100dvw;
+  height: 100dvh;
+  filter: blur(4px);
   background-image: url("/background-2.jpg");
-  height: 100%;
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
