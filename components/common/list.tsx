@@ -14,11 +14,13 @@ import {
   VDivider,
   VCardActions,
   VHover,
+  VForm,
   VDialog
 } from "vuetify/components";
 import Draggable from "vuedraggable";
 import { v4 as uuid, validate } from 'uuid';
 import { useTheme } from 'vuetify'
+import { FieldMeta } from 'vee-validate'
 import './list.scss';
 
 export interface Item extends Record<string, any> {
@@ -85,6 +87,7 @@ export default defineComponent({
       $fetch(this.getApi)
       .then((data) => {
         this.items = data as [];
+        this.resetForm({ values: { items: data as any } })
       })
       .catch((err) => {
         console.log(err);
@@ -110,6 +113,7 @@ export default defineComponent({
                 useToast().error(`${this.title}读取失败！\n${error.value.message}`);
               } else {
                 this.items = data.value as [];
+                this.resetForm({ values: { items: data.value as any } })
               }
               this.$emit('updateItems', this.items)
             }).finally(()=>{
@@ -122,6 +126,12 @@ export default defineComponent({
         }
       },
     },
+    footerFields: {
+      handler(val) {
+        val.length > 0 && console.log(val[0].value)
+      },
+      deep: true
+    }
     // selected(val) {
     //   this.$emit("selectionChange", val);
     // },
@@ -140,8 +150,11 @@ export default defineComponent({
     },
     footerItems() {
       if (this.appendItems && this.appendItems.length > 0) {
-        return this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
+        const fItems = this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
+        this.replaceFooterItems(fItems)
+        return fItems
       }
+      this.replaceFooterItems([])
       return []
     },
     getApi() {
@@ -197,6 +210,7 @@ export default defineComponent({
                 useFetch(this.getApi)
                   .then(({ data }) => {
                     this.items = data.value as [];
+                    this.resetForm({ values: { items: data.value as any } })
                     const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
                     if (prevSelected) {
                       prevSelected.select = true
@@ -234,6 +248,7 @@ export default defineComponent({
           useFetch(this.getApi).then(
             ({ data }) => {
               this.items = data.value as [];
+              this.resetForm({ values: { items: data.value as any } })
               const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
               if (prevSelected) {
                 prevSelected.select = true
@@ -269,6 +284,7 @@ export default defineComponent({
                 useFetch(this.getApi).then(
                   ({ data }) => {
                     this.items = data.value as [];
+                    this.resetForm({ values: { items: data.value as any } })
                     const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
                     if (prevSelected) {
                       prevSelected.select = true
@@ -314,6 +330,7 @@ export default defineComponent({
         this.$emit("change", saved as Item);
         useFetch(this.getApi).then(({ data }) => {
           this.items = data.value as [];
+          this.resetForm({ values: { items: data.value as any } })
           const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
           if (prevSelected) {
             prevSelected.select = true
@@ -342,6 +359,20 @@ export default defineComponent({
       console.log('handleCancel')
       this.dialog.showDetail = false;
     },
+    isDirty(index: number) {
+      const matchedKeys = []
+      for (const key of Object.keys(this.fieldRefs)) {
+        if (key.indexOf(`items[${index}].`) == 0) {
+          matchedKeys.push(key)
+        }
+      }
+      for (const key of matchedKeys) {
+        if ((this.fieldRefs[key] as { meta: FieldMeta<any> }).meta.dirty) {
+          return true
+        }
+      }
+      return false
+    }
   },
   setup(props, ctx) {
     const draggableCol = { title: '', key: 'data-table-draggable', style: "width: 21px;", class: "text-center px-0", cellClass: "px-0" } as Header
@@ -359,6 +390,17 @@ export default defineComponent({
     const loading = ref(false)
     const selected = ref();
     const drag = ref(false);
+
+    const { resetForm, handleSubmit } = useForm()
+    const formDirty = useIsFormDirty()
+    const { fields } = useFieldArray('items')
+    const { fields: footerFields, replace: replaceFooterItems } = useFieldArray('footerItems')
+    const fieldRefs: Record<string, Element | ComponentPublicInstance | null | { meta: FieldMeta<any> }> = {}
+    // ======================================
+    // resetForm({ values: { items: items.value as any } })
+    // ======================================
+
+
     const prependCols = ref([] as Header[])
     props.draggable && (prependCols.value.push(draggableCol))
     // props.showSelect && (prependCols.value.push(selectableCol))
@@ -378,7 +420,13 @@ export default defineComponent({
       dialog,
       selected,
       drag,
-      innerHeaders
+      fields,
+      footerFields,
+      fieldRefs,
+      innerHeaders,
+      resetForm,
+      formDirty,
+      replaceFooterItems
     };
   },
   render() {
@@ -391,225 +439,257 @@ export default defineComponent({
             <span class="text-h5 ml-1 mt-1">{this.title}</span>
           </VCardTitle>)
         }
-        { /* @ts-ignore */}
-        <VTable theme='primary' style="width: 100%;" fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
-          <thead>
-            <tr>
-              {this.innerHeaders.map((header) => {
-                return (
-                  <th key={header.key} class={header.class} style={header.style ?? ''}>
-                    {header.key == 'data-table-select' ? '选择' : header.title}
-                  </th>
-                )
-              })}
-            </tr>
-          </thead>
-          {
-            // @ts-ignore
-            <Draggable
-              modelValue={this.items}
-              group={group}
-              animation="200"
-              ghost-class={useTheme().current.value.dark ? "ghost-dark" : "ghost"}
-              handle=".data-table-draggable"
-              itemKey="name"
-              tag="tbody"
-              onStart={this.onDragRow}
-              onEnd={this.onDropRow}
-              onUpdate:modelValue={(v: any) => { this.items = v }}
-            >
-              {{
-                item: ({ element: item, index }: { element: Item, index: number }) => {
-                  const testtag = (
-                    // @ts-ignore
-                    <Transition
-                      name={!this.drag ? 'flip-list' : undefined}
-                      type="transition"
-                    >
-                      {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
-                      <tr class={{ "bg-row-active": this.showSelect && this.selected === item.id }} onClick={() => this.showSelect && this.handleSelect(item)}>
-                        {
-                          this.innerHeaders.map(({ key, cellClass }) => {
-                            return (
-                              key == "data-table-draggable" && (
-                                <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
-                              ) ||
-                              // key == "data-table-select" && (
-                              //   <td class={cellClass} key={key}><VIcon
-                              //     color={item.select ? 'primary' : ''}
-                              //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
-                              //     // @ts-ignore
-                              //     onClick={() => this.handleSelect(item)}
-                              //   ></VIcon></td>
-                              // ) ||
-                              key == 'index' && (
-                                <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
-                              ) ||
-                              !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                <td class={[cellClass, 'card-input']} key={`item.${key}`}>
-                                  {
-                                    // @ts-ignore
-                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item }) : item[key]
-                                  }
-                                </td>
-                              ) ||
-                              key == 'actions' && (
-                                <td class={cellClass} key={`item.${key}`}>
-                                  <VRow class="actions justify-center">
-                                    { this.inlineEdit ?
-                                      <VTooltip text='保存'>
+        <VForm>
+          { /* @ts-ignore */}
+          <VTable theme='primary' style="width: 100%;" fixedHeader={this.fixedHeader} height={this.height ?? this.tableHeight}>
+            <thead>
+              <tr>
+                {this.innerHeaders.map((header) => {
+                  return (
+                    <th key={header.key} class={header.class} style={header.style ?? ''}>
+                      {header.key == 'data-table-select' ? '选择' : header.title}
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            {
+              // @ts-ignore
+              <Draggable
+                modelValue={this.items}
+                group={group}
+                animation="200"
+                ghost-class={useTheme().current.value.dark ? "ghost-dark" : "ghost"}
+                handle=".data-table-draggable"
+                itemKey="name"
+                tag="tbody"
+                onStart={this.onDragRow}
+                onEnd={this.onDropRow}
+                onUpdate:modelValue={(v: any) => { this.items = v }}
+              >
+                {{
+                  item: ({ element: item, index }: { element: Item, index: number }) => {
+                    const testtag = (
+                      // @ts-ignore
+                      <Transition
+                        name={!this.drag ? 'flip-list' : undefined}
+                        type="transition"
+                      >
+                        {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
+                        <tr class={{ "bg-row-active": this.showSelect && this.selected === item.id }} onClick={() => this.showSelect && this.handleSelect(item)}>
+                          {
+                            this.innerHeaders.map(({ key, cellClass }) => {
+                              return (
+                                key == "data-table-draggable" && (
+                                  <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
+                                ) ||
+                                // key == "data-table-select" && (
+                                //   <td class={cellClass} key={key}><VIcon
+                                //     color={item.select ? 'primary' : ''}
+                                //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                                //     // @ts-ignore
+                                //     onClick={() => this.handleSelect(item)}
+                                //   ></VIcon></td>
+                                // ) ||
+                                key == 'index' && (
+                                  <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
+                                ) ||
+                                !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
+                                  <td class={[cellClass, 'card-input']} key={`item.${key}`}>
+                                    {
+                                      // @ts-ignore
+                                      this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, index, name: `items[${index}].${key}`, fieldRef: el => this.fieldRefs[`items[${index}].${key}`] = el, modelValue: this.fields.length > 0 ? this.fields[index].value[key] : '', onUpdateModelValue: ($v, siblings:Record<string, any>[]) => {
+                                        // @ts-ignore
+                                        this.fields[index].value[key] = $v;
+                                        siblings && siblings.forEach(sibling => {
+                                          Object.entries(sibling).forEach(([k, v])=>{
+                                            // @ts-ignore
+                                            this.fields[index].value[k]=v
+                                          })
+                                        })
+                                      } }) : item[key]
+                                    }
+                                  </td>
+                                ) ||
+                                key == 'actions' && (
+                                  <td class={cellClass} key={`item.${key}`}>
+                                    <VRow class="actions justify-center">
+                                      { this.inlineEdit ?
+                                        <VTooltip text='保存'>
+                                          {{
+                                            activator: ({ props }) => {
+                                              return (
+                                                <VBtn
+                                                  {...props}
+                                                  icon="mdi-content-save"
+                                                  color="primary"
+                                                  variant="text"
+                                                  size="mini"
+                                                  disabled={!this.isDirty(index)}
+                                                  class='mx-1'
+                                                  // @ts-ignore
+                                                  onClick={() => this.handleSave({ ...item, mode: EditMode.Update })}
+                                                ></VBtn>
+                                                // <VIcon
+                                                //   {...props}
+                                                //   color={this.isDirty(index) ? 'grey' : 'primary'}
+                                                //   class='mx-1'
+                                                //   // @ts-ignore
+                                                //   onClick={this.isDirty(index) || (() => this.handleSave({ ...item, mode: EditMode.Update }))}
+                                                // >mdi-content-save</VIcon>
+                                              )
+                                            },
+                                          }}
+                                        </VTooltip> :
+                                        <VTooltip text='编辑'>
+                                          {{
+                                            activator: ({ props }) => {
+                                              return (
+                                                <VIcon
+                                                  {...props}
+                                                  color='primary'
+                                                  class='mx-1'
+                                                  // @ts-ignore
+                                                  onClick={withModifiers(() => this.showEdit({ ...item, isEdit: true }), ['stop'])}
+                                                >mdi-pencil</VIcon>
+                                              )
+                                            },
+                                          }}
+                                        </VTooltip>
+                                      }
+                                      <VTooltip text='删除'>
                                         {{
                                           activator: ({ props }) => {
                                             return (
                                               <VIcon
                                                 {...props}
-                                                color='primary'
+                                                color='red-lighten-2'
                                                 class='mx-1'
                                                 // @ts-ignore
-                                                onClick={() => this.handleSave({ ...item, mode: EditMode.Update })}
-                                              >mdi-content-save</VIcon>
+                                                onClick={withModifiers(() => this.handleDelete({ ...item, delete: true }), ['stop'])}
+                                              >mdi-delete</VIcon>
                                             )
-                                          },
-                                        }}
-                                      </VTooltip> :
-                                      <VTooltip text='编辑'>
-                                        {{
-                                          activator: ({ props }) => {
-                                            return (
-                                              <VIcon
-                                                {...props}
-                                                color='primary'
-                                                class='mx-1'
-                                                // @ts-ignore
-                                                onClick={withModifiers(() => this.showEdit({ ...item, isEdit: true }), ['stop'])}
-                                              >mdi-pencil</VIcon>
-                                            )
-                                          },
+                                          }
                                         }}
                                       </VTooltip>
+                                    </VRow>
+                                  </td>
+                                )
+                              )
+                            })
+                          }
+                        </tr>
+                      </Transition>
+                    )
+                    return testtag
+                  },
+                  footer: () => {
+                    return this.items.length == 0 && this.footerItems.length == 0 ? (
+                      <tr class="v-data-table__empty-wrapper">
+                        <td class="text-center" colspan={this.innerHeaders.length}>
+                          <span class="text-grey">{this.noData}</span>
+                        </td>
+                      </tr>
+                    ) : this.footerItems.map((item, index) => {
+                      return (
+                        <tr class={['bg-orange-lighten-5']}>
+                          {
+                            this.innerHeaders.map(({ key, cellClass }) => {
+                              return (
+                                key == "data-table-draggable" && (
+                                  <td class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-blank'></VIcon></td>
+                                ) ||
+                                // key == "data-table-select" && (
+                                //   <td class={cellClass} key={key}><VIcon
+                                //     color={item.select ? 'primary' : ''}
+                                //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
+                                //     // @ts-ignore
+                                //     onClick={() => this.handleSelect(item)}
+                                //   ></VIcon></td>
+                                // ) ||
+                                key == 'index' && (
+                                  <td class={cellClass} key={`item.${key}`} >{index + this.items.length + 1}</td>
+                                ) ||
+                                !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
+                                  <td class={[cellClass, 'card-input']} key={`item.${key}`}>
+                                    {
+                                      // @ts-ignore
+                                      this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, index, disabled: !!item.id, name: `appendItems[${index}].${key}`, fieldRef: el => this.fieldRefs[`appendItems[${index}].${key}`] = el, modelValue: this.footerFields.length > 0 ? this.footerFields[index].value[key] : '', onUpdateModelValue: ($v, siblings:Record<string, any>[]) => {
+                                        // @ts-ignore
+                                        this.footerFields[index].value[key] = $v;
+                                        siblings && siblings.forEach(sibling => {
+                                          Object.entries(sibling).forEach(([k, v])=>{
+                                            // @ts-ignore
+                                            this.footerFields[index].value[k]=v
+                                          })
+                                        })
+                                      } }) : item[key]
                                     }
-                                    <VTooltip text='删除'>
+                                  </td>
+                                ) ||
+                                key == 'actions' && (
+                                  <td class={cellClass} key={`item.${key}`}>
+                                    <VRow class="actions justify-center">
+                                    <VTooltip text={item.id ? '绑定' : '添加'}>
                                       {{
                                         activator: ({ props }) => {
                                           return (
                                             <VIcon
                                               {...props}
-                                              color='red-lighten-2'
+                                              color={item.id ? 'primary' : 'success'}
                                               class='mx-1'
+                                              icon={item.id ? 'mdi-link-variant-plus' : 'mdi-plus'}
                                               // @ts-ignore
-                                              onClick={withModifiers(() => this.handleDelete({ ...item, delete: true }), ['stop'])}
-                                            >mdi-delete</VIcon>
+                                              onClick={withModifiers(() => this.handleAppendCreate({ ...item, mode: EditMode.Create }), ['stop'])}
+                                            ></VIcon>
                                           )
-                                        }
+                                        },
                                       }}
                                     </VTooltip>
-                                  </VRow>
-                                </td>
+                                    </VRow>
+                                  </td>
+                                )
                               )
-                            )
-                          })
-                        }
-                      </tr>
-                    </Transition>
-                  )
-                  return testtag
-                },
-                footer: () => {
-                  return this.items.length == 0 && this.footerItems.length == 0 ? (
-                    <tr class="v-data-table__empty-wrapper">
-                      <td class="text-center" colspan={this.innerHeaders.length}>
-                        <span class="text-grey">{this.noData}</span>
-                      </td>
-                    </tr>
-                  ) : this.footerItems.map((item, index) => {
-                    return (
-                      <tr class={['bg-orange-lighten-5']}>
-                        {
-                          this.innerHeaders.map(({ key, cellClass }) => {
-                            return (
-                              key == "data-table-draggable" && (
-                                <td class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-blank'></VIcon></td>
-                              ) ||
-                              // key == "data-table-select" && (
-                              //   <td class={cellClass} key={key}><VIcon
-                              //     color={item.select ? 'primary' : ''}
-                              //     icon={item.select ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'}
-                              //     // @ts-ignore
-                              //     onClick={() => this.handleSelect(item)}
-                              //   ></VIcon></td>
-                              // ) ||
-                              key == 'index' && (
-                                <td class={cellClass} key={`item.${key}`} >{index + this.items.length + 1}</td>
-                              ) ||
-                              !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                <td class={[cellClass, 'card-input']} key={`item.${key}`}>
-                                  {
-                                    // @ts-ignore
-                                    this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, disabled: !!item.id }) : item[key]
-                                  }
-                                </td>
-                              ) ||
-                              key == 'actions' && (
-                                <td class={cellClass} key={`item.${key}`}>
-                                  <VRow class="actions justify-center">
-                                  <VTooltip text={item.id ? '绑定' : '添加'}>
-                                    {{
-                                      activator: ({ props }) => {
-                                        return (
-                                          <VIcon
-                                            {...props}
-                                            color={item.id ? 'primary' : 'success'}
-                                            class='mx-1'
-                                            icon={item.id ? 'mdi-link-variant-plus' : 'mdi-plus'}
-                                            // @ts-ignore
-                                            onClick={withModifiers(() => this.handleAppendCreate({ ...item, mode: EditMode.Create }), ['stop'])}
-                                          ></VIcon>
-                                        )
-                                      },
-                                    }}
-                                  </VTooltip>
-                                  </VRow>
-                                </td>
-                              )
-                            )
-                          })
-                        }
-                      </tr>
-                    )
-                  })
-                }
-              }}
-            </Draggable>
-          }
-        </VTable>
-        <VDivider></VDivider>
-        <VCardActions>
-          <VSpacer></VSpacer>
-          {
-            this.inlineEdit && this.items.length > 0 && (
-              <VBtn
-                color="primary"
-                icon="mdi-content-save-all"
-                density="comfortable"
-                // @ts-ignore
-                onClick={() => this.handleSaveAll()}
-              ></VBtn>
-            )
-          }
-          {
-            !this.inlineEdit &&
-              !this.hideCreate && !!this.cascadedId && (
+                            })
+                          }
+                        </tr>
+                      )
+                    })
+                  }
+                }}
+              </Draggable>
+            }
+          </VTable>
+          <VDivider></VDivider>
+          <VCardActions>
+            <VSpacer></VSpacer>
+            {
+              this.inlineEdit && this.items.length > 0 && (
                 <VBtn
-                  color="success"
-                  icon="mdi-plus"
+                  color="primary"
+                  icon="mdi-content-save-all"
                   density="comfortable"
+                  disabled={!this.formDirty}
                   // @ts-ignore
-                  onClick={() => this.showEdit()}
-                >
-                </VBtn>
+                  onClick={() => this.handleSaveAll()}
+                ></VBtn>
               )
-          }
-        </VCardActions>
+            }
+            {
+              !this.inlineEdit &&
+                !this.hideCreate && !!this.cascadedId && (
+                  <VBtn
+                    color="success"
+                    icon="mdi-plus"
+                    density="comfortable"
+                    // @ts-ignore
+                    onClick={() => this.showEdit()}
+                  >
+                  </VBtn>
+                )
+            }
+          </VCardActions>
+        </VForm>
         {
           this.$slots['editor'] && <VDialog width="500" modelValue={this.dialog.showDetail} persistent>
             {

@@ -45,8 +45,8 @@
                       @change="changeHandler"
                       @update-items="updateItemsHandler"
                     >
-                      <template v-slot:[`item.type`]="{ item, disabled }">
-                        <v-select name="type" v-model="item.type" :items="itemTypes" @update:model-value="$v=>$v !== 'date' && (item.format=null)" :disabled="disabled" density="compact" hide-details>
+                      <template v-slot:[`item.type`]="{ item, index, name, modelValue, onUpdateModelValue, fieldRef, disabled }">
+                        <!-- <v-select name="type" v-model="item.type" :items="itemTypes" @update:model-value="$v=>$v !== 'date' && (item.format=null)" :disabled="disabled" density="compact" hide-details>
                           <template v-slot:selection="{ item: selection, index }">
                             <span v-if="xlAndUp">{{ selection.title }}</span>
                             <v-icon v-else :icon="selection.raw.icon" start></v-icon>
@@ -58,10 +58,29 @@
                               </template>
                             </v-list-item>
                           </template>
-                        </v-select>
+                        </v-select> -->
+                        <CommonInlineInput :name="name" :ref="fieldRef" :modelValue="modelValue" @update:model-value="($v: string)=>$v !== 'date' ? onUpdateModelValue($v, [{ format: null}]) : onUpdateModelValue($v)" :items="itemTypes" :disabled="disabled" density="compact" hide-details v-slot:default="{ props }">
+                          <v-select v-bind="props">
+                            <template v-slot:selection="{ item: selection, index }">
+                              <span v-if="xlAndUp">{{ selection.title }}</span>
+                              <v-icon v-else :icon="selection.raw.icon" start></v-icon>
+                            </template>
+                            <template v-slot:item="{ item: listItem, index, props }">
+                              <v-list-item v-bind="props" :key="index" :title="listItem.title" :value="listItem.value">
+                                <template v-slot:prepend>
+                                  <v-icon :icon="listItem.raw.icon"></v-icon>
+                                </template>
+                              </v-list-item>
+                            </template>
+                          </v-select>
+                        </CommonInlineInput>
                       </template>
-                      <template v-slot:[`item.format`]="{ item, disabled }">
-                        <v-text-field name="format" v-model="item.format" :disabled="disabled || item.type !== 'date'" density="compact" hide-details clearable></v-text-field>
+                      <template v-slot:[`item.format`]="{ item, index, name, modelValue, onUpdateModelValue, fieldRef, disabled }">
+                        <!-- <v-text-field name="format" v-model="item.format" :disabled="disabled || item.type !== 'date'" density="compact" hide-details clearable></v-text-field> -->
+                        <CommonInlineInput :name="name" :ref="fieldRef" :modelValue="modelValue" @update:model-value="($v: string)=>onUpdateModelValue($v)" :disabled="disabled || item.type !== 'date'" density="compact" hide-details clearable v-slot:default="{ props }">
+                          <v-text-field v-bind="props">
+                          </v-text-field>
+                        </CommonInlineInput>
                       </template>
                       <template v-slot:append>
                         {{ "test" }}
