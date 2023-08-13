@@ -470,7 +470,6 @@ export default defineComponent({
     // resetForm({ values: { items: items.value as any } })
     // ======================================
 
-
     const prependCols = ref([] as Header[])
     props.draggable && (prependCols.value.push(draggableCol))
     // props.showSelect && (prependCols.value.push(selectableCol))
@@ -483,10 +482,19 @@ export default defineComponent({
     //   }
     // }
     const innerHeaders = prependCols.value.concat(props.headers).concat([actionCol])
+
+    const select = ref((item: Item) => {
+      if (!item.select) {
+        items.value.forEach(itm => itm.select = itm == item)
+        selected.value = item.id
+        ctx.emit('selectionChange', item)
+      }
+    })
     return {
       loading,
       item,
       items,
+      select,
       dialog,
       selected,
       drag,
@@ -548,7 +556,7 @@ export default defineComponent({
                         {/* <tr class={[{'draggable-hover': this.draggable && !this.drag}, {'draggable-drag': this.drag}]}> */}
                         <tr class={{ "bg-row-active": this.showSelect && this.selected === item.id }} onClick={() => this.showSelect && this.handleSelect(item)}>
                           {
-                            this.innerHeaders.map(({ key, cellClass }) => {
+                            this.innerHeaders.map(({ key, cellClass, cellStyle }) => {
                               return (
                                 key == "data-table-draggable" && (
                                   <td style={{ cursor: 'move' }} class={cellClass} key={key}><VIcon color='grey' class="data-table-draggable" icon='mdi-drag-vertical'></VIcon></td>
@@ -565,7 +573,8 @@ export default defineComponent({
                                   <td class={cellClass} key={`item.${key}`} >{index + 1}</td>
                                 ) ||
                                 !['index', 'data-table-select', 'data-table-draggable', 'actions'].includes(key) && (
-                                  <td class={[cellClass, 'card-input']} key={`item.${key}`}>
+                                  <td class={[cellClass, 'card-input']} style={cellStyle} key={`item.${key}`}>
+                                    {this.$slots[`item.${key}`] ? '' : item[key]}
                                     {
                                       // @ts-ignore
                                       this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, index, name: `items[${index}].${key}`, fieldRef: el => this.fieldRefs[`items[${index}].${key}`] = el, modelValue: this.fields.length > 0 ? this.fields[index].value[key] : '', onUpdateModelValue: ($v, siblings:Record<string, any>[]) => {
@@ -577,7 +586,10 @@ export default defineComponent({
                                             this.fields[index].value[k]=v
                                           })
                                         })
-                                      } }) : item[key]
+                                      } }) : (
+                                        <VTooltip text={item[key]} activator="parent">
+                                        </VTooltip>
+                                      )
                                     }
                                   </td>
                                 ) ||

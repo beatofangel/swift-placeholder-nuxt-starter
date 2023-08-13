@@ -68,12 +68,16 @@ import { Item } from 'components/common/list';
 import { Template } from 'index';
 
 const props = defineProps({
-  businessCategory: Object as PropType<Item>
+  businessCategory: Object as PropType<Item>,
+  selectedItem: Object as PropType<Item>
 })
 watch(() => props.businessCategory?.id, (val) => {
   selected.value = undefined
 })
-const innerTemplateCommonList = ref<{items: Template[]}>()
+// watch(() => props.selectedItem, (val) => {
+//   innerTemplateCommonList.value?.select(val)
+// })
+const innerTemplateCommonList = ref<{items: Template[], select?: (item?: Item) => void}>()
 const selected = ref<Item | undefined>()
 const emits = defineEmits({
   'change': () => true,
@@ -98,9 +102,17 @@ const templateHeaders = [{
   //   cellClass: "nameClass text-center text-truncate ",
   // },
 ]
+const templateList = computed(() => {
+  return innerTemplateCommonList.value?.items
+})
+const select = computed(() => {
+  return innerTemplateCommonList.value?.select
+})
 
 defineExpose({
-  selected: selected
+  selected: selected,
+  list: templateList,
+  select: select
 })
 
 const selectionChangeHandler = (item: Item | undefined) => {

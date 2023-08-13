@@ -2,7 +2,8 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1">占位符</span><span class="text-h5 ml-1">{{ template ? `&nbsp;-&nbsp;<${template.name}>` : '' }}</span>
+      <span class="text-h5 ml-1">占位符</span><v-spacer></v-spacer><v-select class="mr-2" density="compact" hide-details :items="templateList" return-object item-value="id" item-title="name" :modelValue="template" @update:model-value="$v=>emits('onChangeTemplate', $v)"></v-select>
+      <!-- <span class="text-h5 ml-1">{{ template ? `&nbsp;-&nbsp;<${template.name}>` : '' }}</span> -->
       <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>
@@ -120,7 +121,7 @@ import { useDisplay } from 'vuetify'
 import { Item } from 'components/common/list'
 import { validate } from 'uuid'
 const { xlAndUp } = useDisplay()
-const props = defineProps<{ template: Template | undefined}>()
+const props = defineProps<{ template: Template | undefined, templateList?: Item[] }>()
 const placeholdersInDoc = ref<Item[]>([])
 watch(() => props.template, async val => {
   console.log('template chagned', val)
@@ -131,6 +132,10 @@ watch(() => props.template, async val => {
   }
 }, {
   deep: true
+})
+
+const emits = defineEmits({
+  'onChangeTemplate': (tpl: Item) => true
 })
 
 const innerPlaceholderCommonList = ref<{items: Placeholder[]}>()

@@ -79,6 +79,7 @@ const categoryHeaders = ref([
     key: "name",
     class: "text-center",
     cellClass: "nameClass text-center text-truncate ",
+    cellStyle: "max-width: 240px;"
   },
   {
     title: "图标",

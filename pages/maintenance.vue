@@ -18,7 +18,7 @@
       <v-row key="placeholder">
         <v-col>
           <!-- <v-card id="businessCategory" class="mb-2"> -->
-            <PlaceholderList id="placeholder" class="mb-2" :template="template.selected" :visible="true"></PlaceholderList>
+            <PlaceholderList id="placeholder" class="mb-2" :template="template.selected" :templateList="template.list" :visible="true" @onChangeTemplate="handleChangeTemplateFromPlaceholder"></PlaceholderList>
           <!-- </v-card> -->
         </v-col>
       </v-row>
@@ -59,7 +59,7 @@
 import { Item } from 'components/common/list';
 import { pick, throttle } from 'lodash-es'
 import { useDisplay } from 'vuetify'
-export interface CommonListSelectedItem { selected: (Item & { path: string, placeholders: [] }) | undefined }
+export interface CommonListSelectedItem { selected: (Item & { path: string, placeholders: [] }) | undefined, list: Item[], select: (item: Item) => void }
 // import { useToast } from 'vue-toastification';
 definePageMeta({
   // middleware: ['casbin'],
@@ -69,6 +69,9 @@ definePageMeta({
 const businessCategory = ref({} as CommonListSelectedItem)
 const template = ref({} as CommonListSelectedItem)
 const { xlAndUp } = useDisplay()
+watch(template, (val) => {
+  console.log('watch template', val.list, val.selected, val.select)
+})
 
 let timer: NodeJS.Timer
 const itemsDummy = ref([
@@ -124,6 +127,10 @@ const selectTab = (item: { id: any; }) => {
   timer = setTimeout(() => {
     onScrollLock.value = false
   }, 600);
+}
+
+const handleChangeTemplateFromPlaceholder = (tpl: Item) => {
+  template.value.select(tpl)
 }
 </script>
 
