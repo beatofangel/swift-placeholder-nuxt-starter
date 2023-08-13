@@ -126,11 +126,14 @@ export default defineComponent({
         }
       },
     },
-    footerFields: {
-      handler(val) {
-        val.length > 0 && console.log(val[0].value)
-      },
-      deep: true
+    // footerFields: {
+    //   handler(val) {
+    //     val.length > 0 && console.log(val[0].value)
+    //   },
+    //   deep: true
+    // },
+    footerItems(val) {
+      this.replaceFooterItems(val)
     }
     // selected(val) {
     //   this.$emit("selectionChange", val);
@@ -151,10 +154,10 @@ export default defineComponent({
     footerItems() {
       if (this.appendItems && this.appendItems.length > 0) {
         const fItems = this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
-        this.replaceFooterItems(fItems)
+        // this.replaceFooterItems(fItems)
         return fItems
       }
-      this.replaceFooterItems([])
+      // this.replaceFooterItems([])
       return []
     },
     getApi() {
@@ -615,6 +618,7 @@ export default defineComponent({
                                     {
                                       // @ts-ignore
                                       this.$slots[`item.${key}`] ? this.$slots[`item.${key}`]({ item, index, disabled: !!item.id, name: `appendItems[${index}].${key}`, fieldRef: el => this.fieldRefs[`appendItems[${index}].${key}`] = el, modelValue: this.footerFields.length > 0 ? this.footerFields[index].value[key] : '', onUpdateModelValue: ($v, siblings:Record<string, any>[]) => {
+                                        item[key] = $v
                                         // @ts-ignore
                                         this.footerFields[index].value[key] = $v;
                                         siblings && siblings.forEach(sibling => {
