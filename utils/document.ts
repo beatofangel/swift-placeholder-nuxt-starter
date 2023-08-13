@@ -30,7 +30,7 @@ export const useDocumentHelper = () => {
         },
       }
     })
-    // console.log(doc)
+    console.log('UNBINDING CC', placeholder.id, placeholder.name)
     window.docQueue.value.push({ doc });
     // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
   }
@@ -47,7 +47,7 @@ export const useDocumentHelper = () => {
         // "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("\$\{${placeholder.name || ''}\}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
       }
     })
-    // console.log(doc)
+    console.log('BINDING CC', placeholder.id, placeholder.name)
     window.docQueue.value.push({ doc });
     // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
   }
@@ -67,6 +67,7 @@ export const useDocumentHelper = () => {
           placeholderInTab.contentControls = matchedCtrls
         }
       }
+      console.log('Sync: cc', placeholders)
       for (const placeholderInTab of placeholders) {
         const matchedCtrls = ctrls.filter(ctrl => ctrl.Tag === placeholderInTab.id)
         if (matchedCtrls.length > 0) {

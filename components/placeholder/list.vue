@@ -2,7 +2,7 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1 mt-1">占位符</span>
+      <span class="text-h5 ml-1">占位符</span><span class="text-h5 ml-1">{{ template ? `&nbsp;-&nbsp;<${template.name}>` : '' }}</span>
       <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>
@@ -28,6 +28,7 @@
                         put: '/api/v1/placeholders/{1}',
                         delete: '/api/v1/templates/{1}/placeholders/{2}',
                         sort: '/api/v1/templates/{1}/placeholders/sort',
+                        batch: '/api/v1/templates/{1}/placeholders/batchsave'
                       }"
                       :headers="placeholderHeaders"
                       title="占位符"
@@ -268,12 +269,13 @@ function onAppReady() {
   console.log('OnlyOffice is Ready')
   // initialize docQueue
   window.docQueue = ref(queue(function ({ doc }: any, callback: Function) {
-    console.log('consume queue');
+    console.log('consume queue', doc);
     window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback);
   }, 1 /* no concurrency */));
   window.docQueue.value.drain(function () {
-    console.log('all items have been processed');
+    console.log('all tasks have been processed');
     useDocumentHelper().value.moveCursorToStart()
+    doSyncDocument()
   });
 }
 function onLoadComponentError(errorCode: number, errorDescription: string) {
@@ -331,7 +333,7 @@ function changeHandler(item: Item | undefined) {
 function updateItemsHandler(items: Item[]) {
   if (placeholdersInDoc.value.length > 0) {
     console.log('updateItemsHandler： placeholdersInDoc data exists')
-    doSyncDocument()
+    // doSyncDocument()
   }
 }
 
@@ -356,13 +358,13 @@ const placeholderHeaders = [{
     cellClass: "text-center text-truncate ",
     style: "min-width: 240px;"
   },
-  {
-    title: "所属模板",
-    key: "tplName",
-    class: "text-center",
-    cellClass: "nameClass text-center text-truncate ",
-    style: "min-width: 96px"
-  },
+  // {
+  //   title: "所属模板",
+  //   key: "tplName",
+  //   class: "text-center",
+  //   cellClass: "nameClass text-center text-truncate ",
+  //   style: "min-width: 96px"
+  // },
 ]
 const itemTypes = ref([
   { title: '文本', value: 'text', icon: 'mdi-text' },

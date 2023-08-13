@@ -2,7 +2,7 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1 mt-1">业务分类</span>
+      <span class="text-h5 ml-1">业务分类</span>
       <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>

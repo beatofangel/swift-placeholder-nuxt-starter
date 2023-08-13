@@ -3,7 +3,7 @@
   <v-card>
     <v-toolbar class="pl-4" color="primary">
       <v-icon start>mdi-format-list-bulleted</v-icon>
-      <span class="text-h5 ml-1 mt-1">模板</span>
+      <span class="text-h5 ml-1">模板</span><span class="text-h5 ml-1">{{ businessCategory ? `&nbsp;-&nbsp;<${businessCategory.name}>` : '' }}</span>
       <!-- <v-spacer></v-spacer>
       <v-btn @click="onClose" fab plain small>
         <v-icon>mdi-close</v-icon>
@@ -91,12 +91,12 @@ const templateHeaders = [{
   //   cellClass: "text-center text-truncate ",
   //   style: "min-width: 64px;"
   // },
-  {
-    title: "所属业务",
-    key: "bcName",
-    class: "text-center",
-    cellClass: "nameClass text-center text-truncate ",
-  },
+  // {
+  //   title: "所属业务",
+  //   key: "bcName",
+  //   class: "text-center",
+  //   cellClass: "nameClass text-center text-truncate ",
+  // },
 ]
 
 defineExpose({

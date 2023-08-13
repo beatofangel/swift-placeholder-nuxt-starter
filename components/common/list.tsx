@@ -38,14 +38,15 @@ export default defineComponent({
   // props: props,
   props: {
     api: {
-      type: Object as PropType<{ get: string, post?: string, put?: string, delete?: string, sort?: string }>,
+      type: Object as PropType<{ get: string, post?: string, put?: string, delete?: string, sort?: string, batch?: string }>,
       required: true,
       default: () => ({
         get: '',
         post: '',
         put: '',
         delete: '',
-        sort: ''
+        sort: '',
+        batch: ''
       })
     },
     flat: Boolean,
@@ -87,6 +88,7 @@ export default defineComponent({
       $fetch(this.getApi)
       .then((data) => {
         this.items = data as [];
+        this.fieldRefs = {}
         this.resetForm({ values: { items: data as any } })
       })
       .catch((err) => {
@@ -113,6 +115,7 @@ export default defineComponent({
                 useToast().error(`${this.title}读取失败！\n${error.value.message}`);
               } else {
                 this.items = data.value as [];
+                this.fieldRefs = {}
                 this.resetForm({ values: { items: data.value as any } })
               }
               this.$emit('updateItems', this.items)
@@ -160,6 +163,9 @@ export default defineComponent({
       // this.replaceFooterItems([])
       return []
     },
+    isFormDirty() {
+      return this.items.some((item, index) => this.isDirty(index)) || this.footerItems.length > 0
+    },
     getApi() {
       return this.api.get.replace('{1}', this.cascadedId!)
     },
@@ -174,6 +180,9 @@ export default defineComponent({
     },
     sortApi() {
       return this.api.sort!.replace('{1}', this.cascadedId!)
+    },
+    batchApi() {
+      return this.api.batch!.replace('{1}', this.cascadedId!)
     }
   },
   methods: {
@@ -213,13 +222,16 @@ export default defineComponent({
                 useFetch(this.getApi)
                   .then(({ data }) => {
                     this.items = data.value as [];
+                    this.fieldRefs = {}
                     this.resetForm({ values: { items: data.value as any } })
-                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                    if (prevSelected) {
-                      prevSelected.select = true
-                    } else {
-                      this.selected = null
-                      this.$emit('selectionChange')
+                    if (this.showSelect) {
+                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                      if (prevSelected) {
+                        prevSelected.select = true
+                      } else {
+                        this.selected = null
+                        this.$emit('selectionChange')
+                      }
                     }
                     this.$emit('updateItems', this.items)
                   })
@@ -246,18 +258,23 @@ export default defineComponent({
         if (error.value) {
           useToast().error(`${this.title}保存失败！\n${error.value.message}`);
         } else {
-          this.$emit('appendItemCreate', { ...(data.value as Record<string, any>), contentControls: this.item.contentControls })
+          const appendCreated = data.value
+          // this.$emit('appendItemCreate', { ...(data.value as Record<string, any>), contentControls: this.item.contentControls })
           useToast().success(`${this.title}保存成功！`);
           useFetch(this.getApi).then(
             ({ data }) => {
               this.items = data.value as [];
+              this.fieldRefs = {}
               this.resetForm({ values: { items: data.value as any } })
-              const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-              if (prevSelected) {
-                prevSelected.select = true
-              } else {
-                this.selected = null
-                this.$emit('selectionChange')
+              this.$emit('appendItemCreate', { ...(appendCreated as Record<string, any>), contentControls: this.item.contentControls })
+              if (this.showSelect) {
+                const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                if (prevSelected) {
+                  prevSelected.select = true
+                } else {
+                  this.selected = null
+                  this.$emit('selectionChange')
+                }
               }
               this.$emit('updateItems', this.items)
             })
@@ -281,20 +298,26 @@ export default defineComponent({
               if (error.value) {
                 useToast().error(`${this.title}删除失败！\n${error.value.message}`);
               } else {
+                const deleted = data.value
                 console.log('deleted', data.value)
                 useToast().success(`${this.title}删除成功！`);
-                this.$emit("change", { ...(data.value as Item), contentControls: this.item.contentControls, mode: EditMode.Delete });
+                // this.$emit("change", { ...(data.value as Item), contentControls: this.item.contentControls, mode: EditMode.Delete });
                 useFetch(this.getApi).then(
                   ({ data }) => {
                     this.items = data.value as [];
+                    this.fieldRefs = {}
                     this.resetForm({ values: { items: data.value as any } })
-                    const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-                    if (prevSelected) {
-                      prevSelected.select = true
-                    } else {
-                      this.selected = null
-                      this.$emit('selectionChange')
+                    if (this.showSelect) {
+                      const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+                      if (prevSelected) {
+                        prevSelected.select = true
+                      } else {
+                        this.selected = null
+                        this.$emit('selectionChange')
+                      }
                     }
+                    // fixed delete操作：同步文档操作移动到队列drain事件后，需要基于最新this.items进行操作，移动至此
+                    this.$emit("change", { ...(deleted as Item), contentControls: this.item.contentControls, mode: EditMode.Delete });
                     this.$emit('updateItems', this.items)
                   })
               }
@@ -333,20 +356,64 @@ export default defineComponent({
         this.$emit("change", saved as Item);
         useFetch(this.getApi).then(({ data }) => {
           this.items = data.value as [];
+          this.fieldRefs = {}
           this.resetForm({ values: { items: data.value as any } })
-          const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
-          if (prevSelected) {
-            prevSelected.select = true
-          } else {
-            this.selected = null
-            this.$emit('selectionChange')
+          if (this.showSelect) {
+            const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+            if (prevSelected) {
+              prevSelected.select = true
+            } else {
+              this.selected = null
+              this.$emit('selectionChange')
+            }
           }
           this.$emit('updateItems', this.items)
         });
       }
     },
     async handleSaveAll() {
-      alert('功能：全部保存\n状态：施工中...')
+      const errors = []
+      const tgtItems: Item[] = []
+      const appendItemCreateEmitsPayload: any[] = []
+      this.fields.forEach(async (field, index) => {
+        if (this.isDirty(index)) {
+          tgtItems.push(field.value as Item)
+        }
+      })
+      this.footerItems.forEach(async (field, index) => {
+        tgtItems.push(field as Item)
+        appendItemCreateEmitsPayload.push(JSON.parse(JSON.stringify({ ...field, contentControls: field.contentControls })))
+      })
+      console.log(appendItemCreateEmitsPayload)
+      tgtItems.length > 0 && useFetch(this.batchApi, { method: 'POST', body: tgtItems }).then(({ error }) => {
+        if (error.value) {
+          useToast().error(`${this.title}保存失败！`);
+        } else {
+          useToast().success(`${this.title}保存成功！`);
+          useFetch(this.getApi).then(({ data }) => {
+            this.items = data.value as [];
+            this.fieldRefs = {}
+            this.resetForm({ values: { items: data.value as any } })
+            // 保存占位符id到文档
+            if (appendItemCreateEmitsPayload.length > 0 && this.items.length > 0) {
+              appendItemCreateEmitsPayload.forEach(payload => {
+                const savedItm = this.items.find(itm=>itm.name===payload.name)
+                savedItm && this.$emit('appendItemCreate', { ...payload, id: savedItm.id})
+              })
+            }
+            if (this.showSelect) {
+              const prevSelected = this.items.find(item => this.selected ? item.id == this.selected : false)
+              if (prevSelected) {
+                prevSelected.select = true
+              } else {
+                this.selected = null
+                this.$emit('selectionChange')
+              }
+            }
+            this.$emit('updateItems', this.items)
+          });
+        }
+      })
     },
     handleSelect(item: Item) {
       if (!item.select) {
@@ -518,7 +585,7 @@ export default defineComponent({
                                   <td class={cellClass} key={`item.${key}`}>
                                     <VRow class="actions justify-center">
                                       { this.inlineEdit ?
-                                        <VTooltip text='保存'>
+                                        <VTooltip text='保存' disabled={!this.isDirty(index)}>
                                           {{
                                             activator: ({ props }) => {
                                               return (
@@ -668,15 +735,24 @@ export default defineComponent({
           <VCardActions>
             <VSpacer></VSpacer>
             {
-              this.inlineEdit && this.items.length > 0 && (
-                <VBtn
-                  color="primary"
-                  icon="mdi-content-save-all"
-                  density="comfortable"
-                  disabled={!this.formDirty}
-                  // @ts-ignore
-                  onClick={() => this.handleSaveAll()}
-                ></VBtn>
+              this.inlineEdit && (this.items.length > 0 || this.footerItems.length > 0) && (
+                <VTooltip text='全部保存' disabled={!this.isFormDirty}>
+                  {{
+                    activator: ({ props }) => {
+                      return (
+                        <VBtn
+                          {...props}
+                          color="primary"
+                          icon="mdi-content-save-all"
+                          density="comfortable"
+                          disabled={!this.isFormDirty}
+                          // @ts-ignore
+                          onClick={() => this.handleSaveAll()}
+                        ></VBtn>
+                      )
+                    }
+                  }}
+                </VTooltip>
               )
             }
             {
