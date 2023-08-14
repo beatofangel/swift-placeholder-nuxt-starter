@@ -46,6 +46,7 @@ model User {
   sessions      Session[]
   roles         RoleRel[]
   workspaces    Workspace[]
+  histories     History[]
   docFavourite  Boolean        @default(true)
   docGroupId    String?
   docGroup      DocGroup?      @relation(fields: [docGroupId], references: [id])
@@ -167,13 +168,28 @@ enum WsType {
 }
 
 model Workspace {
-  id      String  @id @default(uuid()) @db.VarChar(36)
+  id      String @id @default(uuid()) @db.VarChar(36)
   name    String
-  type    WsType  @default(REPLACEMENT)
+  type    WsType @default(REPLACEMENT)
   data    Json?
-  ordinal Int     @default(0)
+  ordinal Int    @default(0)
   owner   String
-  user    User    @relation(fields: [owner], references: [id])
+  user    User   @relation(fields: [owner], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  version   Int @default(0)
+}
+
+model History {
+  id        String   @id @db.VarChar(36)
+  name      String
+  type      WsType
+  data      Json?
+  owner     String
+  user      User     @relation(fields: [owner], references: [id])
+  createdAt DateTime
+  updatedAt DateTime
+  version   Int @default(0)
 }
 
 model BusinessCategory {
@@ -195,7 +211,7 @@ model BusinessCategory {
   version   Int
 
   templates BcTplRel[]
-  parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id], onDelete: Cascade )
+  parent    BusinessCategory?  @relation("BusinessCategoryParentChildren", fields: [pid], references: [id], onDelete: Cascade)
   children  BusinessCategory[] @relation("BusinessCategoryParentChildren")
 }
 
