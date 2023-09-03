@@ -3,7 +3,7 @@ import type { Ref } from 'vue'
 export const usePersistedState = <T extends Object>(identifier: string, defaultOptions: T): Ref<T> => {
   const persistedObject = useState<T>(identifier, (): T => {
     const item = localStorage.getItem(identifier)
-    if (!item)
+    if (!item || item === 'undefined')
       return defaultOptions
 
     return JSON.parse(item) as T ?? defaultOptions

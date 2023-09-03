@@ -15,7 +15,8 @@ import {
   VCardActions,
   VHover,
   VForm,
-  VDialog
+  VDialog,
+  VProgressLinear
 } from "vuetify/components";
 import Draggable from "vuedraggable";
 import { v4 as uuid, validate } from 'uuid';
@@ -80,7 +81,12 @@ export default defineComponent({
       type: Array<Item>,
       default: () => null,
     },
-    inlineEdit: Boolean
+    inlineEdit: Boolean,
+    footerLoading: Boolean,
+    footerLoadingText: {
+      type: String,
+      default: "加载中..."
+    },
   },
   mounted() {
     if (this.cascadedId) {
@@ -120,9 +126,9 @@ export default defineComponent({
               }
               this.$emit('updateItems', this.items)
             }).finally(()=>{
-              // setTimeout(() => {
-              //   this.loading = false
-              // }, 500);
+              setTimeout(() => {
+                this.loading = false
+              }, 500);
             })
         } else {
           this.items.splice(0);
@@ -156,7 +162,8 @@ export default defineComponent({
     },
     footerItems() {
       if (this.appendItems && this.appendItems.length > 0) {
-        const fItems = this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
+        // const fItems = this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) && aItm.name === itm.id || itm.name === aItm.name))
+        const fItems = this.appendItems.filter(aItm=> !this.items.some(itm => validate(aItm.name!) || itm.name === aItm.name))
         // this.replaceFooterItems(fItems)
         return fItems
       }
@@ -666,10 +673,11 @@ export default defineComponent({
                     return testtag
                   },
                   footer: () => {
-                    return this.items.length == 0 && this.footerItems.length == 0 ? (
+                    /* 1. no data 2. footer loading */
+                    return this.items.length == 0 && this.footerItems.length == 0 || this.footerLoading ? (
                       <tr class="v-data-table__empty-wrapper">
                         <td class="text-center" colspan={this.innerHeaders.length}>
-                          <span class="text-grey">{this.noData}</span>
+                          <span class="text-grey">{this.footerLoading && <VIcon icon="mdi-vanish mdi-spin" start></VIcon>}{this.footerLoading ? this.footerLoadingText : this.noData}</span>
                         </td>
                       </tr>
                     ) : this.footerItems.map((item, index) => {

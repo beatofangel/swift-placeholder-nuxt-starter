@@ -3,21 +3,30 @@ import type { Placeholder, ValidatePlaceholdersResult, PlaceholderStatistic } fr
 
 export const useDocumentHelper = () => {
   const writeContentControl = (placeholder: Placeholder) => {
-    window.connector.value.executeMethod("GetAllContentControls", null, function (data: any) {
-      //console.log(ctrls);
-      for (var ctrl of data) {
-        //console.log(ctrl.InternalId);
-        if (ctrl.Tag === placeholder.id) {
-          const doc = [{
-            "Props": {
-              "InternalId": ctrl.InternalId
-            },
-            "Script": `var oParagraph = Api.CreateParagraph();oParagraph.AddText("${placeholder.value || ''}");Api.GetDocument().InsertContent([oParagraph], true, {KeepTextOnly: true});`
-          }];
-          window.docQueue.value.push({ doc });
+    const doc = { tag: placeholder.id, text: placeholder.value }
+    window.docQueue.value.push({ doc })
+  }
+  const readAllContentControls = (placeholders: Placeholder[]) => {
+    const dayjs = useDayJS()
+    window.docConnector.callCommand('readAllContentControls', null, (ctrls: { name: string, value: any }[]) => {
+      // console.log(ctrls)
+      ctrls && ctrls.length > 0 && placeholders.forEach(placeholder => {
+        const matched = ctrls.find(ctrl => placeholder.id == ctrl.name)
+        if (matched) {
+          switch (placeholder.type) {
+            case 'date':
+              if (dayjs(matched.value, placeholder.format).isValid()) {
+                placeholder.value = matched.value
+              } else {
+                placeholder.value = dayjs().format(placeholder.format)
+              }
+              break;
+            default:
+              placeholder.value = matched.value
+          }
         }
-      }
-    });
+      })
+    })
   }
   const unbindContentControl = (placeholder: Placeholder) => {
     var doc = placeholder.contentControls.map((cc: any) => {
@@ -32,7 +41,6 @@ export const useDocumentHelper = () => {
     })
     console.log('UNBINDING CC', placeholder.id, placeholder.name)
     window.docQueue.value.push({ doc });
-    // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
   }
   const bindContentControl = (placeholder: Placeholder) => {
     var doc = placeholder.contentControls.map((cc: any) => {
@@ -49,14 +57,14 @@ export const useDocumentHelper = () => {
     })
     console.log('BINDING CC', placeholder.id, placeholder.name)
     window.docQueue.value.push({ doc });
-    // window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc]);
   }
-  const moveCursorToStart = () => {
-    window.connector.value.executeMethod("MoveCursorToStart", [true]);
-  }
-  const validatePlaceholders = (placeholders: Placeholder[], withWrite?: boolean, callback?: ((checkResult: ValidatePlaceholdersResult) => void)) => {
-    window.connector.value.executeMethod("GetAllContentControls", null, function (ctrls: any[]) {
-      console.log(ctrls);
+  // const moveCursorToStart = () => {
+  //   window.connector.value.executeMethod("MoveCursorToStart", [true]);
+  // }
+  const validatePlaceholders = (placeholders: Placeholder[], withRead?: boolean, callback?: ((checkResult: ValidatePlaceholdersResult) => void)) => {
+    // de version
+    window.docConnector.executeMethod("GetAllContentControls", null, function (ctrls: any[]) {
+      // console.log(ctrls);
       const result: ValidatePlaceholdersResult = { warning: false, distinctContentControls: [] }
       // 将文档中的占位符同步到列表中
       for (const placeholderInTab of placeholders) {
@@ -67,15 +75,12 @@ export const useDocumentHelper = () => {
           placeholderInTab.contentControls = matchedCtrls
         }
       }
-      console.log('Sync: cc', placeholders)
+      withRead && readAllContentControls(placeholders)
+      // console.log('Sync: cc', placeholders)
       for (const placeholderInTab of placeholders) {
         const matchedCtrls = ctrls.filter(ctrl => ctrl.Tag === placeholderInTab.id)
         if (matchedCtrls.length > 0) {
-          console.log(`Sync: placeholder<${placeholderInTab.name}x${matchedCtrls.length}> found.`)
-          // placeholderInTab.sync = true
-          // placeholderInTab.count = matchedCtrls.length
-          // placeholderInTab.contentControls = matchedCtrls
-          withWrite && writeContentControl(placeholderInTab)
+          // console.log(`Sync: placeholder<${placeholderInTab.name}x${matchedCtrls.length}> found.`)
           result.valid || (result.valid = {})
           result.valid.placeholders || (result.valid.placeholders = [])
           result.valid.placeholders.push(placeholderInTab)
@@ -116,6 +121,6 @@ export const useDocumentHelper = () => {
     unbindContentControl,
     bindContentControl,
     writeContentControl,
-    moveCursorToStart
+    // moveCursorToStart
   })
 }

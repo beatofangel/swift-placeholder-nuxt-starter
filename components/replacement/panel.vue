@@ -3,6 +3,7 @@
     <v-row>
       <v-col class="d-flex flex-row">
         <v-navigation-drawer :rail="templateListRailed" @click="templateListRailed = false" permanent>
+          <!-- 模板 -->
           <v-list v-model:selected="selectedTemplateIndex" style="max-width: 255px;" class="text-truncate" color="primary"
             mandatory>
             <v-list-item title="模板" class="pr-0" density="comfortable">
@@ -32,6 +33,7 @@
           </v-list>
         </v-navigation-drawer>
         <v-main>
+          <!-- 占位符 -->
           <v-list density="comfortable" style="height: calc(100dvh - 310px);" class="mx-auto">
             <v-list-item title="占位符">
               <template v-slot:prepend>
@@ -39,7 +41,7 @@
               </template>
             </v-list-item>
             <v-divider class="my-2"></v-divider>
-            <v-list-item v-if="templates" v-for="placeholder in templates[selectedTemplateIndex[0]].placeholders"
+            <v-list-item v-if="templates && templates.length > 0" v-for="placeholder in templates[selectedTemplateIndex[0]]?.placeholders"
               :key="placeholder.id">
               <v-list-item-title>
                 <template v-if="placeholder.type === 'date'">
@@ -47,10 +49,10 @@
                     <template v-slot:activator="{ props }">
                       <v-text-field :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
                         v-bind="props" :placeholder="`请输入${placeholder.name}`" clearable :disabled="!placeholder.sync"
-                        :value="dayjs(placeholder.value).format(placeholder.format)" readonly>
-                        <template v-slot:prepend>
+                        :value="placeholder.value">
+                        <!-- <template v-slot:prepend>
                           <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
-                        </template>
+                        </template> -->
                         <template v-slot:prepend-inner>
                           <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
                             :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
@@ -58,19 +60,26 @@
                                 `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
                         </template>
                         <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
-                          dayjs(placeholder.value).format(placeholder.format) }}</v-tooltip>
+                          placeholder.value }}</v-tooltip>
                       </v-text-field>
                     </template>
-                    <v-date-picker :model-value="[dayjs(placeholder.value).toDate()]" :title="placeholder.name"
-                      @update:model-value="$v => placeholder.value = dayjs($v[0]).toISOString()"></v-date-picker>
+                    <v-date-picker :model-value="[dayjs(placeholder.value, placeholder.format).toDate()]" width="1000" :title="placeholder.name" :format="placeholder.format"
+                      @update:model-value="$v => {
+                        placeholder.status = 1 // modified
+                        placeholder.value = dayjs($v[0]).format(placeholder.format)
+                        placeholderUpdate('', placeholder)
+                      }"></v-date-picker>
                   </v-menu>
                 </template>
                 <v-text-field v-else :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
                   :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
-                  :disabled="!placeholder.sync" @update:model-value="$v => placeholderUpdate($v, placeholder)">
-                  <template v-slot:prepend>
+                  :disabled="!placeholder.sync" @update:model-value="$v => {
+                    placeholder.status = 1 // modified
+                    placeholderUpdate($v, placeholder)
+                  }">
+                  <!-- <template v-slot:prepend>
                     <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
-                  </template>
+                  </template> -->
                   <template v-slot:prepend-inner>
                     <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
                       :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
@@ -105,13 +114,14 @@
 </template>
 
 <script setup lang="ts">
-import dayjs from 'dayjs'
 import type { Template, Placeholder, DocWarning } from '~/index';
 import { VDatePicker } from 'vuetify/labs/VDatePicker'
 import { debounce } from 'lodash-es'
-const selectedTemplateIndex = ref([0])
+const dayjs = useDayJS()
+
+const selectedTemplateIndex: Ref<number[]> = ref([])
 const templateListRailed = ref(true)
-const props = defineProps<{ id: string, templates: Template[] | null }>()
+const props = defineProps<{ id: string, bcId: string | null, templates: Template[] | null }>()
 // const businessCategoryOptions = ref([])
 const docWarnings = ref([] as DocWarning[])
 const emit = defineEmits([
@@ -123,33 +133,32 @@ const refMap: Record<string, refItem> = {}
 onMounted(() => {
   selectedTemplateIndex.value = [useSelectedTemplate(props.id).value]
   templateListRailed.value = useTemplateRailed().value
-  // $fetch('/api/businessCategories', {
-  // $fetch('/api/businesscategories', {
-  //   query: {
-  //     cascaded: true
-  //   }
-  // }).then((data) => {
-  //   if (data.success) {
-  //     businessCategoryOptions.value = data
-  //   } else {
-  //     console.log(data.errorMessage)
-  //   }
-  // })
+  // onSelectedTemplateChanged(selectedTemplateIndex.value[0], true)
 })
-watch(() => props.id, (val) => {
-  console.log('当替换标签页切换时', val)
-  selectedTemplateIndex.value = [useSelectedTemplate(val).value]
-  // 手动触发
-  onSelectedTemplateChanged(selectedTemplateIndex.value[0])
-  // emit('update:config', props.templates![selectedTemplateIndex.value[0] || 0])
-})
+
 const onSelectedTemplateChanged = (val: number) => {
   console.log('当模板菜单切换时', val)
   docWarnings.value.splice(0) // 重置警告
   useSelectedTemplate(props.id).value = val
-  emit('update:config', props.templates![val || 0])
+  props.templates && props.templates.length > 0 && emit('update:config', props.templates[val || 0])
 }
-watch(() => selectedTemplateIndex.value[0], onSelectedTemplateChanged, {
+
+// watch(() => props.bcId, (val) => {
+//   console.log('监视：业务分类', val)
+//   if (!val) {
+//     useSelectedTemplate(props.id).value = 0
+//   }
+//   selectedTemplateIndex.value = [useSelectedTemplate(props.id).value]
+//   docWarnings.value.splice(0) // 重置警告
+//   props.templates && props.templates.length > 0 && emit('update:config', props.templates[selectedTemplateIndex.value[0]])
+// }, {
+//   immediate: true
+// })
+
+watch(() => selectedTemplateIndex.value[0], (val) => {
+  console.log('监视：模板菜单', val)
+  onSelectedTemplateChanged(val)
+}, {
   immediate: true
 })
 
@@ -157,9 +166,10 @@ watch(templateListRailed, val => {
   useTemplateRailed().value = val
 })
 
-// watch(props.templates![selectedTemplateIndex.value[0]].placeholders, val => {
-//   console.log(val)
-// })
+const triggerSelectedTemplateChanged = () => {
+  selectedTemplateIndex.value = [useSelectedTemplate(props.id).value]
+  onSelectedTemplateChanged(selectedTemplateIndex.value[0])
+}
 
 const placeholders = computed({
   get() {
@@ -170,7 +180,7 @@ const placeholders = computed({
   }
 })
 
-defineExpose({ placeholders, docWarnings })
+defineExpose({ placeholders, docWarnings, triggerSelectedTemplateChanged })
 
 // method
 function setRefMap(el: refItem, name: string) {

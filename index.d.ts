@@ -7,12 +7,13 @@
 // }
 import type { Session } from 'next-auth';
 import type { QueueObject } from 'async-es'
+import type { DocConnector } from '@/composables/connector'
 export interface SessionWrapper extends Session {
   uid: string
   username: string
 }
 
-export interface WorkData extends Replacement {
+export interface Workspace extends Replacement {
   id: string
   name: string
   type: string
@@ -114,7 +115,7 @@ export type Asc = { scope: Record<string, any> }
 
 declare global {
   interface Window {
-    connector: Ref<Connector>;
+    docConnector: DocConnector;
     Asc: Ref<Asc>;
     docQueue: Ref<QueueObject<T>>
   }

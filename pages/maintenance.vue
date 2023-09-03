@@ -69,9 +69,9 @@ definePageMeta({
 const businessCategory = ref({} as CommonListSelectedItem)
 const template = ref({} as CommonListSelectedItem)
 const { xlAndUp } = useDisplay()
-watch(template, (val) => {
-  console.log('watch template', val.list, val.selected, val.select)
-})
+// watch(template, (val) => {
+//   console.log('watch template', val.list, val.selected, val.select)
+// })
 
 let timer: NodeJS.Timer
 const itemsDummy = ref([

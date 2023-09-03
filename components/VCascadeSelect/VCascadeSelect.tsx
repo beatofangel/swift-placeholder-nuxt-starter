@@ -207,7 +207,7 @@ export const VCascadeSelect = genericComponent<new <
     //   }
     // })
 
-    console.log(items)
+    // console.log(items)
     const cascadeSelections = computed(() => {
       const path: number[] = []
       const cascadeSelectionsInner: ListItem[][] = []
@@ -238,14 +238,14 @@ export const VCascadeSelect = genericComponent<new <
 
       findPath(items.value, 1)
 
-      console.log(cascadeSelectionsInner)
+      // console.log(cascadeSelectionsInner)
 
       return cascadeSelectionsInner
     })
     const cascadeSelected = computed(() => {
       return cascadeSelections.value.map((selection) => [selection[0].value])
     })
-    console.log("cascadeSelected", cascadeSelected.value)
+    // console.log("cascadeSelected", cascadeSelected.value)
     const cascadeDisplayItems = computed(() => {
       const cascadeDisplayItemsInner: ListItem[][] = []
       // cascadeDisplayItems.push(items.value)
@@ -281,7 +281,7 @@ export const VCascadeSelect = genericComponent<new <
 
       return cascadeDisplayItemsInner
     })
-    console.log("cascadeDisplayItems", cascadeDisplayItems.value)
+    // console.log("cascadeDisplayItems", cascadeDisplayItems.value)
     const isFocused = ref(false)
     let keyboardLookupPrefix = ''
     let keyboardLookupLastTime: number
@@ -386,7 +386,7 @@ export const VCascadeSelect = genericComponent<new <
       // model.value = [item]
 
       // menu.value = false
-      console.log('cascadeSelect', model.value)
+      // console.log('cascadeSelect', model.value)
     }
     // ===================================
     // function select (item: ListItem) {

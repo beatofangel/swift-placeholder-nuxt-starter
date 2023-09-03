@@ -43,6 +43,7 @@
                       :hide-create="!template?.id"
                       :append-items="placeholdersInDoc"
                       inline-edit
+                      :footer-loading="loading"
                       @append-item-create="appendItemCreateHandler"
                       @change="changeHandler"
                       @update-items="updateItemsHandler"
@@ -138,6 +139,7 @@ const emits = defineEmits({
   'onChangeTemplate': (tpl: Item) => true
 })
 
+const loading = ref(false)
 const innerPlaceholderCommonList = ref<{items: Placeholder[]}>()
 const placeholderEditor = ref({ /* items: innerPlaceholderCommonList.value?.items ?? [], */ docWarnings: [] } as { /* items: Placeholder[], */ docWarnings: ({ text: string[] })[] })
 const config = ref({} as IConfig)
@@ -169,11 +171,15 @@ const { validatePlaceholders } = useDocumentHelper().value
 function onDocumentReady() {
   console.log("Document is loaded");
   // initialize connector
-  window.connector = ref(window.DocEditor.instances['producer-editor'].createConnector())
+  // window.connector = ref(window.DocEditor.instances['producer-editor'].createConnector())
+  const iframeWin = (document.querySelector('[name=frameEditor]') as HTMLIFrameElement).contentWindow
+  iframeWin && useConnector(window, iframeWin)
+  loading.value = true
+  window.docConnector.callbacks['onPluginReady'] = doSyncDocument
   // syncDocument()
-  console.log(innerPlaceholderCommonList.value)
-  console.log('call doSyncDocument onDocumentReady')
-  doSyncDocument()
+  // console.log(innerPlaceholderCommonList.value)
+  // console.log('call doSyncDocument onDocumentReady')
+  // doSyncDocument()
   // validatePlaceholders(innerPlaceholderCommonList.value?.items ?? [], false, result => {
   //   if (result.warning) {
   //     console.log(result)
@@ -275,11 +281,12 @@ function onAppReady() {
   // initialize docQueue
   window.docQueue = ref(queue(function ({ doc }: any, callback: Function) {
     console.log('consume queue', doc);
-    window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback);
+    /* window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback); */
+    window.docConnector.executeMethod("InsertAndReplaceContentControls", { doc: [doc] }, callback);
   }, 1 /* no concurrency */));
   window.docQueue.value.drain(function () {
     console.log('all tasks have been processed');
-    useDocumentHelper().value.moveCursorToStart()
+    /* useDocumentHelper().value.moveCursorToStart() */
     doSyncDocument()
   });
 }
@@ -287,36 +294,63 @@ function onLoadComponentError(errorCode: number, errorDescription: string) {
   console.error(errorCode, errorDescription)
 }
 function getPlaceholdersInDocument(result: ValidatePlaceholdersResult) {
-  // reset
-  placeholdersInDoc.value.splice(0)
-  const ordinal = placeholdersInDoc.value.length
-  placeholdersInDoc.value.push(...result.distinctContentControls.map((dcc, index)=>({
-    id: undefined,
-    name: dcc.Tag,
-    type: 'text',
-    format: null,
-    ordinal: index + ordinal,
-    // select: false,
-    tplName: 'N/A',
-    contentControls: dcc.contentControls
-  })))
-  console.log(placeholdersInDoc.value)
+
   useFetch('/api/v1/placeholders', { method: 'GET', query: {
       name: {
-        in: placeholdersInDoc.value.filter(ph=>ph.name && !validate(ph.name)).map(ph=>ph.name)
+        in: result.distinctContentControls.map(dcc => dcc.Tag).filter(phName=>!validate(phName))
       }
     }
   }).then(({ data }) => {
     const existedPhs = data.value as Placeholder[]
-    placeholdersInDoc.value.forEach(ph => {
-      const matchedPh = existedPhs.find(ePh => ePh.name == ph.name)
-      if (matchedPh) {
-        ph.id = matchedPh.id
-        ph.type = matchedPh.type
-        ph.format = matchedPh.format
-      }
+    // reset
+    placeholdersInDoc.value.splice(0)
+    const ordinal = placeholdersInDoc.value.length
+    result.distinctContentControls.forEach((dcc, index) => {
+      const matchedPh = existedPhs.find(ePh => ePh.name == dcc.Tag)
+      placeholdersInDoc.value.push({
+        id: matchedPh ? matchedPh.id : undefined,
+        name: dcc.Tag,
+        type: matchedPh ? matchedPh.type : 'text',
+        format: matchedPh ? matchedPh.format : null,
+        ordinal: index + ordinal,
+        tplName: 'N/A',
+        contentControls: dcc.contentControls
+      })
     })
+    loading.value = false
   })
+
+  // // reset
+  // placeholdersInDoc.value.splice(0)
+  // const ordinal = placeholdersInDoc.value.length
+  // placeholdersInDoc.value.push(...result.distinctContentControls.map((dcc, index)=>({
+  //   id: undefined,
+  //   name: dcc.Tag,
+  //   type: 'text',
+  //   format: null,
+  //   ordinal: index + ordinal,
+  //   // select: false,
+  //   tplName: 'N/A',
+  //   contentControls: dcc.contentControls
+  // })))
+  // console.log(placeholdersInDoc.value)
+  // useFetch('/api/v1/placeholders', { method: 'GET', query: {
+  //     name: {
+  //       in: placeholdersInDoc.value.filter(ph=>ph.name && !validate(ph.name)).map(ph=>ph.name)
+  //     }
+  //   }
+  // }).then(({ data }) => {
+  //   const existedPhs = data.value as Placeholder[]
+  //   placeholdersInDoc.value.forEach(ph => {
+  //     const matchedPh = existedPhs.find(ePh => ePh.name == ph.name)
+  //     if (matchedPh) {
+  //       ph.id = matchedPh.id
+  //       ph.type = matchedPh.type
+  //       ph.format = matchedPh.format
+  //     }
+  //   })
+  //   loading.value = false
+  // })
 }
 function appendItemCreateHandler(item: Item) {
   console.log('appendItemCreateHandler', item)

@@ -1,7 +1,7 @@
 <template>
   <v-container class="pa-0" fluid>
     <v-app-bar density="compact" flat>
-      <v-slide-group v-model="tab" @change="onChanged" show-arrows mandatory style="max-width: calc(100vw - 176px)"
+      <v-slide-group v-model="tab" show-arrows mandatory style="max-width: calc(100vw - 176px)"
         class="align-self-end">
         <v-slide-group-item v-for="(item, index) in replacementSessions" :key="index" v-slot="{ isSelected, toggle }">
           <div class="align-self-end">
@@ -18,14 +18,14 @@
                   :size="isSelected ? 'default' : 'small'" :ripple="false">
                   <div style="max-width: 160px" class="text-truncate">
                     {{
-                      `${editing[item.id] ? "* " : ""}${calcSessionName(item)}`
+                      `${editing[item.id] ? "* " : ""}${item.name}`
                     }}
                   </div>
                   <v-btn density="compact" size="small" :color="isSelected ? 'primary' : 'grey lighten-3'"
                     class="rounded-sm" icon="mdi-close" @click.stop="closeReplacement(item)"></v-btn>
                 </v-btn>
               </template>
-              {{ calcSessionName(item) }}
+              {{ item.name }}
             </v-tooltip>
           </div>
         </v-slide-group-item>
@@ -80,61 +80,15 @@
                   </template>
                 </v-list-item>
                 <v-divider class="my-2"></v-divider>
-                <!-- <v-expansion-panels multiple variant="accordion">
-                  <v-expansion-panel>
-                    <v-expansion-panel-title>
-                      <v-icon color="primary" start class="ml-n1 mr-8">mdi-family-tree</v-icon>业务分类
-                    </v-expansion-panel-title>
-                    <v-expansion-panel-text>
-                      <v-list-item class="px-0 mx-n2">
-                        <template v-slot:prepend>
-                          <v-tooltip location="top">
-                            <template v-slot:activator="{ props }">
-                              <v-icon class="mr-0 mb-5" v-bind="props" size="large"
-                                :color="['primary', 'light-green', 'orange'][selectedBusinessCategory?.level ?? 0]"
-                                :icon="selectedBusinessCategory?.selected?.icon"></v-icon>
-                            </template>
-                            <span>{{ selectedBusinessCategory?.selected?.name }}</span>
-                          </v-tooltip>
-                        </template>
-                        <v-list-item-title>
-                          <v-card>
-                            <v-card-text>
-                              <v-row>
-                                <v-col>
-                                  <BusinessCategoryPanel ref="selectedBusinessCategory"
-                                    v-model="replacementSessions[tab].businessCategory"></BusinessCategoryPanel>
-                                </v-col>
-                              </v-row>
-                            </v-card-text>
-                          </v-card>
-                        </v-list-item-title>
-                      </v-list-item>
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-                </v-expansion-panels>
-                <v-expansion-panels multiple>
-                  <v-expansion-panel>
-                    <v-expansion-panel-title>
-                      <v-icon color="primary" start class="ml-n1 mr-8">mdi-file-document-multiple-outline</v-icon>模板
-                    </v-expansion-panel-title>
-                    <v-expansion-panel-text>
-                      <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
-                        v-model:id="replacementSessions[tab].id" v-model:templates="replacementSessions[tab].templates"
-                        @update:config="updateDocConfig">
-                      </ReplacementPanel>
-                    </v-expansion-panel-text>
-                  </v-expansion-panel>
-                </v-expansion-panels> -->
                 <v-list-item>
                   <template v-slot:prepend>
                     <v-tooltip location="top">
                       <template v-slot:activator="{ props }">
                         <v-icon class="mr-0 mb-5" v-bind="props" size="large"
-                          :color="['primary', 'light-green', 'orange', 'teal'][selectedBusinessCategory.level ?? 3]"
-                          :icon="selectedBusinessCategory.selected?.icon"></v-icon>
+                          :color="['primary', 'light-green', 'orange', 'teal'][selectedBusinessCategory?.level ?? 3]"
+                          :icon="selectedBusinessCategory?.selected?.icon"></v-icon>
                       </template>
-                      <span>{{ selectedBusinessCategory.selected?.name }}</span>
+                      <span>{{ selectedBusinessCategory?.selected?.name }}</span>
                     </v-tooltip>
                   </template>
                   <v-list-item-title>
@@ -153,8 +107,8 @@
                 <!-- <替换>面板 -->
                 <v-list-item class="px-0">
                   <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
-                    v-model:id="replacementSessions[tab].id" v-model:templates="replacementSessions[tab].templates"
-                    @update:config="updateDocConfig">
+                    v-model:id="replacementSessions[tab].id" v-model:bcId="replacementSessions[tab].businessCategory" v-model:templates="replacementSessions[tab].templates"
+                    @update:config="updateDocConfigDebounced">
                   </ReplacementPanel>
                 </v-list-item>
               </v-list>
@@ -163,7 +117,7 @@
         </v-card>
       </v-navigation-drawer>
       <v-main tag="editor">
-        <v-card style="height: calc(100dvh - 114px);" flat>
+        <v-card style="height: calc(100dvh - 118px);" flat class="mt-1">
           <!-- <v-card-text style="height: calc(100dvh - 140px);"> -->
           <div v-if="replacementSessions.length == 0" style="height: calc(100vh - 124px);"
             class="d-flex flex-column justify-center align-center no-click">
@@ -177,7 +131,7 @@
               开启全新替换旅程！
             </div>
           </div>
-          <DocumentEditor v-else-if="config.document" id="doc-editor" :document-server-url="documentServerApiUrl"
+          <DocumentEditor v-else-if="config.document && replacementSessions[tab].templates && replacementSessions[tab].templates.length > 0" id="doc-editor" :document-server-url="documentServerApiUrl"
             :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
             :on-load-component-error="onLoadComponentError" />
           <!-- </v-card-text> -->
@@ -189,7 +143,7 @@
 
 <script setup lang="ts">
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
-import type { Template, WorkData, Placeholder, DocWarning, Replacement } from '~/index';
+import type { Template, Workspace, Placeholder, DocWarning, Replacement } from '~/index';
 import { queue } from 'async-es'
 // @ts-ignore
 import Mousetrap from "mousetrap"
@@ -205,7 +159,7 @@ onMounted(() => {
   pinned.value = usePlaceholderPinned().value
   $fetch('/api/replacements').then((rows: { id: string, name: string, type: string, data: Replacement }[]) => {
     replacementSessions.value = rows.map(row=>{
-      return { id: row.id, name: row.name, type: row.type, businessCategory: row.data.businessCategory, templates: row.data.templates }
+      return { id: row.id, modified: false, name: row.name, type: row.type, businessCategory: row.data.businessCategory ?? null, templates: [] }
     })
     bindHotkeys()
   })
@@ -222,16 +176,66 @@ const pinned = ref(true)
 const showDialog = ref(false)
 watch(showDialog, (val) => console.log(val))
 const tab = ref(0)
-const replacementSessions = ref([] as WorkData[])
+const replacementSessions = ref([] as Workspace[])
 const editing = ref({} as Record<string, boolean>)
 const showReplaceMenu = ref(false)
-const selectedBusinessCategory = ref({} as { selected: { icon: string; name: string } | null, level: number | undefined })
-const currentReplaceTab = ref({} as { placeholders: Placeholder[], docWarnings: DocWarning[] })
+const selectedBusinessCategory = ref({} as { selected: { icon: string; name: string, id: string } | null, level: number | undefined })
+const currentReplaceTab = ref({} as { placeholders: Placeholder[], docWarnings: DocWarning[], triggerSelectedTemplateChanged: Function })
 
+const triggerSelectedBusinessCategoryChanged = (bcId?: string) => {
+  if (replacementSessions.value[tab.value]?.id) {
+    const api = `/api/v1/workspaces/${replacementSessions.value[tab.value].id}/switch-bcid/${bcId || '00000000-0000-0000-0000-000000000000'}`
+    useFetch(api, {
+      method: 'POST',
+      body: {
+        type: 'REPLACEMENT'
+      }
+    }).then(({ data, error }) => {
+      const { name, data: wsData } = (data.value as any)
+      replacementSessions.value[tab.value].name = name
+      if (wsData.templates) {
+        replacementSessions.value[tab.value].templates.splice(0)
+        replacementSessions.value[tab.value].templates.push(...(wsData.templates as []))
+      }
+      console.log('触发选择模板改变事件')
+      currentReplaceTab.value.triggerSelectedTemplateChanged()
+    })
+  }
+}
 // watch
 watch(pinned, (val) => {
   console.log('pinned:', val)
   usePlaceholderPinned().value = val
+})
+watch(tab, (newVal, oldVal) => {
+  console.log('当标签页改变时', oldVal, newVal)
+  // 当业务分类未发生改变时，改由此监视触发【triggerSelectedTemplateChanged】
+  if (replacementSessions.value.length > 0/*  && (replacementSessions.value.length <= oldVal || replacementSessions.value[oldVal].businessCategory === replacementSessions.value[newVal].businessCategory) */) {
+    console.log('当业务分类未发生改变时，改由此监视触发【triggerSelectedTemplateChanged】')
+    triggerSelectedBusinessCategoryChanged(replacementSessions.value[newVal].businessCategory)
+  }
+})
+watch(() => selectedBusinessCategory.value?.selected?.id, (val) => {
+  console.log('当业务分类改变时', val)
+  triggerSelectedBusinessCategoryChanged(val)
+  // if (replacementSessions.value[tab.value]?.id) {
+  //   const api = `/api/v1/workspaces/${replacementSessions.value[tab.value].id}/switch-bcid/${val || '00000000-0000-0000-0000-000000000000'}`
+  //   useFetch(api, {
+  //     method: 'POST',
+  //     body: {
+  //       type: 'REPLACEMENT'
+  //     }
+  //   }).then(({ data, error }) => {
+  //     const { name, data: wsData } = (data.value as any)
+  //     replacementSessions.value[tab.value].name = name
+  //     if (wsData.templates) {
+  //       replacementSessions.value[tab.value].templates.splice(0)
+  //       replacementSessions.value[tab.value].templates.push(...(wsData.templates as []))
+  //     }
+  //     console.log('触发选择模板改变事件')
+  //     currentReplaceTab.value.triggerSelectedTemplateChanged()
+  //   })
+  // }
 })
 
 // computed
@@ -330,30 +334,38 @@ const dotMenuList = computed(() => {
 })
 
 // methods
-function onChanged(index: number) {
-  console.log(index);
-}
-function calcSessionName(item: WorkData) {
-  if (item.name) {
-    // return `${item.businessCategoryDisplay}-${item.id}`;
-    return `${item.name}`;
-  } else {
-    return `替换-${item.id}`;
-  }
-}
+// function onChanged(index: number) {
+//   console.log(index, tab.value);
+//   // triggerSelectedBusinessCategoryChanged(replacementSessions.value[index].businessCategory)
+// }
+// function calcSessionName(item: Workspace) {
+//   if (item.name) {
+//     // return `${item.businessCategoryDisplay}-${item.id}`;
+//     return `${item.name}`;
+//   } else {
+//     return `替换-${item.id}`;
+//   }
+// }
 function closeReplacement({ id }: { id: string }) {
   $confirm({
     text: `即将删除本次替换，是否继续？`, onOk: () => {
       const index = replacementSessions.value.findIndex((session) => session.id == id);
       if (index != -1) {
-        const session = replacementSessions.value.splice(index, 1);
-        // prevent index overflow
-        if (replacementSessions.value.length <= tab.value) {
-          tab.value = replacementSessions.value.length - 1
-        }
-        if (session.length > 0) {
+        const session = replacementSessions.value[index]
+        if (session) {
           // TODO
           console.log('TODO: remove from Workspace')
+          useFetch(`/api/v1/workspaces/${session.id}`, { method: 'DELETE' }).then(({ data, error }) => {
+            if (data.value) {
+              replacementSessions.value.splice(index, 1);
+              // prevent index overflow
+              if (replacementSessions.value.length <= tab.value) {
+                tab.value = replacementSessions.value.length > 0 ? replacementSessions.value.length - 1 : 0
+              } else {
+                tab.value = tab.value > 0 ? tab.value - 1 : 0
+              }
+            }
+          })
         }
       }
     }
@@ -363,7 +375,22 @@ function closeReplacement({ id }: { id: string }) {
  * 新建替换（标签页）
  */
 function newReplacement() {
-  $confirm({ title: '新建', text:'', onOk: ()=>console.log('newReplacement') })
+  // TODO $confirm 导致标签页拥有相同的provide ID，表现为新增多个标签页时，会同时选中或取消选中
+  // $confirm({ title: '新建', text:'', onOk: ()=>{
+      useFetch('/api/v1/workspaces', { method: 'POST' }).then(({ data, error }) => {
+        if (error.value) {
+          useToast().error(`新建替换失败！`);
+        } else {
+          const newSession = data.value as any
+          replacementSessions.value.push({
+            id: newSession.id, name: newSession.name, type: newSession.type, businessCategory: newSession.data.businessCategory ?? null, templates: newSession.data.templates ?? []
+          })
+          tab.value = replacementSessions.value.length - 1
+        }
+      })
+      console.log('newReplacement')
+    // }
+  // })
 }
 function doReplace() {
   $confirm({ title: '替换', text:'', onOk: ()=>console.log('doReplace') })
@@ -372,6 +399,9 @@ function doReplaceAll() {
   $confirm({ title: '全部替换', text:'', onOk: ()=>console.log('doReplaceAll') })
 }
 import { VRow, VCol, VCheckboxBtn } from 'vuetify/components'
+import { useToast } from 'vue-toastification';
+import { pick, debounce } from 'lodash-es';
+import replacements from 'server/api/replacements';
 function doSave() {
   console.log(replacementSessions.value[tab.value], tab.value)
   saveWithPrompt.value ? $confirm({ title: '保存替换', text:() =>h(VRow,null, h(VCol, null, h(VCheckboxBtn, { label: '不再提示' }, []))), onOk: saveWorkSession}) : saveWorkSession()
@@ -407,45 +437,50 @@ async function updateDocConfig(template: Template) {
     config.value = data as any
   })
 }
+const updateDocConfigDebounced = debounce(updateDocConfig, 50)
+
 function onDocumentReady() {
   console.log("Document is loaded");
   // initialize connector
-  window.connector = ref(window.DocEditor.instances['doc-editor'].createConnector())
-  // syncDocument()
-  const { validatePlaceholders } = useDocumentHelper().value
-  validatePlaceholders(currentReplaceTab.value.placeholders, true, result => {
-    if (result.warning) {
-      console.log(result)
-      result.invalid?.placeholders?.forEach((placeholder) => {
-        currentReplaceTab.value.docWarnings.push({
-          text: [
-            `占位符<${placeholder.name}>无效。`
-          ]
+  const iframeWin = (document.querySelector('[name=frameEditor]') as HTMLIFrameElement).contentWindow
+  iframeWin && useConnector(window, iframeWin)
+  window.docConnector.callbacks['onPluginReady'] = () => {
+    // syncDocument()
+    const { validatePlaceholders } = useDocumentHelper().value
+    validatePlaceholders(currentReplaceTab.value.placeholders, true, result => {
+      if (result.warning) {
+        console.log(result)
+        result.invalid?.placeholders?.forEach((placeholder) => {
+          currentReplaceTab.value.docWarnings.push({
+            text: [
+              `占位符<${placeholder.name}>无效。`
+            ]
+          })
         })
-      })
-      result.invalid?.contentControls?.forEach((contentControl) => {
-        currentReplaceTab.value.docWarnings.push({
-          text: [
-            `未能匹配占位符。`,
-            `ID: ${contentControl.InternalId} 名称: ${contentControl.Tag || '<未命名>'}`
-          ]
+        result.invalid?.contentControls?.forEach((contentControl) => {
+          currentReplaceTab.value.docWarnings.push({
+            text: [
+              `未能匹配占位符。`,
+              `ID: ${contentControl.InternalId} 名称: ${contentControl.Tag || '<未命名>'}`
+            ]
+          })
         })
-      })
-    }
+      }
 
-  })
+    })
+  }
 }
 function onAppReady() {
   console.log('OnlyOffice is Ready')
   // initialize docQueue
-  window.docQueue = ref(queue(function ({ doc }: any, callback: Function) {
+  window.docQueue = ref(queue(function (doc: any, callback: Function) {
     console.log('consume queue');
-    window.connector.value.executeMethod("InsertAndReplaceContentControls", [doc], callback);
+    window.docConnector.callCommand('writeContentControl', doc, callback)
   }, 1 /* no concurrency */));
   window.docQueue.value.drain(function () {
     console.log('all items have been processed');
-    useDocumentHelper().value.moveCursorToStart()
   });
+
 }
 function onLoadComponentError(errorCode: number, errorDescription: string) {
   console.error(errorCode, errorDescription)

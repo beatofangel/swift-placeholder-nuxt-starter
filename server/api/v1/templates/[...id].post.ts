@@ -57,26 +57,47 @@ const postPlaceholdersInTemplates = async (event: { context: { prisma: PrismaCli
         }
       })
       console.log('newOrdinal', newOrdinal)
-      const dataForCreate = pick(item, ['name', 'type', 'format'])
 
       if (item.id) {
-        // 若 占位符已存在，则 关联到指定模板
-        await prisma.tplPhItmRel.create({
-          data: {
-            tplId: tplId,
-            phItmId: item.id,
-            ordinal: newOrdinal,
-            version: 0
-          }
-        })
-        return await prisma.placeholderItem.findUnique({
+        const updateOnly = await prisma.tplPhItmRel.count({
           where: {
-            id: item.id
+            tplId: tplId,
+            phItmId: item.id
           }
         })
+        if (updateOnly > 0) {
+          const dataForUpdate = pick(item, ['type', 'format'])
+          return await prisma.placeholderItem.update({
+            data: {
+              ...dataForUpdate,
+              version: {
+                increment: 1
+              }
+            },
+            where: {
+              id: item.id
+            }
+          })
+        } else {
+          // 若 占位符已存在，则 关联到指定模板
+          await prisma.tplPhItmRel.create({
+            data: {
+              tplId: tplId,
+              phItmId: item.id,
+              ordinal: newOrdinal,
+              version: 0
+            }
+          })
+          return await prisma.placeholderItem.findUnique({
+            where: {
+              id: item.id
+            }
+          })
+        }
       } else {
         // 若 占位符不存在，则 新建占位符并关联到指定模板
         const id = uuid()
+        const dataForCreate = pick(item, ['name', 'type', 'format'])
         return await prisma.placeholderItem.create({
           data: {
             id: id,
@@ -219,21 +240,42 @@ const postPlaceholdersInTemplatesBatchSave = async (event: { node: { res: Server
         }
       })
       console.log('newOrdinal', newOrdinal)
-      const dataForCreate = pick(item, ['name', 'type', 'format'])
 
       if (item.id) {
-        // 若 占位符已存在，则 关联到指定模板
-        await prisma.tplPhItmRel.create({
-          data: {
+        const updateOnly = await prisma.tplPhItmRel.count({
+          where: {
             tplId: tplId,
-            phItmId: item.id,
-            ordinal: newOrdinal,
-            version: 0
+            phItmId: item.id
           }
         })
+        if (updateOnly > 0) {
+          const dataForUpdate = pick(item, ['type', 'format'])
+          await prisma.placeholderItem.update({
+            data: {
+              ...dataForUpdate,
+              version: {
+                increment: 1
+              }
+            },
+            where: {
+              id: item.id
+            }
+          })
+        } else {
+          // 若 占位符已存在，则 关联到指定模板
+          await prisma.tplPhItmRel.create({
+            data: {
+              tplId: tplId,
+              phItmId: item.id,
+              ordinal: newOrdinal,
+              version: 0
+            }
+          })
+        }
       } else {
         // 若 占位符不存在，则 新建占位符并关联到指定模板
         const id = uuid()
+        const dataForCreate = pick(item, ['name', 'type', 'format'])
         await prisma.placeholderItem.create({
           data: {
             id: id,

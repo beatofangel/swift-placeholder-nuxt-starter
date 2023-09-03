@@ -162,7 +162,7 @@ export default defineEventHandler(async (event) => {
           console.log(ex);
         }
       }
-      await callbackProcessSave(body.url, newFilename);
+      return await callbackProcessSave(body.url, newFilename);
     };
 
     // callback file force saving process

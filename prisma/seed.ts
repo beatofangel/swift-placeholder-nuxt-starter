@@ -1094,14 +1094,15 @@ async function main() {
         name: "替换1",
         type: "REPLACEMENT",
         owner: adminUserId,
+        ordinal: 0,
         data: {
           businessCategory: "5c1bdfcf-3cde-47bd-a099-834664196470",
           templates: [
             {
               id: "99fe65e0-90ac-41ef-91a1-aa3b4d4a09cd",
               name: "小分类229-模板A",
-              key: fileKeys[0],
-              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[0]}.docx`,
+              // key: fileKeys[0],
+              path: `/workspace/5eb1fa9f-edeb-4dbe-8fd8-0199d1b8b74b/replacement/43ccacc1-a062-4a84-9219-ea1cd1a5704d/${fileKeys[0]}`,
               placeholders: [
                 {
                   id: "6369f6c3-67e1-45f1-ac9f-6bbcf325c434",
@@ -1109,6 +1110,7 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "原告1",
+                  status: 1
                 },
                 {
                   id: "7ef7390c-e78e-4681-b105-893e325457e6",
@@ -1116,14 +1118,15 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "被告1",
+                  status: 1
                 },
               ],
             },
             {
               id: "cfba1cfa-1f1c-45d5-b223-6145c75a0528",
               name: "小分类229-模板B",
-              key: fileKeys[1],
-              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[1]}.docx`,
+              // key: fileKeys[1],
+              path: `/workspace/5eb1fa9f-edeb-4dbe-8fd8-0199d1b8b74b/replacement/43ccacc1-a062-4a84-9219-ea1cd1a5704d/${fileKeys[1]}`,
               placeholders: [
                 {
                   id: "fec05590-6202-479b-8735-409ded3b9905",
@@ -1131,6 +1134,7 @@ async function main() {
                   type: "number",
                   format: null,
                   value: "10000",
+                  status: 1
                 },
                 {
                   id: "d4e98926-a657-4412-9bb5-463a4419bdfa",
@@ -1138,6 +1142,7 @@ async function main() {
                   type: "date",
                   format: "YYYY年MM月DD日",
                   value: "2021-05-12",
+                  status: 1
                 },
               ],
             },
@@ -1149,14 +1154,15 @@ async function main() {
         name: "替换2",
         type: "REPLACEMENT",
         owner: adminUserId,
+        ordinal: 1,
         data: {
           businessCategory: "0c1617ec-2d21-44d8-8e7e-48390f78fa7f",
           templates: [
             {
               id: "6a9f12fe-cf86-4f39-bf55-86c33724d25c",
               name: "中分类21-模板A",
-              key: fileKeys[2],
-              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[2]}.docx`,
+              // key: fileKeys[2],
+              path: `/workspace/5eb1fa9f-edeb-4dbe-8fd8-0199d1b8b74b/replacement/378cf3c1-1900-4a86-b7ae-28633a4e72b1/${fileKeys[2]}`,
               placeholders: [
                 {
                   id: "40b457f2-7708-40a9-a3f7-4c1f4da5d128",
@@ -1164,6 +1170,7 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "法院1",
+                  status: 1
                 },
                 {
                   id: "bd99b029-0177-4030-82a7-b4a79bea497a",
@@ -1171,14 +1178,15 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "案由1",
+                  status: 1
                 },
               ],
             },
             {
               id: "9eb1db1c-639b-49e9-9341-bbf0b25f6841",
               name: "中分类21-模板B",
-              key: fileKeys[3],
-              path: `/workdata/5c1bdfcf-3cde-47bd-a099-834664196470/${fileKeys[3]}.docx`,
+              // key: fileKeys[3],
+              path: `/workspace/5eb1fa9f-edeb-4dbe-8fd8-0199d1b8b74b/replacement/378cf3c1-1900-4a86-b7ae-28633a4e72b1/${fileKeys[3]}`,
               placeholders: [
                 {
                   id: "a70d08eb-ca4e-44f7-8339-71885f115376",
@@ -1186,6 +1194,7 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "地址1",
+                  status: 1
                 },
                 {
                   id: "26d17448-3f72-4a9f-b6a4-b25bc635b062",
@@ -1193,6 +1202,7 @@ async function main() {
                   type: "text",
                   format: null,
                   value: "+8613812345678",
+                  status: 1
                 },
               ],
             },

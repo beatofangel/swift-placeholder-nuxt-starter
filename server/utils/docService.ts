@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { v4 as uuid } from 'uuid'
+import { createHash } from 'crypto'
 import querystring from 'querystring'
 const {
   cfgSignatureSecret,
@@ -41,13 +42,16 @@ export const useDocService = () => {
     }
     return decoded;
   }
-  const generateRevisionId = function (expectedKey: any) {
+  const generateRevisionId = function (expectedKey: string) {
+    let _key = expectedKey
     let maxKeyLength = 128;  // the max key length is 128
-    if (expectedKey.length > maxKeyLength) {  // if the expected key length is greater than the max key length
-      expectedKey = expectedKey.hashCode().toString();  // the expected key is hashed and a fixed length value is stored in the string format
+    if (_key.length > maxKeyLength) {  // if the expected key length is greater than the max key length
+      // _key = _key.hashCode().toString();  // the expected key is hashed and a fixed length value is stored in the string format
+      _key = createHash('sha1').update(_key).digest('hex')
     }
 
-    var key = expectedKey.replace(new RegExp("[^0-9-.a-zA-Z_=]", "g"), "_");
+    var key = _key.replace(new RegExp("[^0-9-.a-zA-Z_=]", "g"), "_");
+    console.log('generateRevisionId', key)
 
     return key.substring(0, Math.min(key.length, maxKeyLength));  // the resulting key is of the max key length or less
   }

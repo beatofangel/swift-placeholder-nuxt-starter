@@ -8,7 +8,9 @@
 // @ts-ignore
 import type { ListItem } from 'vuetify/composables/list-items.mjs'
 const props = defineProps<{ modelValue: string | null }>()
-const emit = defineEmits(['update:model-value'])
+const emit = defineEmits([
+  'update:model-value'
+])
 const businessCategory = computed({
   get() {
     return props.modelValue
@@ -34,7 +36,7 @@ const selectedItems = computed(()=>{
   }) : []
 })
 watch(selectedItems, (val) => {
-  selected.value = val.length > 0 ? val.at(-1).raw : { icon: 'mdi-family-tree', name: '请选择业务分类' }
+  selected.value = val.length > 0 ? val.at(-1).raw : { icon: 'mdi-family-tree', name: '请选择业务分类', id: '' }
   level.value = val.length > 0 ? val.length - 1 : undefined
 })
 defineExpose({ selected, level })
