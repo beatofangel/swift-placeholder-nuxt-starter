@@ -215,7 +215,7 @@ watch(tab, (newVal, oldVal) => {
     triggerSelectedBusinessCategoryChanged(replacementSessions.value[newVal].businessCategory)
   }
 })
-watch(() => selectedBusinessCategory.value?.selected?.id, (val) => {
+watch(() => replacementSessions.value[tab.value]?.businessCategory, (val) => {
   console.log('当业务分类改变时', val)
   triggerSelectedBusinessCategoryChanged(val)
   // if (replacementSessions.value[tab.value]?.id) {

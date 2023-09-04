@@ -19,6 +19,10 @@ export default defineNuxtConfig({
       'vue-toastification'
     ]
   },
+  routeRules: {
+    '/replacement': { ssr: false },
+    '/maintenance': { ssr: false },
+  },
   // vite: {
   //   css: {
   //     modules: {

@@ -41,56 +41,58 @@
               </template>
             </v-list-item>
             <v-divider class="my-2"></v-divider>
-            <v-list-item v-if="templates && templates.length > 0" v-for="placeholder in templates[selectedTemplateIndex[0]]?.placeholders"
-              :key="placeholder.id">
-              <v-list-item-title>
-                <template v-if="placeholder.type === 'date'">
-                  <v-menu location="bottom" :close-on-content-click="false" :offset="[20, 88]">
-                    <template v-slot:activator="{ props }">
-                      <v-text-field :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
-                        v-bind="props" :placeholder="`请输入${placeholder.name}`" clearable :disabled="!placeholder.sync"
-                        :value="placeholder.value">
-                        <!-- <template v-slot:prepend>
-                          <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
-                        </template> -->
-                        <template v-slot:prepend-inner>
-                          <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
-                            :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
-                              :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
-                                `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
-                        </template>
-                        <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
-                          placeholder.value }}</v-tooltip>
-                      </v-text-field>
-                    </template>
-                    <v-date-picker :model-value="[dayjs(placeholder.value, placeholder.format).toDate()]" width="1000" :title="placeholder.name" :format="placeholder.format"
-                      @update:model-value="$v => {
-                        placeholder.status = 1 // modified
-                        placeholder.value = dayjs($v[0]).format(placeholder.format)
-                        placeholderUpdate('', placeholder)
-                      }"></v-date-picker>
-                  </v-menu>
-                </template>
-                <v-text-field v-else :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
-                  :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
-                  :disabled="!placeholder.sync" @update:model-value="$v => {
-                    placeholder.status = 1 // modified
-                    placeholderUpdate($v, placeholder)
-                  }">
-                  <!-- <template v-slot:prepend>
-                    <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
-                  </template> -->
-                  <template v-slot:prepend-inner>
-                    <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
-                      :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
-                        :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
-                          `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
+            <v-list height="calc(100dvh - 380px)" class="overflow-y-auto">
+              <v-list-item v-if="templates && templates.length > 0" v-for="placeholder in templates[selectedTemplateIndex[0]]?.placeholders"
+                :key="placeholder.id">
+                <v-list-item-title>
+                  <template v-if="placeholder.type === 'date'">
+                    <v-menu location="bottom" :close-on-content-click="false" :offset="[20, 88]">
+                      <template v-slot:activator="{ props }">
+                        <v-text-field :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
+                          v-bind="props" :placeholder="`请输入${placeholder.name}`" clearable :disabled="!placeholder.sync"
+                          :value="placeholder.value">
+                          <!-- <template v-slot:prepend>
+                            <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
+                          </template> -->
+                          <template v-slot:prepend-inner>
+                            <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
+                              :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
+                                :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
+                                  `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
+                          </template>
+                          <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
+                            placeholder.value }}</v-tooltip>
+                        </v-text-field>
+                      </template>
+                      <v-date-picker :model-value="[dayjs(placeholder.value, placeholder.format).toDate()]" :title="placeholder.name" :format="placeholder.format"
+                        @update:model-value="$v => {
+                          placeholder.status = 1 // modified
+                          placeholder.value = dayjs($v[0]).format(placeholder.format)
+                          placeholderUpdate('', placeholder)
+                        }"></v-date-picker>
+                    </v-menu>
                   </template>
-                  <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
-                    placeholder.value }}</v-tooltip>
-                </v-text-field>
-              </v-list-item-title>
-            </v-list-item>
+                  <v-text-field v-else :ref="el => setRefMap(el, placeholder.id)" density="compact" hide-details
+                    :placeholder="`请输入${placeholder.name}`" clearable v-model="placeholder.value"
+                    :disabled="!placeholder.sync" @update:model-value="$v => {
+                      placeholder.status = 1 // modified
+                      placeholderUpdate($v, placeholder)
+                    }">
+                    <!-- <template v-slot:prepend>
+                      <v-icon icon="mdi-drag-vertical" size="large"></v-icon>
+                    </template> -->
+                    <template v-slot:prepend-inner>
+                      <v-chip label :variant="!!placeholder.value ? 'elevated' : 'tonal'"
+                        :color="!!placeholder.value ? 'success' : 'grey'"><v-icon start
+                          :icon="{ text: 'mdi-text', number: 'mdi-numeric', date: 'mdi-calendar' }[placeholder.type]"></v-icon>{{
+                            `${placeholder.name}${placeholder.count > 1 ? `x${placeholder.count}` : ''}` }}</v-chip>
+                    </template>
+                    <v-tooltip :disabled="!placeholder.value" activator="parent" location="right">{{
+                      placeholder.value }}</v-tooltip>
+                  </v-text-field>
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
             <v-card variant="text">
               <v-card-text>
                 <v-fade-transition group mode="in-out">
