@@ -58,91 +58,98 @@
       </v-menu>
     </v-app-bar>
     <v-layout full-height>
-      <v-navigation-drawer v-if="replacementSessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :floating="pinned"
-        :rail="!pinned">
-        <v-card style="height: 100%" variant="text">
-          <v-row>
-            <v-col>
-              <v-list width="600" density="comfortable">
-                <v-list-item prepend-icon="mdi-menu" title="替换">
-                  <template v-slot:prepend>
-                    <v-icon color="red">mdi-swap-horizontal-variant</v-icon>
-                  </template>
-                  <template v-slot:append>
-                    <v-tooltip>
-                      <template v-slot:activator="{ props }"><v-btn v-bind="props"
-                          :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'" :color="pinned ? 'primary' : 'grey'"
-                          variant="text" density="compact" @click="pinned = !pinned">
-                        </v-btn>
-                      </template>
-                      {{ pinned ? '取消固定' : '固定' }}
-                    </v-tooltip>
-                  </template>
-                </v-list-item>
-                <v-divider class="my-2"></v-divider>
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-tooltip location="top">
-                      <template v-slot:activator="{ props }">
-                        <v-icon class="mr-0 mb-5" v-bind="props" size="large"
-                          :color="['primary', 'light-green', 'orange', 'teal'][selectedBusinessCategory?.level ?? 3]"
-                          :icon="selectedBusinessCategory?.selected?.icon"></v-icon>
-                      </template>
-                      <span>{{ selectedBusinessCategory?.selected?.name }}</span>
-                    </v-tooltip>
-                  </template>
-                  <v-list-item-title>
-                    <v-card>
-                      <v-card-text>
-                        <v-row>
-                          <v-col>
-                            <BusinessCategoryPanel ref="selectedBusinessCategory"
-                              v-model="replacementSessions[tab].businessCategory"></BusinessCategoryPanel>
-                          </v-col>
-                        </v-row>
-                      </v-card-text>
-                    </v-card>
-                  </v-list-item-title>
-                </v-list-item>
-                <!-- <替换>面板 -->
-                <v-list-item class="px-0">
-                  <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
-                    v-model:id="replacementSessions[tab].id" v-model:bcId="replacementSessions[tab].businessCategory" v-model:templates="replacementSessions[tab].templates"
-                    @update:config="updateDocConfigDebounced">
-                  </ReplacementPanel>
-                </v-list-item>
-              </v-list>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-navigation-drawer>
+      <!-- <v-navigation-drawer v-if="replacementSessions.length > 0" width="600" :expand-on-hover="!pinned" permanent :floating="pinned"
+        :rail="!pinned"> -->
       <v-main tag="editor">
-        <v-card style="height: calc(100dvh - 118px);" flat class="mt-1">
-          <!-- <v-card-text style="height: calc(100dvh - 140px);"> -->
-          <div v-if="replacementSessions.length == 0" style="height: calc(100vh - 124px);"
-            class="d-flex flex-column justify-center align-center no-click">
-            <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
-              <common-key :shortcuts="shortcutNew">
-                <template v-slot:prepend><span class="text--disabled text-no-wrap">按下&nbsp;</span></template>
-                <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
-              </common-key>
-            </div>
-            <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium text--disabled mt-8 mb-12">
-              开启全新替换旅程！
-            </div>
-          </div>
-          <DocumentEditor v-else-if="config.document && replacementSessions[tab].templates && replacementSessions[tab].templates.length > 0" id="doc-editor" :document-server-url="documentServerApiUrl"
-            :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
-            :on-load-component-error="onLoadComponentError" />
-          <!-- </v-card-text> -->
-        </v-card>
+        <Splitpanes class="d-flex default-theme" @resized="replacementPanelRatio=$event[0].size" v-if="replacementSessions.length > 0">
+          <Pane :size="replacementPanelRatio" max-size="40">
+            <v-card style="height: 100%; width: 100%" variant="text">
+              <v-row>
+                <v-col>
+                  <v-list density="comfortable">
+                    <v-list-item prepend-icon="mdi-menu" title="替换">
+                      <template v-slot:prepend>
+                        <v-icon color="red">mdi-swap-horizontal-variant</v-icon>
+                      </template>
+                      <!-- <template v-slot:append>
+                        <v-tooltip>
+                          <template v-slot:activator="{ props }"><v-btn v-bind="props"
+                              :icon="pinned ? 'mdi-pin-outline' : 'mdi-pin-off-outline'" :color="pinned ? 'primary' : 'grey'"
+                              variant="text" density="compact" @click="pinned = !pinned">
+                            </v-btn>
+                          </template>
+                          {{ pinned ? '取消固定' : '固定' }}
+                        </v-tooltip>
+                      </template> -->
+                    </v-list-item>
+                    <v-divider class="my-2"></v-divider>
+                    <v-list-item>
+                      <template v-slot:prepend>
+                        <v-tooltip location="top">
+                          <template v-slot:activator="{ props }">
+                            <v-icon class="mr-0 mb-5" v-bind="props" size="large"
+                              :color="['primary', 'light-green', 'orange', 'teal'][selectedBusinessCategory?.level ?? 3]"
+                              :icon="selectedBusinessCategory?.selected?.icon"></v-icon>
+                          </template>
+                          <span>{{ selectedBusinessCategory?.selected?.name }}</span>
+                        </v-tooltip>
+                      </template>
+                      <v-list-item-title>
+                        <v-card>
+                          <v-card-text>
+                            <v-row>
+                              <v-col>
+                                <BusinessCategoryPanel ref="selectedBusinessCategory"
+                                  v-model="replacementSessions[tab].businessCategory"></BusinessCategoryPanel>
+                              </v-col>
+                            </v-row>
+                          </v-card-text>
+                        </v-card>
+                      </v-list-item-title>
+                    </v-list-item>
+                    <!-- <替换>面板 -->
+                    <v-list-item class="px-0">
+                      <ReplacementPanel ref="currentReplaceTab" v-if="replacementSessions.length > 0"
+                        v-model:id="replacementSessions[tab].id" v-model:bcId="replacementSessions[tab].businessCategory" v-model:templates="replacementSessions[tab].templates"
+                        @update:config="updateDocConfigDebounced">
+                      </ReplacementPanel>
+                    </v-list-item>
+                  </v-list>
+                </v-col>
+              </v-row>
+            </v-card>
+          </Pane>
+          <Pane class="align-start">
+            <v-card style="height: calc(100dvh - 118px); width: 100%" flat class="mt-1">
+              <!-- <v-card-text style="height: calc(100dvh - 140px);"> -->
+              <div v-if="replacementSessions.length == 0" style="height: calc(100vh - 124px);"
+                class="d-flex flex-column justify-center align-center no-click">
+                <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium mb-8 mt-n12">
+                  <common-key :shortcuts="shortcutNew">
+                    <template v-slot:prepend><span class="text--disabled text-no-wrap">按下&nbsp;</span></template>
+                    <template v-slot:group-delimiter><span class="text--disabled">&nbsp;或&nbsp;</span></template>
+                  </common-key>
+                </div>
+                <div class="text-xl-h1 text-lg-h2 text-md-h3 text-sm-h4 text-h5 font-weight-medium text--disabled mt-8 mb-12">
+                  开启全新替换旅程！
+                </div>
+              </div>
+              <DocumentEditor v-else-if="config.document && replacementSessions[tab].templates && replacementSessions[tab].templates.length > 0" id="doc-editor" :document-server-url="documentServerApiUrl"
+                :config="config" :events_on-app-ready="onAppReady" :events_on-document-ready="onDocumentReady"
+                :on-load-component-error="onLoadComponentError" />
+              <!-- </v-card-text> -->
+            </v-card>
+          </Pane>
+        </Splitpanes>
       </v-main>
+      <!-- </v-navigation-drawer> -->
     </v-layout>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { DocumentEditor, IConfig } from '@onlyoffice/document-editor-vue'
+import { Splitpanes, Pane } from 'splitpanes'
 import type { Template, Workspace, Placeholder, DocWarning, Replacement } from '~/index';
 import { queue } from 'async-es'
 // @ts-ignore
@@ -156,7 +163,8 @@ definePageMeta({
 
 // mounted
 onMounted(() => {
-  pinned.value = usePlaceholderPinned().value
+  replacementPanelRatio.value = useReplacementPanelRatio().value
+  // pinned.value = usePlaceholderPinned().value
   $fetch('/api/replacements').then((rows: { id: string, name: string, type: string, data: Replacement }[]) => {
     replacementSessions.value = rows.map(row=>{
       return { id: row.id, modified: false, name: row.name, type: row.type, businessCategory: row.data.businessCategory ?? null, templates: [] }
@@ -172,7 +180,8 @@ onUnmounted(() => {
 
 // data
 const saveWithPrompt = ref(true)
-const pinned = ref(true)
+// const pinned = ref(true)
+const replacementPanelRatio = ref('30')
 const showDialog = ref(false)
 watch(showDialog, (val) => console.log(val))
 const tab = ref(0)
@@ -203,9 +212,13 @@ const triggerSelectedBusinessCategoryChanged = (bcId?: string) => {
   }
 }
 // watch
-watch(pinned, (val) => {
-  console.log('pinned:', val)
-  usePlaceholderPinned().value = val
+// watch(pinned, (val) => {
+//   console.log('pinned:', val)
+//   usePlaceholderPinned().value = val
+// })
+watch(replacementPanelRatio, (val) => {
+  console.log('replacementPanelRatio:', val)
+  useReplacementPanelRatio().value = val
 })
 watch(tab, (newVal, oldVal) => {
   console.log('当标签页改变时', oldVal, newVal)

@@ -20,4 +20,6 @@ export const useTemplateRailed = () => usePersistedState<boolean>('STATE_TEMPLAT
 
 export const usePlaceholderPinned = () => usePersistedState<boolean>('STATE_PLACEHOLDER_PINNED', true)
 
+export const useReplacementPanelRatio = () => usePersistedState<number>('STATE_REPLACEMENT_PANEL_RATIO', 30)
+
 export const useSelectedTemplate = (replacementId: string) => usePersistedState<number>(`STATE_REPLACEMENT_${replacementId}_SELECTED_TEMPLATE`, 0)

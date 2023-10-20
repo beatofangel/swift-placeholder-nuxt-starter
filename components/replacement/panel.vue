@@ -34,14 +34,14 @@
         </v-navigation-drawer>
         <v-main>
           <!-- 占位符 -->
-          <v-list density="comfortable" style="height: calc(100dvh - 310px);" class="mx-auto">
+          <v-list density="comfortable" style="height: calc(100dvh - 320px);" class="mx-auto">
             <v-list-item title="占位符">
               <template v-slot:prepend>
                 <v-icon color="orange">mdi-bookmark-multiple-outline</v-icon>
               </template>
             </v-list-item>
             <v-divider class="my-2"></v-divider>
-            <v-list height="calc(100dvh - 380px)" class="overflow-y-auto">
+            <v-list height="calc(100dvh - 430px)" class="overflow-y-auto">
               <v-list-item v-if="templates && templates.length > 0" v-for="placeholder in templates[selectedTemplateIndex[0]]?.placeholders"
                 :key="placeholder.id">
                 <v-list-item-title>
